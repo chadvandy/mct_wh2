@@ -1,3 +1,6 @@
+--- MCT Mod Object
+-- @module mct_mod
+
 local mct_mod = {
     _name = "",
     _title = "No Title Assigned",
@@ -40,16 +43,114 @@ function mct_mod.new(key)
         -- etc
     } -- read from the .json file
 
+    -- start with the default section, if none are specified this is what's used
+    self._sections = {
+        {key = "default", txt = "Default Category"},
+        
+    }
+
+    --self._options_by_section = {}
+
     return self
+end
+
+function mct_mod:add_new_section(section_key, localised_name)
+    if not is_string(section_key) then
+        -- errmsg
+        return false
+    end
+
+    local table = {
+        key = section_key,
+        txt = localised_name
+    }
+
+    -- put the section key at the bottom of the sections list - used to find the last-made section, which is what new options will default to
+    self._sections[#self._sections+1] = table
+end
+
+function mct_mod:get_options_by_section(section_key)
+    local options = self:get_options()
+    local retval = {}
+    for option_key, option_obj in pairs(options) do
+        if option_obj:get_assigned_section() == section_key then
+            retval[option_key] = option_obj
+        end
+    end
+
+    return retval
+    --return self._options_by_section[section_key]
+end
+
+function mct_mod:get_sections()
+    return self._sections
+end
+
+function mct_mod:get_last_section()
+    -- return the last index in the _sections table
+    return self._sections[#self._sections] or ""
 end
 
 function mct_mod:get_key()
     return self._key
 end
 
-function mct_mod:finalize()  
+-- triggered once the file which housed this mod_obj is done loading
+function mct_mod:finalize()
+    self:set_positions_for_options()
+end
+
+function mct_mod:set_positions_for_options()
+    local settings = self:get_sections()
+    
+    for i = 1, #settings do
+        local settings_key = settings[i].key
+        local attached_options = self:get_options_by_section(settings_key)
+
+        local total = 0
+        local option_keys = {}
+
+        for key,_ in pairs(attached_options) do
+            total = total + 1
+            option_keys[#option_keys+1] = key
+        end
+
+        local num_remaining = total
+
+        local x = 1
+        local y = 1
+
+        for i = 1, #option_keys do
+            local option_key = option_keys[i]
+            local option_obj = self:get_option_by_key(option_key)
+
+            option_obj:override_position(x,y)
+
+            if x == 3 then
+                x = 1 
+                y = y + 1
+            else
+                x = x + 1
+            end
+        end
+
+        --[[local valid = true
+        while valid do
+            if num_remaining <= 0 then
+                break
+            end
+
+            -- grab the next option
+
+        end]]
+    end
+end
+
+function mct_mod:finalize_UNUSED_FUCK________()  
     mct:log("Beginning finalize for mod ["..self:get_key().."].")
 
+    
+    
     local dropdown_option_keys = self:get_option_keys_by_type("dropdown")
     local checkbox_option_keys = self:get_option_keys_by_type("checkbox")
     local slider_option_keys = self:get_option_keys_by_type("slider")
@@ -227,7 +328,7 @@ function mct_mod:get_option_key_for_coords(x,y)
 
     local index = tostring(x) .. "," .. tostring(y)
     local object_key = self._coords[index]
-    return object_key or "MCT_BLANK"
+    return object_key or "NONE"
 end
 
 --[[function mct_mod:set_title(title_text, is_localised)

@@ -1,3 +1,6 @@
+--- MCT Option Object
+-- @module mct_option
+
 local mct_option = {
     _mod = nil,
     _key = "",
@@ -30,6 +33,9 @@ function mct_option.new(mod, option_key, type)
     --self._text = text or ""
     --self._tooltip_text = tooltip_text or ""
     self._values = {}
+
+    -- assigned section, used for UI, defaults to the last created section unless one is specified
+    self._assigned_section = mod:get_last_section().key
 
     -- a callback triggered whenever the setting is changed within the UI
     self._option_set_callback = nil
@@ -69,13 +75,22 @@ function mct_option.new(mod, option_key, type)
     return self
 end
 
+function mct_option:get_assigned_section()
+    return self._assigned_section
+end
+
 function mct_option:get_read_only()
     return self._read_only
 end
 
 
 function mct_option:set_read_only(enabled)
-    enabled = enabled or true
+    if is_nil(enabled) then
+        enabled = true
+    end
+
+    --enabled = enabled or true
+
     if not is_boolean(enabled) then
         -- issue
         return false

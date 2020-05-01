@@ -1,3 +1,6 @@
+--- MCT UIC Mixins. INTERNAL USE ONLY.
+-- @script mct_uic_mixins
+
 local uic_mixins = {
     --[[uic_IsUicomponent = function(self, uic)
         return assert(is_uicomponent(uic), "uic provided is not a valid UIComponent!")

@@ -22,11 +22,17 @@ core:add_listener(
     "MctOptionSettingFinalized",
     function(context)
         out("TEST 1")
+        for k,v in pairs(context) do
+            out(tostring(k))
+            out(tostring(v))
+        end
+        local ok, err = pcall(function()
         out(tostring(context))
         out(tostring(context:mod()))
         out(tostring(context:mod():get_key()))
         out(context:mod():get_key())
         out(context:option():get_key())
+        end) if not ok then out(err) end
         return context:mod():get_key() == "mct_mod" and context:option():get_key() == "enable_logging"
     end,
     function(context)

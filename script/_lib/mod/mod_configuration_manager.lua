@@ -1,49 +1,5 @@
--- enables more varied usages of the "custom_context" object, so you can supply the function name as well as the object
--- ie., `custom_context:add_data("testing string", "blorp")` will enable you to use `conext:blorp()` to output "testing string". 
-function custom_context:add_data_with_key(value, key)
-    -- make index optional
-    if not is_string(key) then
-        script_error("ERROR: adding data to custom context, but the key provided is not a string!")
-        return false
-    end
-
-    self[key.."_data"] = val
-    self[key] = function() return self[key.."_data"] end
-end
-
-
-function core_object:trigger_custom_event(event, data_items)
-
-    -- build an event context
-    local context = custom_context:new();
-
-    if not is_string(event) then
-        script_error("ERROR: triggering custom event, but the event key provided is not a string!")
-        return false
-    end
-
-    if not is_table(data_items) then
-        -- issue
-        script_error("ERROR: triggering custom event, but the data_items arg provided is not a table!")
-        return false
-    end
-
-    for key, value in pairs(data_items) do
-        context:add_data_with_key(value, key)
-    end
-
-    local event_table = events[event]
-    if event_table then
-        for i = 1, #event_table do
-            event_table[i](context)
-        end
-    end
-end
-
-
-
-
-
+--- Mod Configuration Tool Manager
+-- @module ModConfigurationTool
 
 -- Define the manager that will be used for the majority of all these operations
 local mod_configuration_tool = {
@@ -66,20 +22,26 @@ function mod_configuration_tool:init(loading_game_context)
 
     -- load modules!
     local ok, err = pcall(function()
-        -- load vendors first
         self:log("********\nLOADING INTERNAL MODULES\n********")
-        self:load_module("json") 
-        self:load_module("inspect")
+
+        -- add the modules and modules/extern/ paths to the Lua field
+        local path = "script/mct/modules/?.lua;script/mct/modules/extern/?.lua;"
+        package.path = path .. package.path
+
+        -- load external vendors, not my work at all, all rights reserved, copyright in these files stands
+        self:load_module("json", "script/mct/modules/extern/") 
+        self:load_module("inspect", "script/mct/modules/extern/")
 
         -- load vandy-lib stuff
-        self:load_module("uic_mixins")
+        self:load_module("uic_mixins", "script/mct/modules/")
 
-        -- load self-made modules
-        self:load_module("option_obj")
-        self:load_module("mod_obj")
+        -- load MCT object modules
+        self:load_module("option_obj", "script/mct/modules/")
+        self:load_module("mod_obj", "script/mct/modules/")
 
-        self:load_module("settings")
-        self:load_module("ui")
+        -- load the settings and UI files last
+        self:load_module("settings", "script/mct/modules/")
+        self:load_module("ui", "script/mct/modules/")
 
         -- load mods in mct/settings/!
         self:load_mods() 
@@ -87,10 +49,11 @@ function mod_configuration_tool:init(loading_game_context)
         if __game_mode == __lib_type_campaign then
             -- if it's a new game, read the settings file and save that into the save file
             if cm:is_new_game() then
-                cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
+                self.settings:load()
             end
-                
-            self.settings:load_game_callback(loading_game_context)
+
+            cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)                
+            cm:add_loading_game_callback(function(context) self.settings:load_game_callback(loading_game_context) end)
         else
             -- read the settings file
             self.settings:load()
@@ -111,6 +74,8 @@ function mod_configuration_tool:log_init()
     file:close()
 end
 
+--- Basic logging function for outputting text into the MCT log file.
+-- @tparam string text The string used for output
 function mod_configuration_tool:log(text)
     if not is_string(text) and not is_number(text) then
         return false
@@ -125,6 +90,8 @@ function mod_configuration_tool:log(text)
     file:close()
 end
 
+--- Basic error logging function for outputting text into the MCT log file.
+-- @tparam string text The string used for output
 function mod_configuration_tool:error(text)
     if not is_string(text) and not is_number(text) then
         return false
@@ -139,6 +106,10 @@ function mod_configuration_tool:error(text)
     file:close()
 end
 
+--- For internal use, loads specific mod files located in `script/mct/settings/`. 
+-- Any .lua file found in here is given the MCT manager as the variable `mct` within the full scope of the file.
+-- @tparam string filename The filename being required and loaded.
+-- @tparam string filename_for_out The original filename with the full directory path still included; used for outputs.
 function mod_configuration_tool:load_mod(filename, filename_for_out)
     self:log("Loading MCT module with name [" .. filename_for_out .."]")
 
@@ -222,13 +193,11 @@ function mod_configuration_tool:load_mods()
     self:log("********\nFINISHED LOADING SETTINGS\n********")
 end
 
-function mod_configuration_tool:load_module(module_name)
-    if package.loaded[module_name] then
+--- Internal loader for scripts located in `script/mct/modules/`.
+function mod_configuration_tool:load_module(module_name, path)
+    --[[if package.loaded[module_name] then
         return 
-    end
-
-    local path = "script/mct/modules/"
-    package.path = path .. "?.lua;".. package.path
+    end]]
 
     local full_file_name = path .. module_name .. ".lua"
 

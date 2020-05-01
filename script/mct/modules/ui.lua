@@ -1,3 +1,6 @@
+--- MCT UI Object. INTERNAL USE ONLY.
+-- @module mct_ui
+
 local ui_obj = {
     -- UICs
 
@@ -417,7 +420,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     end
 
 
-    self:create_settings_rows(selected_mod)
+    self:create_sections_and_contents(selected_mod)
 
     --[[local options = selected_mod:get_options()
 
@@ -464,6 +467,129 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     end]]
 end
 
+function ui_obj:section_visibility_change(section_key, enable)
+    local attached_rows = self._sections_to_rows[section_key]
+    for i = 1, #attached_rows do
+        local row = attached_rows[i]
+        if is_uicomponent(row) then
+            row:SetVisible(enable)
+        end
+    end
+end
+
+function ui_obj:create_sections_and_contents(mod_obj)
+    local mod_settings_panel = self.mod_settings_panel
+    local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
+
+    local sections = mod_obj:get_sections()
+
+    self._sections_to_rows = {}
+
+    core:remove_listener("MCT_SectionHeaderPressed")
+
+    for i = 1, #sections do
+        local section_table = sections[i]
+        local section_key = section_table.key
+        self._sections_to_rows[section_key] = {}
+        -- first, create the section header
+        local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/expandable_row_header", mod_settings_box)
+        local open = true
+
+        core:add_listener(
+            "MCT_SectionHeaderPressed",
+            "ComponentLClickUp",
+            function(context)
+                return context.string == "mct_section_"..section_key
+            end,
+            function(context)
+                open = not open
+                self:section_visibility_change(section_key, open)
+            end,
+            true
+        )
+
+        -- TODO set text & width and shit
+        section_header:SetCanResizeWidth(true)
+        section_header:SetCanResizeHeight(false)
+        section_header:Resize(mod_settings_box:Width() * 0.99, section_header:Height())
+        section_header:SetCanResizeWidth(false)
+
+        section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
+        
+        local child_count = find_uicomponent(section_header, "child_count")
+        child_count:SetVisible(false)
+
+        local text = section_table.txt
+        if is_nil(text) then
+            text = "No Text Assigned"
+        else
+            local test = effect.get_localised_string(text)
+            if test ~= "" then
+                text = test
+            --else
+                --text = text
+            end
+        end
+
+        if not is_string(text) then
+            text = "No Text Assigned"
+        end
+
+        local dy_title = find_uicomponent(section_header, "dy_title")
+        dy_title:SetStateText(text)
+
+        -- lastly, create all the rows and options within
+        local num_remaining_options = 0
+        local options = mod_obj:get_options_by_section(section_key)
+        local valid = true
+
+        for _,_ in pairs(options) do
+            num_remaining_options = num_remaining_options + 1 
+        end
+
+        local x = 1
+        local y = 1
+
+        while valid do
+            if num_remaining_options < 1 then
+                -- mct:log("No more remaining options!")
+                -- no more options, abort!
+                break
+            end
+            local index = tostring(x) .. "," .. tostring(y)
+            local option_key = mod_obj:get_option_key_for_coords(x, y)
+            mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
+            local option_obj
+            if is_string(option_key) then
+                if option_key == "NONE" then
+                    -- no option objects remaining, kill the engine
+                    break
+                end
+                if option_key == "MCT_BLANK" then
+                    option_obj = option_key
+                else
+                    -- only iterate down this iterator when it's a real option
+                    num_remaining_options = num_remaining_options - 1
+                    option_obj = mod_obj:get_option_by_key(option_key)
+                end
+    
+                -- add a new column (and potentially, row, if x==1) for this position
+                self:new_option_row_at_pos(option_obj, x, y, section_key)
+            else
+                -- issue? break? dunno?
+            end
+    
+            -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
+            if x >= 3 then
+                x = 1 
+                y = y + 1
+            else
+                x = x + 1
+            end
+        end
+    end
+end
+
 function ui_obj:create_settings_rows(mod_obj)
     mct:log("Is This thing On")
 
@@ -501,6 +627,10 @@ function ui_obj:create_settings_rows(mod_obj)
         mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
         local option_obj
         if is_string(option_key) then
+            if option_key == "NONE" then
+                -- no option objects remaining, kill the engine
+                break
+            end
             if option_key == "MCT_BLANK" then
                 option_obj = option_key
             else
@@ -525,7 +655,7 @@ function ui_obj:create_settings_rows(mod_obj)
     end
 end
 
-function ui_obj:new_option_row_at_pos(option_obj, x, y)
+function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     local mod_settings_panel = self.mod_settings_panel
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
     local w,h = mod_settings_panel:Dimensions()
@@ -533,7 +663,11 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y)
     h = h * 0.20
 
     -- first up, grab the dummy row - it will either create a new one, or get one that's already created
-    local dummy_row = core:get_or_create_component("settings_row_"..tostring(y), "ui/mct/script_dummy", mod_settings_box)
+    local dummy_row = core:get_or_create_component("settings_row_"..section_key.."_"..tostring(y), "ui/mct/script_dummy", mod_settings_box)
+
+    local table = self._sections_to_rows[section_key]
+
+    table[#table+1] = dummy_row
     
     -- check to see if it was newly created, and then apply these settings
     if x == 1 then

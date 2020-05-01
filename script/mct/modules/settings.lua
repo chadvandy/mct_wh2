@@ -1,3 +1,6 @@
+--- Settings Object. INTERNAL USE ONLY.
+-- @module mct_settings
+
 local settings = {
     settings_file = "mct_settings.json"
 }
