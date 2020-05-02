@@ -119,4 +119,4 @@ function settings:save_game_callback(context)
     end
 end
 
-mct.settings = settings
+return settings

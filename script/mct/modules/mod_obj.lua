@@ -16,8 +16,9 @@ local mct_mod = {
     }
 }
 
-mct._MCT_MOD = mct_mod
-
+--- For internal use, called by the MCT Manager.
+-- @tparam string key The identifying key for this mod object.
+-- @see ModConfigurationTool.register_mod
 function mct_mod.new(key)
     local self = {}
     setmetatable(self, {
@@ -54,6 +55,11 @@ function mct_mod.new(key)
     return self
 end
 
+--- Add a new section to the mod's settings view, to separate them into several categories.
+-- When this function is called, it assumes all following options being defined are being assigned to this section, unless further specified with
+-- mct_option.
+-- @tparam string section_key The unique identifier for this section.
+-- @tparam string localised_name The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "loc_key_example_my_section_name". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned" 
 function mct_mod:add_new_section(section_key, localised_name)
     if not is_string(section_key) then
         -- errmsg
@@ -69,6 +75,9 @@ function mct_mod:add_new_section(section_key, localised_name)
     self._sections[#self._sections+1] = table
 end
 
+--- Returns a k/v table of {option_key=option_obj} for options that are linked to this section.
+-- Shouldn't need to be used externally.
+-- @tparam string section_key The unique identifier for this section.
 function mct_mod:get_options_by_section(section_key)
     local options = self:get_options()
     local retval = {}
@@ -84,6 +93,18 @@ end
 
 function mct_mod:get_sections()
     return self._sections
+end
+
+function mct_mod:get_section_by_key(section_key)
+    local sections = self:get_sections()
+    for i = 1, #sections do
+        local section = sections[i]
+        if section.key == section_key then
+            return section
+        end
+    end
+
+    return nil
 end
 
 function mct_mod:get_last_section()
@@ -499,3 +520,4 @@ function mct_mod:clear_uics_for_all_options()
     end
 end
 
+return mct_mod

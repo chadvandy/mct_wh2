@@ -330,6 +330,5 @@ local inspect ={
   
   setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
   
-  --return inspect
+  return inspect
   
-mct.inspect = inspect

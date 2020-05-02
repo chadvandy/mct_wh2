@@ -29,19 +29,19 @@ function mod_configuration_tool:init(loading_game_context)
         package.path = path .. package.path
 
         -- load external vendors, not my work at all, all rights reserved, copyright in these files stands
-        self:load_module("json", "script/mct/modules/extern/") 
-        self:load_module("inspect", "script/mct/modules/extern/")
+        mct.json = self:load_module("json", "script/mct/modules/extern/") 
+        mct.inspect = self:load_module("inspect", "script/mct/modules/extern/")
 
         -- load vandy-lib stuff
         self:load_module("uic_mixins", "script/mct/modules/")
 
         -- load MCT object modules
-        self:load_module("option_obj", "script/mct/modules/")
-        self:load_module("mod_obj", "script/mct/modules/")
+        self._MCT_OPTION = self:load_module("option_obj", "script/mct/modules/")
+        self._MCT_MOD = self:load_module("mod_obj", "script/mct/modules/")
 
         -- load the settings and UI files last
-        self:load_module("settings", "script/mct/modules/")
-        self:load_module("ui", "script/mct/modules/")
+        self.settings = self:load_module("settings", "script/mct/modules/")
+        self.ui = self:load_module("ui", "script/mct/modules/")
 
         -- load mods in mct/settings/!
         self:load_mods() 
@@ -194,6 +194,8 @@ function mod_configuration_tool:load_mods()
 end
 
 --- Internal loader for scripts located in `script/mct/modules/`.
+-- @tparam string module_name The .lua file name. Exclude the ".lua" part of it!
+-- @tparam string path The path to find this .lua file. Make sure package.path has been editing before this function is called!
 function mod_configuration_tool:load_module(module_name, path)
     --[[if package.loaded[module_name] then
         return 
@@ -229,16 +231,16 @@ function mod_configuration_tool:load_module(module_name, path)
 
         --self[module_name] = lua_module
 
-        return
+        return lua_module
     end
 
     local ok, err = pcall(function() require(module_name) end)
 
-    if not ok then
+    --if not ok then
         self:error("Tried to load module with name [" .. module_name .. ".lua], failed on runtime. Error below:")
         self:error(err)
         return false
-    end
+    --end
 end
 
 function mod_configuration_tool:set_selected_mod(mod_name)
@@ -285,6 +287,10 @@ function mod_configuration_tool:get_mods_from_file(filepath)
     return retval
 end
 
+--- Primary function to begin adding settings to a "mod"
+-- Calls the internal function "mct_mod.new()"
+-- @tparam string mod_name The identifier for this mod.
+-- @see mct_mod.new
 function mod_configuration_tool:register_mod(mod_name)
     -- get info about where this function was called from, to save that Lua file as a part of the mod obj
     local info = debug.getinfo(2, "S")

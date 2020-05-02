@@ -1135,3 +1135,5 @@ core:add_listener(
     end,
     true
 )
+
+return ui_obj

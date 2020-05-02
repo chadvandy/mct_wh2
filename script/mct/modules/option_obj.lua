@@ -18,8 +18,6 @@ local mct_checkbox_template = "ui/templates/checkbox_toggle"
 local mct_dropdown_template = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"}
 local mct_slider_template = "ui/templates/panel_slider_horizontal"
 
-mct._MCT_OPTION = mct_option
-
 function mct_option.new(mod, option_key, type)
     local self = {}
     setmetatable(self, {
@@ -73,6 +71,16 @@ function mct_option.new(mod, option_key, type)
     --self._wrapped = wrapped
 
     return self
+end
+
+function mct_option:set_assigned_section(section_key)
+    local mod = self:get_mod()
+    if is_nil(mod:get_section_by_key(section)) then
+        mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
+        return false
+    end
+
+    self._assigned_section = section
 end
 
 function mct_option:get_assigned_section()
@@ -470,3 +478,5 @@ function mct_option:get_tooltip_text()
 
     return text
 end
+
+return mct_option

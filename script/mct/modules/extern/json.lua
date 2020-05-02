@@ -384,6 +384,4 @@ function json.decode(str)
 end
 
 
-mct.json = json
-
---return json
+return json
