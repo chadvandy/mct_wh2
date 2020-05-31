@@ -1,7 +1,9 @@
 --- Mod Configuration Tool Manager
--- @module ModConfigurationTool
+-- @module mct
+-- @alias mod_configuration_tool
 
 -- Define the manager that will be used for the majority of all these operations
+---@class mct
 local mod_configuration_tool = {
     __tostring = "MOD_CONFIGURATION_TOOL",
 
@@ -29,8 +31,8 @@ function mod_configuration_tool:init(loading_game_context)
         package.path = path .. package.path
 
         -- load external vendors, not my work at all, all rights reserved, copyright in these files stands
-        mct.json = self:load_module("json", "script/mct/modules/extern/") 
-        mct.inspect = self:load_module("inspect", "script/mct/modules/extern/")
+        --self.json = self:load_module("json", "script/mct/modules/extern/") 
+        --self.inspect = self:load_module("inspect", "script/mct/modules/extern/")
 
         -- load vandy-lib stuff
         self:load_module("uic_mixins", "script/mct/modules/")
@@ -103,6 +105,7 @@ function mod_configuration_tool:error(text)
 
     local file = io.open(self._logpath, "a+")
     file:write("ERROR: " .. text .. "\n")
+    file:write(debug.traceback("", 2) .. "\n")
     file:close()
 end
 
@@ -217,7 +220,7 @@ function mod_configuration_tool:load_module(module_name, path)
 
         -- pass valuable stuff to the modules
         attach_env.mct = self
-        attach_env.core = core
+        --attach_env.core = core
 
         setfenv(file, attach_env)
         local lua_module = file(module_name)
@@ -305,6 +308,14 @@ function mod_configuration_tool:register_mod(mod_name)
     self._registered_mods[mod_name] = new_mod
 
     return new_mod
+end
+
+function mod_configuration_tool:is_mct_mod(obj)
+    return tostring(obj) == "MCT_MOD"
+end
+
+function mod_configuration_tool:is_mct_option(obj)
+    return tostring(obj) == "MCT_OPTION"
 end
 
 function get_mct()
