@@ -1,12 +1,14 @@
 --- MCT Mod Object
 -- @module mct_mod
 
+local mct = mct
+
 local mct_mod = {
     _name = "",
     _title = "No Title Assigned",
     _author = "No Author Assigned",
     _description = "No Description Assigned",
-    _workshop_link = "",
+    --_workshop_link = "",
     --_options = {},
 
     _valid_option_types = {
@@ -18,7 +20,7 @@ local mct_mod = {
 
 --- For internal use, called by the MCT Manager.
 -- @tparam string key The identifying key for this mod object.
--- @see ModConfigurationTool.register_mod
+-- @see mct.register_mod
 function mct_mod.new(key)
     local self = {}
     setmetatable(self, {
@@ -62,7 +64,7 @@ end
 -- @tparam string localised_name The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "loc_key_example_my_section_name". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned" 
 function mct_mod:add_new_section(section_key, localised_name)
     if not is_string(section_key) then
-        -- errmsg
+        mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
         return false
     end
 
@@ -91,9 +93,12 @@ function mct_mod:get_options_by_section(section_key)
     --return self._options_by_section[section_key]
 end
 
+--- Returns a table of all "sections" within the mct_mod.
+-- These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
 function mct_mod:get_sections()
     return self._sections
 end
+
 
 function mct_mod:get_section_by_key(section_key)
     local sections = self:get_sections()
@@ -112,37 +117,158 @@ function mct_mod:get_last_section()
     return self._sections[#self._sections] or ""
 end
 
+--- Getter for the mct_mod's key
+-- @treturn string key The key for this mct_mod
 function mct_mod:get_key()
     return self._key
 end
 
--- triggered once the file which housed this mod_obj is done loading
+--- The finalize function is used for all actions needed to be performmed when the mct_mod is done being created, like setting positions for all options.
+-- Triggered once the file which housed this mod_obj is done loading
 function mct_mod:finalize()
+    mct:log("porsting 1")
     self:set_positions_for_options()
+    mct:log("porsting end")
 end
 
+--- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
+-- Order the options by key within each section, giving sliders a full row to their own self
 function mct_mod:set_positions_for_options()
-    local settings = self:get_sections()
+    mct:log("porsting 2")
+    local sections = self:get_sections()
+    mct:log("porsting 3")
     
-    for i = 1, #settings do
-        local settings_key = settings[i].key
-        local attached_options = self:get_options_by_section(settings_key)
+    for i = 1, #sections do
+        local section_key = sections[i].key
+        local attached_options = self:get_options_by_section(section_key)
+
+        mct:log("porsting 4")
 
         local total = 0
-        local option_keys = {}
+        --local option_keys = {}
+
+        local ordered_option_keys = {}
 
         for key,_ in pairs(attached_options) do
+            table.insert(ordered_option_keys, key)
             total = total + 1
-            option_keys[#option_keys+1] = key
+            --option_keys[#option_keys+1] = key
         end
 
-        local num_remaining = total
+        table.sort(ordered_option_keys)
+
+        mct:log("porsting 5")
+
+        --local num_remaining = total
 
         local x = 1
         local y = 1
 
-        for i = 1, #option_keys do
-            local option_key = option_keys[i]
+        -- only put sliders on x == 2
+
+        -- TODO if a spot is invalid for a key, loop through the rest to see if any others can fit instead
+
+        local valid = true
+        local j = 1
+        local any_added_on_current_row = false
+        local slider_added_on_current_row = false
+
+        mct:log("porsting 6")
+
+        local function valid_for_type(type, x,y)
+            -- hard check for sliders, must be in center and can't have any other options on the same row
+            if type == "slider" then
+                if x == 2 and not any_added_on_current_row then return true end
+                return false
+            end
+
+            -- only sliders!
+            if slider_added_on_current_row then
+                return false
+            end
+            
+            -- everything else is fine (for now!!!!!!)
+            return true
+        end
+
+        local function iterate(added)
+            if x == 3 then
+                x = 1
+                y = y + 1
+
+                -- new row, set to false
+                any_added_on_current_row = false
+                slider_added_on_current_row = false
+            else
+                x = x + 1
+
+                -- same row
+                if added then
+                    any_added_on_current_row = true
+                end
+            end
+            if added then j = j + 1 end
+        end
+
+        mct:log("porsting 7")
+
+        while valid do
+            if j >= total then
+                break
+            end
+
+            mct:log("porsting 8")
+
+            local option_key = ordered_option_keys[j]
+            local option_obj = self:get_option_by_key(option_key)
+
+            mct:log(tostring(option_key))
+            mct:log(tostring(x)..", "..tostring(y))
+            
+            -- check if it's a valid position for that option's type (sliders only on 2)
+            if valid_for_type(option_obj:get_type(), x, y) then
+                if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
+                mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
+                option_obj:override_position(x,y)
+
+                iterate(true)
+
+                --j = j + 1
+            else
+                -- if the current one is invalid, we should check the next few options to see if any are valid.
+                local done = false
+                for k = 1, 2 do
+                    local next_option_key = ordered_option_keys[j+k]
+                    local next_option_obj = self:get_option_by_key(next_option_key)
+                    if mct:is_mct_option(next_option_obj) then
+                        if valid_for_type(next_option_obj:get_type(), x, y) then
+                            if next_option_obj:get_type() == "slider" then slider_added_on_current_row = true end
+                            mct:log("setting pos for ["..next_option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
+                            next_option_obj:override_position(x,y)
+
+                            done = true
+
+                            -- swap the positions of the last two keys
+                            ordered_option_keys[j] = next_option_key
+                            ordered_option_keys[j+k] = option_key
+                            --j = j + 1
+
+                            break
+                        end
+                    end
+                end
+
+                iterate(done)
+
+
+                --[[-- do nuffin, just skip this fucker
+                iterate(false)]]
+            end
+        end
+
+
+        --[[effector j = 1, #option_keys do
+            local option_key = option_keys[j]
             local option_obj = self:get_option_by_key(option_key)
 
             option_obj:override_position(x,y)
@@ -153,7 +279,7 @@ function mct_mod:set_positions_for_options()
             else
                 x = x + 1
             end
-        end
+        end]]
 
         --[[local valid = true
         while valid do
@@ -167,130 +293,16 @@ function mct_mod:set_positions_for_options()
     end
 end
 
-function mct_mod:finalize_UNUSED_FUCK________()  
-    mct:log("Beginning finalize for mod ["..self:get_key().."].")
-
-    
-    
-    local dropdown_option_keys = self:get_option_keys_by_type("dropdown")
-    local checkbox_option_keys = self:get_option_keys_by_type("checkbox")
-    local slider_option_keys = self:get_option_keys_by_type("slider")
-
-    -- loop indices for dropdown/checkbox/slider
-    -- if all 3 grow over max size, kill the loop
-    local di = 1
-    local ci = 1
-    local si = 1
-
-    local di_max = #dropdown_option_keys
-    local ci_max = #checkbox_option_keys
-    local si_max = #slider_option_keys
-
-    --mct:log("di,ci,si maxes: ("..tostring(di_max)..", "..tostring(ci_max)..", "..tostring(si_max).. ").")
-
-    local x = 1
-    local y = 1
-
-    local valid = true
-    while valid do
-        -- no more options!
-        if di > di_max and ci > ci_max and si > si_max then
-            break
-        end
-
-        local option_key = ""
-        local option_obj = nil
-
-        -- untouched by the iterators within
-        local curr_x = x
-        local curr_y = y
-
-        -- get the string for the index, ie. "1,2"
-        local index = tostring(curr_x) .. "," .. tostring(curr_y)
-
-        --mct:log("Current index being checked ["..index.."]")
-
-        -- if we're in the first two rows
-        if x < 3 then
-            -- prioritize dropdowns
-            if di <= di_max then
-                option_key = dropdown_option_keys[di]
-                di = di + 1
-            -- check checkboxes next -- JK skip checkboxes for now
-            --[[elseif ci <= ci_max then
-                option_key = checkbox_option_keys[ci]
-                ci = ci + 1]]
-            -- check sliders next, but only put them on the second column
-            elseif si <= si_max and x == 2 then
-                option_key = slider_option_keys[si]
-                si = si + 1
-            end
-
-            -- move to the next column next loop
-            x = x + 1
-        else
-            -- prioritize checkboxes first
-            if ci <= ci_max then
-                option_key = checkbox_option_keys[ci]
-                ci = ci + 1
-            -- check dropdowns next
-            --[[elseif di <= di_max then
-                option_key = dropdown_option_keys[di]
-                di = di + 1]]
-            -- don't check for sliders
-            end
-
-            -- move to the first column of the next row, next loop
-            x = 1
-            y = y + 1
-        end
-
-        -- check if no option was determined for this coord
-        if option_key == "" then
-            -- save so that the loop in ui.lua can see that this is intentionally blank
-            self._coords[index] = "MCT_BLANK"
-        else
-            -- get the option obj with this key
-            option_obj = self:get_option_by_key(option_key)
-
-            -- save the coords in the option & mod objects
-            option_obj:override_position(curr_x, curr_y)
-        end
-    end
-
-
-
-        -- if not - pick the next on the list
-        --if not option_key then
-            --local option = all_options[ordered_option_keys[i]]
-            --option:override_position(x,y)
-            --table.remove(ordered_option_keys, i)
-            --i = i + 1
-        
-        -- if there is, grab that one and remove it from the table
-        --[[else
-            local option = all_options[option_key]
-
-        end
-    end]]
-    --[[for key, option in pairs(all_options) do
-        local index = tostring(x) .. "," .. tostring(y)
-        local option_key = self._coords[index]
-        if not option_key then
-
-        end
-    end]]
-end
-
+--- Used when loading the mct_settings.lua file.
 function mct_mod:load_finalized_settings()
     local options = self:get_options()
 
     local ret = {}
     for key, option in pairs(options) do
-        mct:log("In option ["..key.."].")
+        --mct:log("In option ["..key.."].")
         ret[key] = {}
         --option:set_finalized_setting(option:get_selected_setting())
-        mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
+        --mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
         ret[key] = option:get_finalized_setting()
     end
 
@@ -299,15 +311,16 @@ function mct_mod:load_finalized_settings()
     --return ret
 end
 
+--- Used when finalizing the settings in MCT.
 function mct_mod:finalize_settings()
     local options = self:get_options()
 
     local ret = {}
     for key, option in pairs(options) do
-        mct:log("In option ["..key.."].")
+        --mct:log("In option ["..key.."].")
         ret[key] = {}
         option:set_finalized_setting(option:get_selected_setting())
-        mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
+        --mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
         ret[key] = option:get_finalized_setting()
     end
 
@@ -316,6 +329,7 @@ function mct_mod:finalize_settings()
     return ret
 end
 
+--- Returns the _finalized_settings field of this mct_mod.
 function mct_mod:get_settings()
     --[[local options = self:get_options()
     local retval = {}
@@ -337,13 +351,8 @@ end
 
 -- used when UI is populated
 function mct_mod:get_option_key_for_coords(x,y)
-    if not is_number(x) then
-        -- errmsg
-        return false
-    end
-
-    if not is_number(y) then
-        -- errmsg
+    if not is_number(x) or not is_number(y) then
+        mct:error("get_option_key_for_coords() called for mct_mod with key ["..self:get_key().."], but the x/y coordinates supplied are not numbers! Returning false.")
         return false
     end
 
@@ -352,36 +361,38 @@ function mct_mod:get_option_key_for_coords(x,y)
     return object_key or "NONE"
 end
 
---[[function mct_mod:set_title(title_text, is_localised)
+function mct_mod:set_title(title_text, is_localised)
     if is_string(title_text) then
 
-        self._title = {title_text, is_localised}
+        self._title = {
+            text = title_text, 
+            is_localised = is_localised
+        }
     end
-end]]
+end
 
---[[function mct_mod:set_author(author_text)
+function mct_mod:set_author(author_text, is_localised)
     if is_string(author_text) then
 
         self._author = author_text
     end
-end]]
+end
 
---function mct_mod:set_description(desc_text, is_localised)
---    if is_string(desc_text) then
-        --[[local t = desc_text
-        if is_localised then
-            t = effect.get_localised_string(t)
-        end]]
+function mct_mod:set_description(desc_text, is_localised)
+    if is_string(desc_text) then
 
---        self._description = {desc_text, is_localised}
---    end
---end
+        self._description = {
+            text = desc_text, 
+            is_localised = is_localised
+        }
+    end
+end
 
-function mct_mod:set_workshop_link(link_text)
+--[[function mct_mod:set_workshop_link(link_text)
     if is_string(link_text) then
         self._workshop_link = link_text
     end
-end
+end]]
 
 function mct_mod:get_title()
     -- check if a title exists in the localised texts!
@@ -390,19 +401,15 @@ function mct_mod:get_title()
         return title
     end
 
-    return self._title
-
-    -- _title is a table with {"text/key", is_localised_text}
-    --[[local title_table = self._title
-    
-    local title_text = title_table[1]
-    local is_localised = title_table[2]
-
-    if is_localised then
-        title_text = effect.get_localised_string(title_text)
+    title = self._title
+    if title.is_localised then
+        local test = effect.get_localised_string(title.text)
+        if test ~= "" then
+            return test
+        end
     end
 
-    return title_text]]
+    return self._title.text or "No title assigned"
 end
 
 function mct_mod:get_author()
@@ -412,7 +419,6 @@ function mct_mod:get_author()
     end
 
     return self._author
-    --return self._author --or "No author"
 end
 
 function mct_mod:get_description()
@@ -421,29 +427,27 @@ function mct_mod:get_description()
         return description
     end
 
-    return self._description
-    --[[local text_table = self._description
-
-    local text = text_table[1]
-    local is_localised = text_table[2]
-
-    if is_localised then
-        text = effect.get_localised_string(text)
+    description = self._description
+    if description.is_localised then
+        local test = effect.get_localised_string(description.text)
+        if test ~= "" then
+            return test
+        end
     end
 
-    return text]]
+    return self._description.text or "No description assigned"
 end
 
-function mct_mod:get_workshop_link()
-    return self._workshop_link --or ""
-end
+--[[function mct_mod:get_workshop_link()
+    return self._workshop_link
+end]]
 
 function mct_mod:get_localised_texts()
     return 
         self:get_title(),
         self:get_author(),
-        self:get_description(),
-        self:get_workshop_link()
+        self:get_description()
+        --self:get_workshop_link()
 end
 
 function mct_mod:get_options()
@@ -475,32 +479,24 @@ function mct_mod:get_option_by_key(option_key)
 end
 
 function mct_mod:add_new_option(option_key, option_type)
+    -- check first to see if an option with this key already exists; if it does, return that one!
+
     mct:log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
     if not is_string(option_key) then
-        -- errmsg
-        return
+        mct:error("Trying `add_new_option()` for mod ["..self:get_key().."] but option key provided ["..tostring(option_key).."] is not a string! Returning false.")
+        return false
     end
 
     if not is_string(option_type) then
-        -- errmsg
-        return
+        mct:error("Trying `add_new_option()` for mod ["..self:get_key().."] but option type provided ["..tostring(option_type).."] is not a string! Returning false.")
+        return false
     end
-
-    --[[if not is_string(option_text) then
-        -- errmsg
-        return
-    end
-
-    if not is_string(option_tt) then
-        -- that's actually fine
-        option_tt = ""
-    end]]
 
     local valid_types = self._valid_option_types
 
     if not valid_types[option_type] then
-        -- errmsg
-        return
+        mct:error("Trying `add_new_option()` for mod ["..self:get_key().."] but option type provided ["..tostring(option_type).."] is not a valid type! Returning false.")
+        return false
     end
 
     local mod = self
@@ -510,12 +506,14 @@ function mct_mod:add_new_option(option_key, option_type)
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
 
+    mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
+
     return new_option
 end
 
 function mct_mod:clear_uics_for_all_options()
     local opts = self:get_options()
-    for key, option in pairs(opts) do
+    for _, option in pairs(opts) do
         option:clear_uics()
     end
 end
