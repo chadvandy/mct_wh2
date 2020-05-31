@@ -87,6 +87,8 @@ end]]
 
 function ui_obj:set_selected_mod(row_uic)
     if is_uicomponent(row_uic) then
+        mct:log(row_uic:Id())
+        mct:log(row_uic)
         mct:set_selected_mod(row_uic:Id())
         self.selected_mod_row = row_uic
     end
@@ -96,9 +98,6 @@ function ui_obj:get_selected_mod()
     return self.selected_mod_row
 end
 
--- [[TODO redo the find_uicomponent() and get_or_create_component() functions so this all doesn't suck]]
--- TODO or just give up wrap_uic or use it way less, probably this
--- [[TODO maybe both]]
 function ui_obj:open_frame()
     -- check if one exists already
     local test = self.panel
@@ -140,15 +139,29 @@ function ui_obj:open_frame()
         -- create the MCT row first
         self:new_mod_row(mct:get_mod_with_name("mct_mod"))
 
-        -- create UI rows on the left, for each registered mod
-        for mod_name, mod in pairs(mct._registered_mods) do
-            -- skip MCT dupe
-            if mod_name ~= "mct_mod" then
-                mct:log("flesting 1")
-                self:new_mod_row(mod)
-                mct:log("flesting 2")
+        local ordered_mod_keys = {}
+        for n in pairs(mct._registered_mods) do
+            if n ~= "mct_mod" then
+                table.insert(ordered_mod_keys, n)
             end
         end
+
+        table.sort(ordered_mod_keys)
+
+        for i,n in ipairs(ordered_mod_keys) do
+            local mod_obj = mct:get_mod_with_name(n)
+            self:new_mod_row(mod_obj)
+        end
+
+        -- create UI rows on the left, for each registered mod
+        --[[left_panel_titleor mod_name, mod in pairs(mct._registered_mods) do
+            -- skip MCT dupe
+            if mod_name ~= "mct_mod" then
+                --mct:log("flesting 1")
+                self:new_mod_row(mod)
+                --mct:log("flesting 2")
+            end
+        end]]
     else
         test:SetVisible(true)
     end
@@ -364,7 +377,12 @@ end
 function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     mct:log("populating panel!")
     local selected_mod = mct:get_selected_mod()
-    local former_mod = mct:get_mod_with_name(former_mod_key)
+
+    local former_mod = nil
+    if is_string(former_mod_key) then
+        former_mod = mct:get_mod_with_name(former_mod_key)
+    end
+
     mct:log("Mod selected ["..selected_mod:get_key().."]")
 
     local mod_details_panel = self.mod_details_panel
@@ -376,11 +394,11 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
 
-    mct:log("testing 1")
+    --mct:log("testing 1")
 
     local title, author, desc = selected_mod:get_localised_texts()
 
-    mct:log("testing 2")
+    --mct:log("testing 2")
 
     -- setting up text & stuff
     do
@@ -403,7 +421,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
         set_text(mod_description, desc)
     end
 
-    mct:log("testing 3")
+    --mct:log("testing 3")
 
     -- remove the previous option rows (does nothing if none are present)
     do
@@ -472,7 +490,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
         mct:log("BOX: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
     end]]
 
-    mct:log("testing 5")
+    --mct:log("testing 5")
 end
 
 function ui_obj:section_visibility_change(section_key, enable)
@@ -486,7 +504,7 @@ function ui_obj:section_visibility_change(section_key, enable)
 end
 
 function ui_obj:create_sections_and_contents(mod_obj)
-    mct:log("teest 1")
+    --mct:log("teest 1")
     local mod_settings_panel = self.mod_settings_panel
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
 
@@ -496,7 +514,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
     core:remove_listener("MCT_SectionHeaderPressed")
 
-    mct:log("teest 2")
+    --mct:log("teest 2")
 
     for i = 1, #sections do
         local section_table = sections[i]
@@ -531,7 +549,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
         local child_count = find_uicomponent(section_header, "child_count")
         child_count:SetVisible(false)
 
-        mct:log("teest 3")
+        --mct:log("teest 3")
 
         local text = section_table.txt
         if not is_nil(text) then
@@ -552,7 +570,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
         local dy_title = find_uicomponent(section_header, "dy_title")
         dy_title:SetStateText(text)
 
-        mct:log("teest 4")
+        --mct:log("teest 4")
 
         -- lastly, create all the rows and options within
         local num_remaining_options = 0
@@ -570,7 +588,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
             options_table[index] = option_key
         end
 
-        mct:log("teest 5")
+        --mct:log("teest 5")
 
         local x = 1
         local y = 1
@@ -587,7 +605,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
         -- prevent infinite loops, will only do nothing 3 times
         local loop_num = 0
 
-        mct:log("teest 6")
+        --mct:log("teest 6")
 
         --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
 
@@ -603,14 +621,14 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 break
             end
 
-            mct:log("teest 7")
+            --mct:log("teest 7")
 
             local index = tostring(x) .. "," .. tostring(y)
             local option_key = options_table[index]
 
-            mct:log("teest 8")
+            --mct:log("teest 8")
 
-            mct:log(index)
+            --mct:log(index)
 
             -- check to see if any option was even made at this index!
             --[[if option_key == nil then
@@ -645,7 +663,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
                     --mct:log("!!!!!")
                 end
 
-                mct:log("teest 11")
+                --mct:log("teest 11")
     
                 -- add a new column (and potentially, row, if x==1) for this position
                 --mct:log("!@!@!@")
@@ -653,7 +671,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 self:new_option_row_at_pos(option_obj, x, y, section_key) 
                 end) if not ok then mct:log(err) end
 
-                mct:log("teest 12")
+                --mct:log("teest 12")
                 --mct:log("121212")
             else
                 -- issue? break? dunno?
@@ -798,18 +816,14 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- give priority over column
             dummy_option:PropagatePriority(column:Priority() +1)
 
-            -- assign tt text to the dummy section -- TODO put this on the text not the option??
-            --self:uic_SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
-            --dummy_option:SetTooltipText(option_obj:get_tooltip_text(), true)
-
             -- make some text to display deets about the option
             local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda", dummy_option)
             option_text:SetVisible(true)
             option_text:SetDockingPoint(4)
             option_text:SetDockOffset(5, 0)
+
             self:uic_SetStateText(option_text, option_obj:get_text())
             self:uic_SetTooltipText(option_text, option_obj:get_tooltip_text(), true)
-            --option_text:SetStateText(option_obj:get_text())
 
             local new_option
 
@@ -1079,9 +1093,12 @@ function ui_obj:new_mod_row(mod_obj)
         true
     )
 
-    -- auto-click on making the MCT Mod one
+    -- set the mct_mod as selected and all
     if mod_obj:get_key() == "mct_mod" then
-        row:SimulateLClick()
+        self:uic_SetState(row, "selected")
+        
+        self:set_selected_mod(row)
+        self:populate_panel_on_mod_selected()
     end
 end
 

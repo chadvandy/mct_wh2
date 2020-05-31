@@ -126,23 +126,23 @@ end
 --- The finalize function is used for all actions needed to be performmed when the mct_mod is done being created, like setting positions for all options.
 -- Triggered once the file which housed this mod_obj is done loading
 function mct_mod:finalize()
-    mct:log("porsting 1")
+    --mct:log("porsting 1")
     self:set_positions_for_options()
-    mct:log("porsting end")
+    --mct:log("porsting end")
 end
 
 --- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
 -- Order the options by key within each section, giving sliders a full row to their own self
 function mct_mod:set_positions_for_options()
-    mct:log("porsting 2")
+    --mct:log("porsting 2")
     local sections = self:get_sections()
-    mct:log("porsting 3")
+    --mct:log("porsting 3")
     
     for i = 1, #sections do
         local section_key = sections[i].key
         local attached_options = self:get_options_by_section(section_key)
 
-        mct:log("porsting 4")
+        --mct:log("porsting 4")
 
         local total = 0
         --local option_keys = {}
@@ -157,7 +157,7 @@ function mct_mod:set_positions_for_options()
 
         table.sort(ordered_option_keys)
 
-        mct:log("porsting 5")
+        --mct:log("porsting 5")
 
         --local num_remaining = total
 
@@ -166,14 +166,12 @@ function mct_mod:set_positions_for_options()
 
         -- only put sliders on x == 2
 
-        -- TODO if a spot is invalid for a key, loop through the rest to see if any others can fit instead
-
         local valid = true
         local j = 1
         local any_added_on_current_row = false
         local slider_added_on_current_row = false
 
-        mct:log("porsting 6")
+        --mct:log("porsting 6")
 
         local function valid_for_type(type, x,y)
             -- hard check for sliders, must be in center and can't have any other options on the same row
@@ -210,20 +208,20 @@ function mct_mod:set_positions_for_options()
             if added then j = j + 1 end
         end
 
-        mct:log("porsting 7")
+        --mct:log("porsting 7")
 
         while valid do
             if j >= total then
                 break
             end
 
-            mct:log("porsting 8")
+            --mct:log("porsting 8")
 
             local option_key = ordered_option_keys[j]
             local option_obj = self:get_option_by_key(option_key)
 
-            mct:log(tostring(option_key))
-            mct:log(tostring(x)..", "..tostring(y))
+            --mct:log(tostring(option_key))
+            --mct:log(tostring(x)..", "..tostring(y))
             
             -- check if it's a valid position for that option's type (sliders only on 2)
             if valid_for_type(option_obj:get_type(), x, y) then
