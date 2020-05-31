@@ -1,3 +1,3 @@
-# ModConfigurationTool
- 
-Testing stuff within this.
+## About
+
+The Mod Configuration Tool is an in-game 
