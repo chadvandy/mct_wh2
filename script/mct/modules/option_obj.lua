@@ -1,12 +1,20 @@
 --- MCT Option Object
 -- @module mct_option
 
+local mct = mct
+
 local mct_option = {
     _mod = nil,
     _key = "",
     _type = nil,
     _text = "No text assigned.",
-    _tooltip_text = "No tooltip assigned."
+    _tooltip_text = "No tooltip assigned.",
+
+    __templates = {
+        checkbox = "ui/templates/checkbox_toggle",
+        dropdown = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"},
+        slider = "ui/templates/panel_slider_horizontal"
+    }
 
     --_wrapped = nil
     --_callback = nil,
@@ -14,9 +22,10 @@ local mct_option = {
     --_finalized_setting = nil
 }
 
-local mct_checkbox_template = "ui/templates/checkbox_toggle"
-local mct_dropdown_template = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"}
-local mct_slider_template = "ui/templates/panel_slider_horizontal"
+--local mct_checkbox_template = "ui/templates/checkbox_toggle"
+--local mct_dropdown_template = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"}
+--local mct_slider_template = "ui/templates/panel_slider_horizontal"
+
 
 function mct_option.new(mod, option_key, type)
     local self = {}
@@ -52,22 +61,13 @@ function mct_option.new(mod, option_key, type)
     self._uic_visible = true
 
     self._pos = {
-        x = 0, 
+        x = 0,
         y = 0
     }
-    
-    --local wrapped = nil
-    if type == "checkbox" then
-        self._template = mct_checkbox_template
-        --wrapped = mct_checkbox.new(mod, option_key, self)
-    elseif type == "dropdown" then
-        self._template = mct_dropdown_template
-        --wrapped = mct_dropdown.new(mod, option_key, self)
-    elseif type == "slider" then
-        self._template = mct_slider_template
-        --wrapped = mct_slider.new(mod, option_key, self)
-    end
 
+    -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
+    self._template = self.__templates[type]
+    
     --self._wrapped = wrapped
 
     return self
@@ -75,12 +75,12 @@ end
 
 function mct_option:set_assigned_section(section_key)
     local mod = self:get_mod()
-    if is_nil(mod:get_section_by_key(section)) then
+    if is_nil(mod:get_section_by_key(section_key)) then
         mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
     end
 
-    self._assigned_section = section
+    self._assigned_section = section_key
 end
 
 function mct_option:get_assigned_section()
@@ -90,7 +90,6 @@ end
 function mct_option:get_read_only()
     return self._read_only
 end
-
 
 function mct_option:set_read_only(enabled)
     if is_nil(enabled) then
@@ -128,8 +127,8 @@ function mct_option:set_uics(uic_obj)
     end
 
     -- check if it's just one UIC
-    if not is_uicomponent(uic) then
-        -- errmsg
+    if not is_uicomponent(uic_obj) then
+        mct:error("set_uics() called for mct_option with key ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the uic_obj supplied was neither a UIC or a table of UICs! Returning false.")
         return false
     end
 
@@ -210,13 +209,8 @@ function mct_option:process_callback()
 end
 
 function mct_option:override_position(x,y)
-    if not is_number(x) then
-        -- errmsg
-        return false
-    end
-
-    if not is_number(y) then
-        -- errmsg
+    if not is_number(x) or not is_number(y) then
+        mct:error("override_position() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the x/y coordinates supplied are not numbers! Returning false")
         return false
     end
 
@@ -238,23 +232,19 @@ function mct_option:is_val_valid_for_type(val)
     local type = self:get_type()
     if type == "slider" then
         if not is_number(val) then
-            -- errmsg
             return false
         end
         -- TODO check if the number is valid in the slider's number range
     elseif type == "checkbox" then
         if not is_boolean(val) then
-            -- errmsg
             return false
         end
     elseif type == "dropdown" then
         if not is_string(val) then
-            -- errmsg
             return false
         end
         -- TODO check if the dropdown value has been assigned as a value already
         --[[if not valid then
-            -- errmsg
             return false
         end]]
     end
@@ -264,6 +254,13 @@ end
 
 function mct_option:get_finalized_setting()
     return self._finalized_setting
+end
+
+function mct_option:set_finalized_setting_event_free(val)
+    if self:is_val_valid_for_type(val) then
+        self._finalized_setting = val
+        self._selected_setting = val
+    end
 end
 
 function mct_option:set_finalized_setting(val)
@@ -305,22 +302,22 @@ end
 
 function mct_option:slider_set_values(min, max, current)
     if not self:get_type() == "slider" then
-        -- errmsg
+        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
         return false
     end
 
     if not is_number(min) then
-        -- errmsg
+        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(min).."] is not a number! Returning false.")
         return false
     end
 
     if not is_number(max) then
-        -- errmsg
+        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the max value supplied ["..tostring(max).."] is not a number! Returning false.")
         return false
     end
 
     if not is_number(current) then
-        -- errmsg
+        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the current value supplied ["..tostring(current).."] is not a number! Returning false.")
         return false
     end
 
@@ -334,23 +331,20 @@ function mct_option:slider_set_values(min, max, current)
 end
 
 function mct_option:add_dropdown_values(dropdown_table)
-    mct:log("this is it?")
     if not self:get_type() == "dropdown" then
-        -- errmsg
+        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
         return false
     end
 
     if not is_table(dropdown_table) then
-        -- errmsg
+        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the dropdown_table supplied is not a table! Returning false.")
         return false
     end
 
     if is_nil(dropdown_table[1]) then
-        -- errmsg, empty table
+        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the dropdown_table supplied is an empty table! Returning false.")
         return false
     end
-
-    mct:log("this is it??")
 
     for i = 1, #dropdown_table do
         local dropdown_option = dropdown_table[i]
@@ -360,19 +354,17 @@ function mct_option:add_dropdown_values(dropdown_table)
         local is_default = dropdown_option.default or false
 
         self:add_dropdown_value(key, text, tt, is_default)
-
-        mct:log("this isn't it")
     end
 end
 
 function mct_option:add_dropdown_value(key, text, tt, is_default)
     if not self:get_type() == "dropdown" then
-        -- errmsg
+        mct:error("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
         return false
     end
 
     if not is_string(key) then
-        -- errmsg
+        mct:error("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the key supplied is not a string! Returning false.")
         return false
     end
 
@@ -384,11 +376,6 @@ function mct_option:add_dropdown_value(key, text, tt, is_default)
         text = text,
         tt = tt
     }
-
-    -- assign first as the default
-    --[[if #self._values == 0 then
-        self:set_selected_setting(key)
-    end]]
 
     self._values[#self._values+1] = val
 
@@ -415,7 +402,7 @@ end
 
 function mct_option:set_text(text, is_localised)
     if not is_string(text) then
-        -- errmsg
+        mct:error("set_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the text supplied is not a string! Returning false.")
         return false
     end
 
@@ -426,7 +413,7 @@ end
 
 function mct_option:set_tooltip_text(text, is_localised)
     if not is_string(text) then
-        -- errmsg
+        mct:error("set_tooltip_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the tooltip_text supplied is not a string! Returning false.")
         return false
     end
 
