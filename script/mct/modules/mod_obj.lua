@@ -137,25 +137,35 @@ function mct_mod:set_positions_for_options()
     --mct:log("porsting 2")
     local sections = self:get_sections()
     --mct:log("porsting 3")
+
+    mct:log("setting positions for options in mod ["..self:get_key().."]")
     
     for i = 1, #sections do
         local section_key = sections[i].key
         local attached_options = self:get_options_by_section(section_key)
 
+        mct:log("in section ["..section_key.."].")
+
         --mct:log("porsting 4")
 
-        local total = 0
+        --local total = 0
         --local option_keys = {}
 
         local ordered_option_keys = {}
 
         for key,_ in pairs(attached_options) do
+            mct:log("option with key ["..key.."] detected in section.")
             table.insert(ordered_option_keys, key)
-            total = total + 1
+            --total = total + 1
             --option_keys[#option_keys+1] = key
         end
 
         table.sort(ordered_option_keys)
+
+        local total = #ordered_option_keys
+
+        mct:log("total num = " .. tostring(total))
+        --mct:log("total num =" ..tostring(total))
 
         --mct:log("porsting 5")
 
@@ -211,83 +221,63 @@ function mct_mod:set_positions_for_options()
         --mct:log("porsting 7")
 
         while valid do
-            if j >= total then
+            --mct:log("on loop "..tostring(j))
+            if j > total then
                 break
             end
 
             --mct:log("porsting 8")
 
             local option_key = ordered_option_keys[j]
+            --mct:log("key ["..option_key.."]")
             local option_obj = self:get_option_by_key(option_key)
 
-            --mct:log(tostring(option_key))
-            --mct:log(tostring(x)..", "..tostring(y))
-            
-            -- check if it's a valid position for that option's type (sliders only on 2)
-            if valid_for_type(option_obj:get_type(), x, y) then
-                if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
-                mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
-                option_obj:override_position(x,y)
+            if mct:is_mct_option(option_obj) then
 
-                iterate(true)
+                --mct:log("checking pos for ["..option_key.."], j ["..tostring(j).."].")
 
-                --j = j + 1
-            else
-                -- if the current one is invalid, we should check the next few options to see if any are valid.
-                local done = false
-                for k = 1, 2 do
-                    local next_option_key = ordered_option_keys[j+k]
-                    local next_option_obj = self:get_option_by_key(next_option_key)
-                    if mct:is_mct_option(next_option_obj) then
-                        if valid_for_type(next_option_obj:get_type(), x, y) then
-                            if next_option_obj:get_type() == "slider" then slider_added_on_current_row = true end
-                            mct:log("setting pos for ["..next_option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
-                            next_option_obj:override_position(x,y)
+                --mct:log(tostring(option_key))
+                --mct:log(tostring(x)..", "..tostring(y))
+                
+                -- check if it's a valid position for that option's type (sliders only on 2)
+                if valid_for_type(option_obj:get_type(), x, y) then
+                    if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
+                    mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
+                    option_obj:override_position(x,y)
 
-                            done = true
+                    iterate(true)
 
-                            -- swap the positions of the last two keys
-                            ordered_option_keys[j] = next_option_key
-                            ordered_option_keys[j+k] = option_key
-                            --j = j + 1
+                    --j = j + 1
+                else
+                    -- if the current one is invalid, we should check the next few options to see if any are valid.
+                    local done = false
+                    --[[for k = 1, 2 do
+                        if not done then
+                            local next_option_key = ordered_option_keys[j+k]
+                            local next_option_obj = self:get_option_by_key(next_option_key)
+                            if mct:is_mct_option(next_option_obj) then
+                                if valid_for_type(next_option_obj:get_type(), x, y) then
+                                    if next_option_obj:get_type() == "slider" then slider_added_on_current_row = true end
+                                    mct:log("setting pos for ["..next_option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
+                                    next_option_obj:override_position(x,y)
 
-                            break
+                                    done = true
+
+                                    -- swap the positions of the last two keys
+                                    ordered_option_keys[j] = next_option_key
+                                    ordered_option_keys[j+k] = option_key
+                                    --j = j + 1
+
+                                    --break
+                                end
+                            end
                         end
-                    end
+                    end]]
+
+                    iterate(done)
                 end
-
-                iterate(done)
-
-
-                --[[-- do nuffin, just skip this fucker
-                iterate(false)]]
             end
         end
-
-
-        --[[effector j = 1, #option_keys do
-            local option_key = option_keys[j]
-            local option_obj = self:get_option_by_key(option_key)
-
-            option_obj:override_position(x,y)
-
-            if x == 3 then
-                x = 1 
-                y = y + 1
-            else
-                x = x + 1
-            end
-        end]]
-
-        --[[local valid = true
-        while valid do
-            if num_remaining <= 0 then
-                break
-            end
-
-            -- grab the next option
-
-        end]]
     end
 end
 
