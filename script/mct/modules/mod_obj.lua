@@ -99,7 +99,6 @@ function mct_mod:get_sections()
     return self._sections
 end
 
-
 function mct_mod:get_section_by_key(section_key)
     local sections = self:get_sections()
     for i = 1, #sections do
@@ -110,6 +109,18 @@ function mct_mod:get_section_by_key(section_key)
     end
 
     return nil
+end
+
+-- TODO turn sections into Lua objects!
+
+function mct_mod:set_section_visibility(section_key, visible)
+    local section = self:get_section_by_key(section_key)
+    if is_nil(section) then
+        -- errmsg, invalid section
+        return false
+    end
+
+    self.ui:section_visibility_change(section_key, visible)
 end
 
 function mct_mod:get_last_section()

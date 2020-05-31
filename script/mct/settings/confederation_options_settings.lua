@@ -55,7 +55,7 @@ local dropdown_options = {
         key = "player_only", 
         text = "confederation_options_player_only_text",
         tt = "confederation_options_player_only_tooltip"
-    }, 
+    },
     {
         key = "free_confed",
         text = "confederation_options_free_confed_text",

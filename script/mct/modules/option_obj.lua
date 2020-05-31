@@ -290,6 +290,13 @@ function mct_option:set_selected_setting(val)
     end
 end
 
+function mct_option:ui_select_value(val)
+    if self:is_val_valid_for_type(val) then
+        
+
+    end
+end
+
 function mct_option:get_selected_setting()
     mct:log("["..self._key.."], selected setting iiiiis: "..tostring(self._selected_setting))
     --[[if self._selected_setting == nil then

@@ -1048,11 +1048,11 @@ function ui_obj:new_mod_row(mod_obj)
         txt_txt = "No title assigned"
     end
 
-    mct:log("TESTING 1")
+    --mct:log("TESTING 1")
 
     self:uic_SetStateText(txt, txt_txt)
 
-    mct:log("TESTING 2")
+    --mct:log("TESTING 2")
 
     local date = find_uicomponent(row, "date")
     local author_txt = mod_obj:get_author()
@@ -1138,6 +1138,9 @@ core:add_listener(
     true
 )
 
+-- TODO refactor these to be option methods
+-- dropdown and checkbox
+
 -- Set Selected listeners
 core:add_listener(
     "mct_dropdown_box_option_selected",
@@ -1160,9 +1163,11 @@ core:add_listener(
         local mod_obj = mct:get_selected_mod()
         local option_obj = mod_obj:get_option_by_key(parent_id)
 
+        --option_obj:ui_select_value
+
         -- set the older option as unselected
         local current_val = option_obj:get_selected_setting()
-        mct:log(current_val)
+        --mct:log(current_val)
 
         local currently_selected_uic = find_uicomponent(popup_list, current_val)
 
@@ -1207,7 +1212,7 @@ core:add_listener(
 
         -- will tell us the name of the option
         local parent_id = UIComponent(uic:Parent()):Id()
-        mct:log("Checkbox Pressed - parent id ["..parent_id.."]")
+        --mct:log("Checkbox Pressed - parent id ["..parent_id.."]")
         local mod_obj = mct:get_selected_mod()
         local option_obj = mod_obj:get_option_by_key(parent_id)
 
@@ -1217,7 +1222,7 @@ core:add_listener(
 
         -- this will return true/false for checked/unchecked
         local current_state = option_obj:get_selected_setting()
-        mct:log("Option obj found. Current setting is ["..tostring(current_state).."], new is ["..tostring(not current_state).."]")
+        --mct:log("Option obj found. Current setting is ["..tostring(current_state).."], new is ["..tostring(not current_state).."]")
         option_obj:set_selected_setting(not current_state)
     end,
     true

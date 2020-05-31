@@ -10,6 +10,8 @@ local settings = {
 
 local tab = 0
 
+-- TODO multiplayer shit
+
 local function run_through_table(tabul, str)
     if not is_table(tabul) then
         mct:log("run_through_table() called but the table supplied isn't actually a table!")
@@ -247,10 +249,19 @@ function settings:load()
                         mct:error("Running settings:load(), but an option in the mct_data ["..option_key.."] is not a valid option for mct_mod ["..mod_key.."]. Skipping!")
                     else
                         mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(option_data._setting).."]")
-                        option_obj:set_finalized_setting_event_free(option_data._setting or option_obj:get_finalized_setting())
-                        --option_obj._finalized_setting = option_data._setting or option_obj._finalized_setting
-                        --option_obj._read_only = option_data._read_only or option_obj._read_only
-                        option_obj:set_read_only(option_data._read_only or option_obj:get_read_only())
+
+                        local setting = option_data._setting
+                        if is_nil(setting) then
+                            setting = option_obj:get_finalized_setting()
+                        end
+
+                        local read_only = option_data._read_only
+                        if is_nil(read_only) then
+                            read_only = option_obj:get_read_only()
+                        end
+
+                        option_obj:set_finalized_setting_event_free(setting)
+                        option_obj:set_read_only(read_only)
                     end
                 end
                 
