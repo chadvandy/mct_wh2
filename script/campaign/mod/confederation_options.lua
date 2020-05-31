@@ -38,7 +38,7 @@ core:add_listener(
     true,
     function(context)
         local mct = core:get_static_object("mod_configuration_tool")
-        mct:log("CONFED OPTIONS LISTENER")
+        --mct:log("CONFED OPTIONS LISTENER")
         local confed_options_mod = mct:get_mod_with_name("confederation_options")
 
         local settings_table = confed_options_mod:get_settings()

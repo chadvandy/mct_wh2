@@ -1,9 +1,10 @@
+local mct = mct
+
 local confed_options = mct:register_mod("confederation_options")
 
 --[[confed_options:set_title("Confederation Options")
 confed_options:set_author("Vandy")
 confed_options:set_description("The following are the settings for the mod you're looking at right now. Try it out!")]]
-confed_options:set_workshop_link("https://steamcommunity.com/sharedfiles/filedetails/?id=1577217111")
 
 local options_list = {
     "wh_main_emp_empire",
@@ -91,90 +92,3 @@ for i = 1, #options_list do
     -- add the above table as dropdown values, providing "no_tweak" as the default
     option_obj:add_dropdown_values(dropdown_options)
 end
-
-
---[[local emp = confed_options:add_new_option("wh_main_emp_empire", "dropdown")
-emp:set_text(cult_loc_prefix..emp:get_key())
-emp:add_dropdown_values(dropdown_options)
-
-emp:set_uic_visibility(false)
-
-local dwf = confed_options:add_new_option("wh_main_dwf_dwarfs", "dropdown")
-dwf:set_text(cult_loc_prefix..dwf:get_key())
-dwf:add_dropdown_values(dropdown_options)
-
-dwf:set_uic_visibility(false)
-
-local grn = confed_options:add_new_option("wh_main_grn_greenskins", "dropdown")
-grn:set_text(cult_loc_prefix..grn:get_key())
-grn:add_dropdown_values(dropdown_options)
-
-grn:set_uic_visibility(false)
-
-local vmp = confed_options:add_new_option("wh_main_vmp_vampire_counts", "dropdown")
-vmp:set_text(cult_loc_prefix..vmp:get_key())
-vmp:add_dropdown_values(dropdown_options)
-
-vmp:set_uic_visibility(false)
-
-local hef = confed_options:add_new_option("wh2_main_hef_high_elves", "dropdown")
-hef:set_text(cult_loc_prefix..hef:get_key())
-hef:add_dropdown_values(dropdown_options)
-
-hef:set_uic_visibility(false)
-
-local def = confed_options:add_new_option("wh2_main_def_dark_elves", "dropdown")
-def:set_text(cult_loc_prefix..def:get_key())
-def:add_dropdown_values(dropdown_options)
-
-def:set_uic_visibility(false)
-
-local lzd = confed_options:add_new_option("wh2_main_lzd_lizardmen", "dropdown")
-lzd:set_text(cult_loc_prefix..lzd:get_key())
-lzd:add_dropdown_values(dropdown_options)
-
-lzd:set_uic_visibility(false)
-
-local skv = confed_options:add_new_option("wh2_main_skv_skaven", "dropdown")
-skv:set_text(cult_loc_prefix..skv:get_key())
-skv:add_dropdown_values(dropdown_options)
-
-skv:set_uic_visibility(false)
-
-local brt = confed_options:add_new_option("wh_main_brt_bretonnia", "dropdown")
-brt:set_text(cult_loc_prefix..brt:get_key())
-brt:add_dropdown_values(dropdown_options)
-
-brt:set_uic_visibility(false)
-
-local wef = confed_options:add_new_option("wh_dlc05_wef_wood_elves", "dropdown")
-wef:set_text(cult_loc_prefix..wef:get_key())
-wef:add_dropdown_values(dropdown_options)
-
-wef:set_uic_visibility(false)
-
-local nor = confed_options:add_new_option("wh_main_sc_nor_norsca", "dropdown")
-nor:set_text(subcult_loc_prefix..nor:get_key())
-nor:add_dropdown_values(dropdown_options)
-
-nor:set_uic_visibility(false)
-
-local tmb = confed_options:add_new_option("wh2_dlc09_tmb_tomb_kings", "dropdown")
-tmb:set_text(cult_loc_prefix..tmb:get_key())
-tmb:add_dropdown_values(dropdown_options)
-
-tmb:set_uic_visibility(false)
-
-local cst = confed_options:add_new_option("wh2_dlc11_cst_vampire_coast", "dropdown")
-cst:set_text(cult_loc_prefix..cst:get_key())
-cst:add_dropdown_values(dropdown_options)
-
-cst:set_uic_visibility(false)]]
-
---[[
-    mct1:add_dropdown_value("option_1", "Option 1", "This is option1")
-mct1:add_dropdown_value("option_2", "Option 2", "This is option2")
-mct1:add_dropdown_value("option_3", "Option 3", "This is option3")
-mct1:add_dropdown_value("option_4", "Option 4", "This is option4")
-mct1:set_default_value("option_3")
-]]
