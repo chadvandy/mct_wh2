@@ -30,10 +30,6 @@ function mod_configuration_tool:init(loading_game_context)
         local path = "script/mct/modules/?.lua;script/mct/modules/extern/?.lua;"
         package.path = path .. package.path
 
-        -- load external vendors, not my work at all, all rights reserved, copyright in these files stands
-        --self.json = self:load_module("json", "script/mct/modules/extern/") 
-        --self.inspect = self:load_module("inspect", "script/mct/modules/extern/")
-
         -- load vandy-lib stuff
         self:load_module("uic_mixins", "script/mct/modules/")
 
