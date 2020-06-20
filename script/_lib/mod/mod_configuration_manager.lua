@@ -350,14 +350,16 @@ if __game_mode == __lib_type_campaign then
         button_group:Adopt(new_button:Address())
     end
 
-    core:add_ui_created_callback(function() ModLog("Create campaign button") create_campaign_button() ModLog("button end") end)
+    core:add_ui_created_callback(function() create_campaign_button() end)
 
     core:add_listener(
         "MCT_Init", 
         "LoadingGame", 
         true, 
-        function(context) 
-            mod_configuration_tool:init(context) 
+        function(context)
+            --if not cm:is_multiplayer() then
+                mod_configuration_tool:init(context)
+            --end
         end, 
         true
     )

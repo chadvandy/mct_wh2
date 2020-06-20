@@ -217,9 +217,12 @@ This event triggers any time an editable option (not-read-only) is changed throu
 
 As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&C Modding Den, in #just_vandy_things.
 
-I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now.
+I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now:
+
 - Work on better UX if you haven't pressed "Finalized Settings", or if you haven't used MCT in the frontend before loading a new campaign.
+
 - Incorporate the new option types - sliders, text input, and multi-buttons (ie. four buttons in a row, give AND|OR operations to them, etc)
+
 - Incorporate a "preset" type of option, which changes the setting for other options based on its setting. Y'know, a preset
+
 - Multiplayer compatibility.
-- 
