@@ -270,7 +270,7 @@ local uic_mixins = {
 
     uic_SetVisible = function(self, uic, set_visible)
         if not is_uicomponent(uic) then
-            mct:error("ERROR: uic_SetVisible() called but the [uic] provided is not a valid UIComponent!")
+            mct:error("ERROR: uic_SetVisible() called but the [uic] provided (["..tostring(uic).."]) is not a valid UIComponent!")
             return false
         end
 

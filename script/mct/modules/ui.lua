@@ -87,8 +87,6 @@ end]]
 
 function ui_obj:set_selected_mod(row_uic)
     if is_uicomponent(row_uic) then
-        mct:log(row_uic:Id())
-        mct:log(row_uic)
         mct:set_selected_mod(row_uic:Id())
         self.selected_mod_row = row_uic
     end
@@ -158,18 +156,16 @@ function ui_obj:open_frame()
     -- check if one exists already
     local test = self.panel
 
+
     -- make a new one!
-    if not test then
+    if not is_uicomponent(test) then
         -- create the new window and set it visible
         local new_frame = core:get_or_create_component("mct_options", "ui/mct/mct_frame")
         new_frame:SetVisible(true)
 
-        --mct:log("test 1")
         -- resize the panel
         new_frame:SetCanResizeWidth(true) new_frame:SetCanResizeHeight(true)
-        --mct:log("test 2")
         new_frame:Resize(new_frame:Width() * 4, new_frame:Height() * 2.5)
-        --mct:log("test 3")
 
         -- edit the name
         local title_plaque = find_uicomponent(new_frame, "title_plaque")
@@ -209,17 +205,8 @@ function ui_obj:open_frame()
             self:new_mod_row(mod_obj)
         end
 
-        self:override_escape()
-
-        -- create UI rows on the left, for each registered mod
-        --[[left_panel_titleor mod_name, mod in pairs(mct._registered_mods) do
-            -- skip MCT dupe
-            if mod_name ~= "mct_mod" then
-                --mct:log("flesting 1")
-                self:new_mod_row(mod)
-                --mct:log("flesting 2")
-            end
-        end]]
+        -- TODO setup
+        --self:override_escape()
     else
         test:SetVisible(true)
     end
@@ -229,14 +216,20 @@ function ui_obj:close_frame()
     local panel = self.panel
     if is_uicomponent(panel) then
         self:delete_component(panel)
+    end
 
-        -- clear saved vars
-        self.panel = nil
-        self.mod_row_list_view = nil
-        self.mod_row_list_box = nil
-        self.mod_details_panel = nil
-        self.mod_settings_box = nil
-        self.selected_mod_row = nil
+    -- clear saved vars
+    self.panel = nil
+    self.mod_row_list_view = nil
+    self.mod_row_list_box = nil
+    self.mod_details_panel = nil
+    self.mod_settings_box = nil
+    self.selected_mod_row = nil
+
+    -- clear uic's attached to mct_options
+    local mods = mct:get_mods()
+    for _, mod in pairs(mods) do
+        mod:clear_uics_for_all_options()
     end
 end
 
@@ -445,11 +438,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
 
-    --mct:log("testing 1")
-
     local title, author, desc = selected_mod:get_localised_texts()
-
-    --mct:log("testing 2")
 
     -- setting up text & stuff
     do
@@ -541,7 +530,6 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
         mct:log("BOX: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
     end]]
 
-    --mct:log("testing 5")
 end
 
 function ui_obj:section_visibility_change(section_key, enable)
@@ -555,7 +543,6 @@ function ui_obj:section_visibility_change(section_key, enable)
 end
 
 function ui_obj:create_sections_and_contents(mod_obj)
-    --mct:log("teest 1")
     local mod_settings_panel = self.mod_settings_panel
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
 
@@ -564,8 +551,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
     self._sections_to_rows = {}
 
     core:remove_listener("MCT_SectionHeaderPressed")
-
-    --mct:log("teest 2")
 
     for i = 1, #sections do
         local section_table = sections[i]
@@ -600,8 +585,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
         local child_count = find_uicomponent(section_header, "child_count")
         child_count:SetVisible(false)
 
-        --mct:log("teest 3")
-
         local text = section_table.txt
         if not is_nil(text) then
             --text = "No Text Assigned"
@@ -621,8 +604,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
         local dy_title = find_uicomponent(section_header, "dy_title")
         dy_title:SetStateText(text)
 
-        --mct:log("teest 4")
-
         -- lastly, create all the rows and options within
         local num_remaining_options = 0
         local options = mod_obj:get_options_by_section(section_key)
@@ -639,8 +620,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
             options_table[index] = option_key
         end
 
-        --mct:log("teest 5")
-
         local x = 1
         local y = 1
 
@@ -656,8 +635,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
         -- prevent infinite loops, will only do nothing 3 times
         local loop_num = 0
 
-        --mct:log("teest 6")
-
         --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
 
         while valid do
@@ -672,19 +649,12 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 break
             end
 
-            --mct:log("teest 7")
-
             local index = tostring(x) .. "," .. tostring(y)
             local option_key = options_table[index]
-
-            --mct:log("teest 8")
-
-            --mct:log(index)
 
             -- check to see if any option was even made at this index!
             --[[if option_key == nil then
                 -- skip, go to the next index
-                mct:log("teest 9")
                 move_to_next()
 
                 -- prevent it from looping without doing anything more than 6 times
@@ -697,7 +667,6 @@ function ui_obj:create_sections_and_contents(mod_obj)
             local option_obj
             if is_string(option_key) then
                 mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
-                --mct:log("teest 10")
                 if option_key == "NONE" then
                     -- no option objects remaining, kill the engine
                     break
@@ -709,21 +678,15 @@ function ui_obj:create_sections_and_contents(mod_obj)
                     -- only iterate down this iterator when it's a real option
                     num_remaining_options = num_remaining_options - 1
                     loop_num = 0
-                    --mct:log("???")
                     option_obj = mod_obj:get_option_by_key(option_key)
-                    --mct:log("!!!!!")
                 end
-
-                --mct:log("teest 11")
     
                 -- add a new column (and potentially, row, if x==1) for this position
-                --mct:log("!@!@!@")
-                local ok, err = pcall(function()
-                self:new_option_row_at_pos(option_obj, x, y, section_key) 
-                end) if not ok then mct:log(err) end
 
-                --mct:log("teest 12")
-                --mct:log("121212")
+                --local ok, err = pcall(function()
+                self:new_option_row_at_pos(option_obj, x, y, section_key) 
+                --end) if not ok then mct:log(err) end
+
             else
                 -- issue? break? dunno?
                 mct:log("issue? break? dunno?")
@@ -906,7 +869,6 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
 
-            --mct:log("this is probably it huh")
             -- read if the option is read-only in campaign (and that we're in campaign)
             if __game_mode == __lib_type_campaign and option_obj:get_read_only() then
                 local state = new_option:CurrentState()
@@ -1115,11 +1077,8 @@ function ui_obj:new_mod_row(mod_obj)
         txt_txt = "No title assigned"
     end
 
-    --mct:log("TESTING 1")
-
     self:uic_SetStateText(txt, txt_txt)
 
-    --mct:log("TESTING 2")
 
     local date = find_uicomponent(row, "date")
     local author_txt = mod_obj:get_author()
@@ -1222,13 +1181,16 @@ core:add_listener(
         local popup_menu = UIComponent(popup_list:Parent())
         local dropdown_box = UIComponent(popup_menu:Parent())
 
+
         -- will tell us the name of the option
         local parent_id = UIComponent(dropdown_box:Parent()):Id()
         local mod_obj = mct:get_selected_mod()
         local option_obj = mod_obj:get_option_by_key(parent_id)
 
         -- this operation is set externally (so we can perform the same operation outside of here)
+        local ok, err = pcall(function()
         option_obj:ui_select_value(uic:Id())
+        end) if not ok then mct:error(err) end
     end,
     true
 )

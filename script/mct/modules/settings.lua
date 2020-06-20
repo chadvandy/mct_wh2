@@ -176,7 +176,7 @@ function settings:load_game_callback(context)
                 if option_obj then
                     -- save the option details in Lua-state
                     option_obj:set_finalized_setting_event_free(option_data._setting)
-                    option_obj:set_read_only(option_data.read_only)
+                    option_obj:set_read_only(option_data._read_only)
                 end
             end
         end

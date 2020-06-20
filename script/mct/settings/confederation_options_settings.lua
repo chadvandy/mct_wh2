@@ -83,7 +83,7 @@ for i = 1, #options_list do
     end
 
     -- set the text for the option, displays on the left of the dropdown
-    mct:log(text)
+    -- mct:log(text)
     option_obj:set_text(text, true)
     option_obj:set_tooltip_text("")
 

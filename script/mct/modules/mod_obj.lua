@@ -153,18 +153,14 @@ end
 -- Triggered once the file which housed this `mod_obj` is done loading
 -- @local
 function mct_mod:finalize()
-    --mct:log("porsting 1")
     self:set_positions_for_options()
-    --mct:log("porsting end")
 end
 
 --- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
 -- Order the options by key within each section, giving sliders a full row to their own self
 -- @local
 function mct_mod:set_positions_for_options()
-    --mct:log("porsting 2")
     local sections = self:get_sections()
-    --mct:log("porsting 3")
 
     mct:log("setting positions for options in mod ["..self:get_key().."]")
     
@@ -174,15 +170,13 @@ function mct_mod:set_positions_for_options()
 
         mct:log("in section ["..section_key.."].")
 
-        --mct:log("porsting 4")
-
         --local total = 0
         --local option_keys = {}
 
         local ordered_option_keys = {}
 
         for key,_ in pairs(attached_options) do
-            mct:log("option with key ["..key.."] detected in section.")
+            --mct:log("option with key ["..key.."] detected in section.")
             table.insert(ordered_option_keys, key)
             --total = total + 1
             --option_keys[#option_keys+1] = key
@@ -193,9 +187,6 @@ function mct_mod:set_positions_for_options()
         local total = #ordered_option_keys
 
         mct:log("total num = " .. tostring(total))
-        --mct:log("total num =" ..tostring(total))
-
-        --mct:log("porsting 5")
 
         --local num_remaining = total
 
@@ -208,8 +199,6 @@ function mct_mod:set_positions_for_options()
         local j = 1
         local any_added_on_current_row = false
         local slider_added_on_current_row = false
-
-        --mct:log("porsting 6")
 
         local function valid_for_type(type, x,y)
             -- hard check for sliders, must be in center and can't have any other options on the same row
@@ -246,27 +235,15 @@ function mct_mod:set_positions_for_options()
             if added then j = j + 1 end
         end
 
-        --mct:log("porsting 7")
-
         while valid do
-            --mct:log("on loop "..tostring(j))
             if j > total then
                 break
             end
 
-            --mct:log("porsting 8")
-
             local option_key = ordered_option_keys[j]
-            --mct:log("key ["..option_key.."]")
             local option_obj = self:get_option_by_key(option_key)
 
-            if mct:is_mct_option(option_obj) then
-
-                --mct:log("checking pos for ["..option_key.."], j ["..tostring(j).."].")
-
-                --mct:log(tostring(option_key))
-                --mct:log(tostring(x)..", "..tostring(y))
-                
+            if mct:is_mct_option(option_obj) then                
                 -- check if it's a valid position for that option's type (sliders only on 2)
                 if valid_for_type(option_obj:get_type(), x, y) then
                     if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
@@ -316,10 +293,7 @@ function mct_mod:load_finalized_settings()
 
     local ret = {}
     for key, option in pairs(options) do
-        --mct:log("In option ["..key.."].")
         ret[key] = {}
-        --option:set_finalized_setting(option:get_selected_setting())
-        --mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
         ret[key] = option:get_finalized_setting()
     end
 

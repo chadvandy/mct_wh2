@@ -56,7 +56,7 @@ function mct_option.new(mod, option_key, type)
     self._finalized_setting = nil
 
     -- whether this option obj is read only for campaign
-    self._read_only = true
+    self._read_only = false
 
     -- the UICs linked to this option (the option + the txt)
     self._uics = {}
@@ -180,16 +180,18 @@ end
 -- @local
 function mct_option:get_uics()
     local uic_table = self._uics
-    -- first, loop through the table of UICs to make sure they're all still valid; if any aren't, remove them
+    local copy = {}
+
+    -- first, loop through the table of UICs to make sure they're all still valid; if any are, add them to a copy table
     for i = 1, #uic_table do
         local uic = uic_table[i]
-        if not is_uicomponent(uic) then
-            uic_table[i] = nil
+        if is_uicomponent(uic) then
+            copy[#copy+1] = uic
         end
     end
 
-
-    return uic_table
+    self._uics = copy
+    return self._uics
 end
 
 --- Set a UIC as visible or invisible, dynamically. If the UIC isn't created yet, it will get the applied setting when it is created.
@@ -215,7 +217,7 @@ function mct_option:set_uic_visibility(enable)
         local uic = uic_table[i]
         if is_uicomponent(uic) then
             --mct:log("Setting component to the thing! ["..tostring(self:get_uic_visibility()).."].")
-            uic:SetVisible(self:get_uic_visibility())
+            mct.ui:uic_SetVisible(uic, self:get_uic_visibility())
         end
     end
 end
@@ -397,7 +399,7 @@ end
 -- @local
 function mct_option:ui_select_value(val)
     if not self:is_val_valid_for_type(val) then
-        -- issue
+        mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
         return false
     end
 
@@ -414,6 +416,7 @@ function mct_option:ui_select_value(val)
     ]]
 
     -- trigger separate functions for the types!
+
     if self:get_type() == "dropdown" then
         -- grab the current setting, so we can deselect that UIC
         local current_val = self:get_selected_setting()
@@ -427,20 +430,21 @@ function mct_option:ui_select_value(val)
 
         -- ditto
         local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
-        local popup_list = UIComponent(popup_menu:Frind("popup_list"))
+        local popup_list = UIComponent(popup_menu:Find("popup_list"))
         local currently_selected_uic = find_uicomponent(popup_list, current_val)
         local new_selected_uic = find_uicomponent(popup_list, val)
 
+
         -- unselected the currently-selected dropdown option
         if is_uicomponent(currently_selected_uic) then
-            self.ui:uic_SetState(currently_selected_uic, "unselected")
+            mct.ui:uic_SetState(currently_selected_uic, "unselected")
         else
             mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no currently_selected_uic with key ["..tostring(current_val).."] was found internally. Aborting!")
             return false
         end
 
         -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
-        self.ui:uic_SetState(new_selected_uic, "selected")
+        mct.ui:uic_SetState(new_selected_uic, "selected")
         self:set_selected_setting(val)
 
         -- set the state text of the dropdown box to be the state text of the row
@@ -448,12 +452,12 @@ function mct_option:ui_select_value(val)
         local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()
         local tx = find_uicomponent(dropdown_box_uic, "dy_selected_txt")
 
-        self.ui:uic_SetStateText(tx, t)
-        self.ui:uic_SetTooltipText(dropdown_box_uic, tt, true)
+        mct.ui:uic_SetStateText(tx, t)
+        mct.ui:uic_SetTooltipText(dropdown_box_uic, tt, true)
 
         -- set the menu invisible and unclick the box
         if dropdown_box_uic:CurrentState() == "selected" then
-            self.ui:uic_SetState(dropdown_box_uic, "active")
+            mct.ui:uic_SetState(dropdown_box_uic, "active")
         end
 
         popup_menu:SetVisible(false)
