@@ -24,7 +24,8 @@ local options_list = {
 
 -- TODO incorporate a "preset" option
 
-local enable = confed_options:add_new_option("enable_all", "checkbox")
+-- TODO fix this up
+--[[local enable = confed_options:add_new_option("enable_all", "checkbox")
 enable:set_default_value(false)
 
 -- when the "enable" button is checked on or off, all other options are set visible or invisible
@@ -39,7 +40,7 @@ enable:add_option_set_callback(
             i_option:set_uic_visibility(val)
         end
     end
-)
+)]]
 
 local cult_loc_prefix = "cultures_name_"
 local subcult_loc_prefix = "cultures_subcultures_name_"
@@ -86,8 +87,7 @@ for i = 1, #options_list do
     option_obj:set_text(text, true)
     option_obj:set_tooltip_text("")
 
-    -- default to invisible
-    option_obj:set_uic_visibility(false)
+    option_obj:set_uic_visibility(true)
 
     -- add the above table as dropdown values, providing "no_tweak" as the default
     option_obj:add_dropdown_values(dropdown_options)

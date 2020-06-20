@@ -4,4 +4,5 @@ description='The full API for the Mod Configuration Tool, for use by modders giv
 file = {'script/_lib/mod/mod_configuration_manager.lua', 'script/mct/modules', exclude={'script/mct/modules/extern'}}
 dir = './doc'
 not_luadoc = true
-readme = "readme.md"
+readme = "manual.md"
+format = 'markdown'

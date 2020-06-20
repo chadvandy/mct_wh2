@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Mod Configuration Tool</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>MCT</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#FOREWORD___BETA">FOREWORD - BETA </a></li>
+<li><a href="#Intro">Intro </a></li>
+<li><a href="#How_It_Works">How It Works </a></li>
+<li><a href="#Create_Settings_File">Create Settings File </a></li>
+<li><a href="#Localisation">Localisation </a></li>
+<li><a href="#Hook_Into_Scripts">Hook Into Scripts </a></li>
+<li><a href="#Further_Updates">Further Updates </a></li>
+</ul>
+
+
+<h2>Topics</h2>
+<ul class="">
+  <li><strong>manual</strong></li>
+</ul>
+<h2>Scripts</h2>
+<ul class="nowrap">
+  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/mct.html">mct</a></li>
+  <li><a href="../classes/mct_mod.html">mct_mod</a></li>
+  <li><a href="../classes/mct_option.html">mct_option</a></li>
+  <li><a href="../classes/mct_section.html">mct_section</a></li>
+  <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><a href="../classes/mct_ui.html">mct_ui</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h1>MCT, the Mod Configuration Tool</h1>
+
+<p><a name="FOREWORD___BETA"></a></p>
+<h2>FOREWORD - BETA</h2>
+
+<p><strong>Keep in mind this is just a quick write-up for the beta testing version of MCT. The beta is not feature-complete, some stuff might be wrong, and everything is subject to change. If you find issues with MCT, have requests, or something isn’t clear - please just ping me and I’ll help you out!</strong></p>
+
+<p><a name="Intro"></a></p>
+<h2>Intro</h2>
+
+<p>Hallo. MCT stands for Mod Configuration Tool, an in-game tool that allows Lua modders to make some settings for their mods that can be decided within the UI created from MCT. It includes all functionality needed for making options, reading them, saving them, loading them, and so forth. All mods really need to do is define their options, settings, and then hook them into their code.</p>
+
+<p><a name="How_It_Works"></a></p>
+<h2>How It Works</h2>
+
+<p>Before we go on, we've got to cover how MCT works at its core, so there's no confusion.</p>
+
+<p>The MCT is designed to be fairly simple to use for others, as it does 70% of the heavy lifting - all the UI design, it reads text easily through localisation keys, it saves and reads and sends settings.</p>
+
+<p>When the game is first loaded with MCT, it creates a local mct_settings.lua file on disk, in the same folder as the Warhammer2.exe. Don't touch that .lua file! It is the file used to read any settings that were set in the frontend UI, and "save" those settings into the campaign. When the UI is first "finalized", that .lua file is created, and will be edited by MCT as time goes whenever settings are changed.</p>
+
+<p>That file is only used in frontend, and for the <em>first</em> load of a campaign. After the campaign is created, all the settings saved in the mct_settings.lua file are then saved into the campaign save file via <code>cm:set_saved_value()</code>, and they're read through <code>cm:get_saved_value()</code> internally from then on.</p>
+
+<p>There is a separation internally for MCT. There is one file to <em>define</em> the settings you want for your mod in <code>script/mct/settings/?.lua</code>, and your .lua files elsewhere - ie., <code>script/campaign/mod/?.lua</code> - will be used to <em>read</em> the settings that the player has selected for your mod locally, using a handful of listeners and methods that let you easily read the current state of things.</p>
+
+<p><a name="Create_Settings_File"></a></p>
+<h2>Create Settings File</h2>
+
+<p>To start off - make a file in <code>script/mct/settings/?.lua</code>. Give it a unique name, since two files of the same name in this folder will conflict.</p>
+
+<p>The first line of your file should be:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+</pre>
+
+<p>Wherein <a href="../classes/mct_mod.html#">mct_mod</a> can be replaced with whatever, it's just a local variable, and "my_mod" should be a unique indentifier for your specific mod. Once that single line is done, when you open up the Mod Configuration Tool, you'll see a new mod - that's yours!</p>
+
+<p><img src="./doc_img/00.png" alt="Blank Mod"/></p>
+
+<p>We'll cover <a href="../topics/manual.md.html#Localisation">localisation</a> for the mct_mod further down; for now, options!</p>
+
+<p>The <a href="../classes/mct_option.html#">mct_option</a> object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only two types of options - checkbox &amp; dropdown. As of writing, there are two mid-hookup: slider (a number-based slider) &amp; text input. The documentation will be edited once those are incorporated.</p>
+
+<p>To make a new mct_option, you use the following:</p>
+
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+<span class="keyword">local</span> mct_option = mct_mod:add_new_option(<span class="string">"option_key"</span>, <span class="string">"option_type"</span>)
+</pre>
+
+
+<p>Where, once more, <code>option_key</code> has to be unique (to your <a href="../classes/mct_mod.html#">mct_mod</a>). <code>option_type</code> is either "checkbox" or "dropdown".</p>
+
+<p>First up, if you are using a dropdown, you'll want to use <a href="../classes/mct_option.html#mct_option:add_dropdown_value">mct_option:add_dropdown_value</a> or <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a>, to add the separate dropdown values for the box. This'll create the actual values within the dropdown box. There isn't an upper limit, but I recommend not doing too much, it'll start looking potentially ugly above 6 or 8 or so, depending on resolution.</p>
+
+<p>Next up, you'll want to set a default value.</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+<span class="keyword">local</span> mct_option = mct_mod:add_new_option(<span class="string">"my_cool_option"</span>, <span class="string">"dropdown"</span>)
+mct_option:add_dropdown_value(<span class="string">"value1"</span>, <span class="string">"My Dropdown Value"</span>, <span class="string">"This dropdown value does this."</span>, <span class="keyword">true</span>)
+mct_option:add_dropdown_value(<span class="string">"value2"</span>, <span class="string">"Another Dropdown Value"</span>, <span class="string">"This dropdown value does something."</span>, <span class="keyword">false</span>)
+
+mct_option:set_default_value(<span class="string">"value2"</span>)
+
+<span class="comment">-- OR --
+</span><span class="keyword">local</span> mct_option = mct_mod:add_new_option(<span class="string">"my_cool_checkbox"</span>, <span class="string">"checkbox"</span>)
+
+mct_option:set_default_value(<span class="keyword">false</span>)
+</pre>
+
+
+<p>There's not much beyond that that's needed to really expand functionality, though you can jump through the API to find any extra methods that you'd like. Before we get into reading the settings in-campaign, we're going to do localisation.</p>
+
+<p><a name="Localisation"></a></p>
+<h2>Localisation</h2>
+
+<p>Localisation with MCT is fairly robust. There are three options available for you - automatically read localisation keys, script-applicable localisation keys, and script-applicable loose text (ie. "My Localisation").</p>
+
+<p>For the <a href="../classes/mct_mod.html#">mct_mod</a> object, the auto-read keys are:</p>
+
+<pre>
+- <span class="backtick"><code>mct_[mct_mod_key]_title</code></span>
+- <span class="backtick"><code>mct_[mct_mod_key]_author</code></span>
+- <span class="backtick"><code>mct_[mct_mod_key]_description</code></span>
+</pre>
+
+<p>Alternatively, you can use the following methods in script:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+mct_mod:set_title(<span class="string">"My Title"</span>)
+mct_mod:set_author(<span class="string">"Vandy"</span>)
+mct_mod:set_description(<span class="string">"My cool mod is a very cool mod, thank you for asking."</span>)
+</pre>
+
+
+<p>And, lastly, you can use the same methods to supply dynamic localisation keys instead:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+mct_mod:set_title(<span class="string">"ui_text_replacements_localised_text_my_mod_title"</span>, <span class="keyword">true</span>)
+mct_mod:set_author(<span class="string">"Vandy"</span>) <span class="comment">-- doesn't accept localisation
+</span>mct_mod:set_description(<span class="string">"ui_text_replacements_localised_text_my_mod_desc"</span>, <span class="keyword">true</span>)
+</pre>
+
+
+<p>Supply those methods with <code>true</code> and they will check for a localised string with the loc key you supply.</p>
+
+<p>For the <a href="../classes/mct_option.html#">mct_option</a> object, the auto-read keys are:</p>
+
+<pre>
+- <span class="backtick"><code>mct_[mct_mod_key]_[mct_option_key]_text</code></span>
+- <span class="backtick"><code>mct_[mct_mod_key]_[mct_option_key]_tooltip</code></span>
+</pre>
+
+<p>Alternatively, you can use the following methods in script:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+<span class="keyword">local</span> my_option = mct_mod:add_new_option(<span class="string">"test_option"</span>, <span class="string">"checkbox"</span>)
+
+my_option:set_text(<span class="string">"My Cool Option"</span>)
+my_option:set_tooltip_text(<span class="string">"My cool option does this specifically, enjoy!"</span>)
+</pre>
+
+
+<p>And likewise, you can supply localisation keys instead through script:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+<span class="keyword">local</span> my_option = mct_mod:add_new_option(<span class="string">"test_option"</span>, <span class="string">"checkbox"</span>)
+
+my_option:set_text(<span class="string">"ui_text_replacements_localised_text_my_option_text"</span>, <span class="keyword">true</span>)
+my_option:set_tooltip_text(<span class="string">"ui_text_replacements_localised_text_my_option_tooltip_text"</span>, <span class="keyword">true</span>)
+</pre>
+
+
+<p><a name="Hook_Into_Scripts"></a></p>
+<h2>Hook Into Scripts</h2>
+
+<p>The above is enough to get the UI in the frontend and in the campaign to populate, have localisation, and do stuff, but the settings won't change anything on their own! We're gonna take a bit to look into hooking MCT into your scripts, making MCT an optional mod or a required one, and responding to new settings.</p>
+
+<p>In your own .lua files - in <code>script/campaign/mod/</code> or wherever you've got them at - there's a couple functionalities and listeners you can set up to quickly and easily read the currently saved MCT settings.</p>
+
+<p>A good quick example is the file <code>script/_lib/mod/zzz_mct_options.lua</code> in the MCT pack.</p>
+
+<p>The first event that will help a lot is the "MctInitialized" event.</p>
+
+
+<pre>
+core:add_listener(
+    <span class="string">"bloop"</span>,
+    <span class="string">"MctInitialized"</span>,
+    <span class="keyword">true</span>,
+    <span class="keyword">function</span>(context)
+        <span class="keyword">local</span> mct = context:mct()
+        <span class="keyword">local</span> my_mod = mct:get_mod_by_key(<span class="string">"my_cool_mod"</span>)
+    <span class="keyword">end</span>,
+    <span class="keyword">true</span>
+)
+</pre>
+
+
+<p>MctInitialized is triggered <em>pretty</em> early on, fairly before FirstTickAfterWorldCreated, so <strong>do not do model edits</strong> off of this function! It's a great way to quickly read the settings from MCT and pass them locally, though.</p>
+
+
+<pre>
+<span class="comment">-- default settings for the mod. If MCT is never enabled, or the player doesn't change settings, then do_thing_one and do_thing_two will remain true!
+</span><span class="keyword">local</span> settings = {
+    do_thing_one = <span class="keyword">true</span>,
+    do_thing_two = <span class="keyword">true</span>,
+}
+
+<span class="comment">-- harmless listener, won't do anything if MCT isn't enabled. Triggered around LoadingGame, *do not to model edits here*
+</span>core:add_listener(
+    <span class="string">"bloop"</span>,
+    <span class="string">"MctInitialized"</span>,
+    <span class="keyword">true</span>,
+    <span class="keyword">function</span>(context)
+        <span class="comment">-- get the <a href="../classes/mct.html#">mct</a> object
+</span>        <span class="keyword">local</span> mct = context:mct()
+
+        <span class="comment">-- get the <a href="../classes/mct_mod.html#">mct_mod</a> object with the key "my_cool_mod"
+</span>        <span class="keyword">local</span> my_mod = mct:get_mod_by_key(<span class="string">"my_cool_mod"</span>)
+
+        <span class="comment">-- get the <a href="../classes/mct_option.html#">mct_option</a> object with the key "do_thing_one", and its finalized setting - reading from the mct_settings.lua file if it's a new game, or the save game file if it isn't
+</span>        <span class="keyword">local</span> do_thing_one = my_mod:get_option_by_key(<span class="string">"do_thing_one"</span>)
+        <span class="keyword">local</span> do_thing_one_setting = do_thing_one:get_finalized_setting()
+
+        <span class="comment">-- ditto
+</span>        <span class="keyword">local</span> do_thing_two = my_mod:get_option_by_key(<span class="string">"do_thing_two"</span>)
+        <span class="keyword">local</span> do_thing_two_setting = do_thing_two:get_finalized_setting()
+
+        <span class="comment">-- replace the default settings with the finalized settings through MCT
+</span>        settings.do_thing_one = do_thing_one_setting
+        settings.do_thing_two = do_thing_two_setting
+    <span class="keyword">end</span>,
+    <span class="keyword">true</span>
+)
+
+<span class="comment">-- do our model edits when it's safe, on first_tick!
+</span>cm:add_first_tick_callback(<span class="keyword">function</span>()
+    <span class="comment">-- if the first setting is set to true ...
+</span>    <span class="keyword">if</span> settings.do_thing_one <span class="keyword">then</span>
+        <span class="comment">-- trigger a function for "do thing one", if it's set as true through MCT
+</span>    <span class="keyword">end</span>
+
+    <span class="comment">-- ditto ...
+</span>    <span class="keyword">if</span> settings.do_thing_two <span class="keyword">then</span>
+        <span class="comment">-- ditto
+</span>    <span class="keyword">end</span>
+<span class="keyword">end</span>)
+</pre>
+
+
+<p>Using the above should be enough for most mods. I recommend, if you don't want the settings to be changed mid-campaign, to use <a href="../classes/mct_option.html#mct_option:set_read_only">mct_option:set_read_only</a> after reading the finalized settings and then responding to them. That way, the user won't be able to edit the settings through MCT, only read them through the UI.</p>
+
+<p>If you want settings changeable mid-campaign, there is one more listener provided for ease-of-use:</p>
+
+
+<pre>
+core:add_listener(
+    <span class="string">"bloop"</span>,
+    <span class="string">"MctOptionSettingFinalized"</span>,
+    <span class="keyword">true</span>,
+    <span class="keyword">function</span>(context)
+        <span class="keyword">local</span> mct = context:mct()
+        <span class="keyword">local</span> mct_mod = context:mod()
+        <span class="keyword">local</span> mct_option = context:option()
+        <span class="keyword">local</span> new_settings = context:setting()
+    <span class="keyword">end</span>,
+    <span class="keyword">true</span>
+)
+</pre>
+
+
+<p>This event triggers any time an editable option (not-read-only) is changed through the "Finalize Settings" dialogue within MCT. That allows you to give users way more flexibility within a campaign, if you want that flexibility!</p>
+
+<p><a name="Further_Updates"></a></p>
+<h2>Further Updates</h2>
+
+<p>As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&amp;C Modding Den, in #just<em>vandy</em>things.</p>
+
+<p>I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now.
+- Work on better UX if you haven't pressed "Finalized Settings", or if you haven't used MCT in the frontend before loading a new campaign.
+- Incorporate the new option types - sliders, text input, and multi-buttons (ie. four buttons in a row, give AND|OR operations to them, etc)
+- Incorporate a "preset" type of option, which changes the setting for other options based on its setting. Y'know, a preset
+- Multiplayer compatibility.
+- </p>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-06-20 13:33:24 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

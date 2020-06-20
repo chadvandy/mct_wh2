@@ -21,5 +21,8 @@ local mct2 = mct_mod:add_new_option("mct2", "checkbox", "This is also a test")
 mct2:set_default_value(true)
 mct2:set_text("mct2")
 
-local mct3 = mct_mod:add_new_option("mct3", "slider", "ouaihybefiouaywbefouawyebyf")
-mct3:set_text("mct3")
+--local mct3 = mct_mod:add_new_option("mct3", "textbox", "ouaihybefiouaywbefouawyebyf")
+--mct3:set_text("mct3")
+
+--local mct4 = mct_mod:add_new_option("mct4", "slider", "baowefubawef")
+--mct4:set_text("mct4")

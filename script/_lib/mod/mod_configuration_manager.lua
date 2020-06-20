@@ -1,5 +1,5 @@
 --- Mod Configuration Tool Manager
--- @module mct
+-- @classmod mct
 -- @alias mod_configuration_tool
 
 -- Define the manager that will be used for the majority of all these operations
@@ -46,16 +46,20 @@ function mod_configuration_tool:init(loading_game_context)
         self.ui = self:load_module("ui", "script/mct/modules/")
 
         -- load mods in mct/settings/!
-        self:load_mods() 
+        self:load_mods()
 
         if __game_mode == __lib_type_campaign then
             -- if it's a new game, read the settings file and save that into the save file
             if cm:is_new_game() then
                 self.settings:load()
+            else
+                self.settings:load_game_callback(loading_game_context)
             end
 
-            cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)                
-            cm:add_loading_game_callback(function(context) self.settings:load_game_callback(loading_game_context) end)
+            cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
+            --cm:add_loading_game_callback(function(context)
+                
+            --end)
         else
             -- read the settings file
             self.settings:load()
@@ -255,7 +259,7 @@ function mod_configuration_tool:get_selected_mod_name()
 end
 
 function mod_configuration_tool:get_selected_mod()
-    return self:get_mod_with_name(self:get_selected_mod_name())
+    return self:get_mod_by_key(self:get_selected_mod_name())
 end
 
 function mod_configuration_tool:has_mod_with_name_been_registered(mod_name)
@@ -263,6 +267,13 @@ function mod_configuration_tool:has_mod_with_name_been_registered(mod_name)
 end
 
 function mod_configuration_tool:get_mod_with_name(mod_name)
+    return self:get_mod_by_key(mod_name)
+end
+
+--- Getter for the @{mct_mod} with the supplied key.
+-- @tparam string mod_name Unique identifier for the desired mct_mod.
+-- @return @{mct_mod}
+function mod_configuration_tool:get_mod_by_key(mod_name)
     local test = self._registered_mods[mod_name]
     if type(test) == "nil" then
         self:error("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
@@ -300,7 +311,7 @@ function mod_configuration_tool:register_mod(mod_name)
     local filepath = info.source
     if self:has_mod_with_name_been_registered(mod_name) then
         self:log("Loading mod with name ["..mod_name.."], but it's already been registered. Only use `mct:register_mod()` once. Returning the previous version.")
-        return self:get_mod_with_name(mod_name)
+        return self:get_mod_by_key(mod_name)
     end
 
     local new_mod = self._MCT_MOD.new(mod_name)
@@ -355,5 +366,5 @@ if __game_mode == __lib_type_campaign then
         true
     )
 else
-    mod_configuration_tool:init() 
+    mod_configuration_tool:init()
 end

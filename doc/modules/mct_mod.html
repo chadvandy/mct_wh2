@@ -41,6 +41,7 @@
   <li><a href="../modules/mct.html">mct</a></li>
   <li><strong>mct_mod</strong></li>
   <li><a href="../modules/mct_option.html">mct_option</a></li>
+  <li><a href="../modules/mct_section.html">mct_section</a></li>
   <li><a href="../modules/mct_settings.html">mct_settings</a></li>
   <li><a href="../modules/mct_ui.html">mct_ui</a></li>
 </ul>
@@ -50,7 +51,7 @@
 </ul>
 <h2>Topics</h2>
 <ul class="">
-  <li><a href="../topics/readme.md.html">readme</a></li>
+  <li><a href="../topics/manual.md.html">manual</a></li>
 </ul>
 
 </div>
@@ -59,7 +60,9 @@
 
 <h1>Module <code>mct_mod</code></h1>
 <p>MCT Mod Object</p>
-<p></p>
+<p>
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -74,7 +77,35 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_options_by_section">get_options_by_section (section_key)</a></td>
-	<td class="summary">Returns a k/v table of {option_key=option_obj} for options that are linked to this section.</td>
+	<td class="summary">Returns a k/v table of {option<em>key=option</em>obj} for options that are linked to this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_sections">get_sections ()</a></td>
+	<td class="summary">Returns a table of all "sections" within the mct_mod.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_key">get_key ()</a></td>
+	<td class="summary">Getter for the mct_mod's key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#finalize">finalize ()</a></td>
+	<td class="summary">The finalize function is used for all actions needed to be performmed when the mct_mod is done being created, like setting positions for all options.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_positions_for_options">set_positions_for_options ()</a></td>
+	<td class="summary">Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_finalized_settings">load_finalized_settings ()</a></td>
+	<td class="summary">Used when loading the mct_settings.lua file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#finalize_settings">finalize_settings ()</a></td>
+	<td class="summary">Used when finalizing the settings in MCT.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_settings">get_settings ()</a></td>
+	<td class="summary">Returns the <em>finalized</em>settings field of this mct_mod.</td>
 	</tr>
 </table>
 
@@ -128,7 +159,7 @@
         </li>
         <li><span class="parameter">localised_name</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "loc_key_example_my_section_name". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned"
+         The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "loc<em>key</em>example<em>my</em>section<em>name". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised</em>name is provided, it will default to "No Text Assigned"
         </li>
     </ul>
 
@@ -142,7 +173,7 @@
     <strong>get_options_by_section (section_key)</strong>
     </dt>
     <dd>
-    Returns a k/v table of {option_key=option_obj} for options that are linked to this section.
+    Returns a k/v table of {option<em>key=option</em>obj} for options that are linked to this section.
  Shouldn't need to be used externally.
 
 
@@ -159,6 +190,113 @@
 
 
 </dd>
+    <dt>
+    <a name = "get_sections"></a>
+    <strong>get_sections ()</strong>
+    </dt>
+    <dd>
+    Returns a table of all "sections" within the mct_mod.
+ These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_key"></a>
+    <strong>get_key ()</strong>
+    </dt>
+    <dd>
+    Getter for the mct_mod's key
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        key The key for this mct_mod
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "finalize"></a>
+    <strong>finalize ()</strong>
+    </dt>
+    <dd>
+    The finalize function is used for all actions needed to be performmed when the mct<em>mod is done being created, like setting positions for all options.
+ Triggered once the file which housed this mod</em>obj is done loading
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_positions_for_options"></a>
+    <strong>set_positions_for_options ()</strong>
+    </dt>
+    <dd>
+    Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
+ Order the options by key within each section, giving sliders a full row to their own self
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_finalized_settings"></a>
+    <strong>load_finalized_settings ()</strong>
+    </dt>
+    <dd>
+    Used when loading the mct_settings.lua file.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "finalize_settings"></a>
+    <strong>finalize_settings ()</strong>
+    </dt>
+    <dd>
+    Used when finalizing the settings in MCT.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_settings"></a>
+    <strong>get_settings ()</strong>
+    </dt>
+    <dd>
+    Returns the <em>finalized</em>settings field of this mct_mod.
+
+
+
+
+
+
+
+</dd>
 </dl>
 
 
@@ -166,7 +304,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-05-30 13:11:40 </i>
+<i style="float:right;">Last updated 2020-06-20 10:02:29 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

@@ -1,5 +1,5 @@
 --- MCT UI Object. INTERNAL USE ONLY.
--- @module mct_ui
+-- @classmod mct_ui
 
 local mct = mct
 
@@ -98,6 +98,62 @@ function ui_obj:get_selected_mod()
     return self.selected_mod_row
 end
 
+-- TODO steal escape in all game modes; seems difficult in frontend :(
+function ui_obj:override_escape()
+    local panel = self.panel
+
+    -- frontend takes some hackiness :(
+    if __game_mode == __lib_type_frontend then
+
+        -- listen for the esc menu shortcut being pressed
+        core:add_listener(
+            "mct_esc_pressed",
+            "ShortcutTriggered",
+            function(context)
+                return context.string == "escape_menu"
+            end,
+            function(context)
+
+                -- trigger a listener on the next UI tick, to see if the escape menu has been opened
+                real_timer.register_singleshot("next_tick", 0)
+                core:add_listener(
+                    "next_tick",
+                    "RealTimeTrigger",
+                    function(context)
+                        return context.string == "next_tick"
+                    end,
+                    function(context)
+                        -- find the quit menu
+                        local esc_menu = find_uicomponent("quit_box")
+                        if not is_uicomponent(esc_menu) then
+                            ModLog("fuck")
+                            return false
+                        end
+                        
+                        -- press "cancel" to remove all the shits
+                        local cancel_button = find_uicomponent(esc_menu, "both_group", "button_cancel")
+                        cancel_button:SimulateLClick()
+
+                        -- close the MCT panel
+                        --- TODO make sure this doesn't trigger if there's invalid shit in the MCT, mebbeh do a popup?
+                        self:close_frame()
+                    end,
+                    false
+                )
+            end,
+            false
+        )
+
+        -- TODO finish this fuck
+    else
+        if __game_mode == __lib_type_campaign then
+
+        elseif __game_mode == __lib_type_battle then
+
+        end
+    end
+end
+
 function ui_obj:open_frame()
     -- check if one exists already
     local test = self.panel
@@ -137,7 +193,7 @@ function ui_obj:open_frame()
         self:create_panels()
 
         -- create the MCT row first
-        self:new_mod_row(mct:get_mod_with_name("mct_mod"))
+        self:new_mod_row(mct:get_mod_by_key("mct_mod"))
 
         local ordered_mod_keys = {}
         for n in pairs(mct._registered_mods) do
@@ -149,9 +205,11 @@ function ui_obj:open_frame()
         table.sort(ordered_mod_keys)
 
         for i,n in ipairs(ordered_mod_keys) do
-            local mod_obj = mct:get_mod_with_name(n)
+            local mod_obj = mct:get_mod_by_key(n)
             self:new_mod_row(mod_obj)
         end
+
+        self:override_escape()
 
         -- create UI rows on the left, for each registered mod
         --[[left_panel_titleor mod_name, mod in pairs(mct._registered_mods) do
@@ -170,7 +228,15 @@ end
 function ui_obj:close_frame()
     local panel = self.panel
     if is_uicomponent(panel) then
-        panel:SetVisible(false)
+        self:delete_component(panel)
+
+        -- clear saved vars
+        self.panel = nil
+        self.mod_row_list_view = nil
+        self.mod_row_list_box = nil
+        self.mod_details_panel = nil
+        self.mod_settings_box = nil
+        self.selected_mod_row = nil
     end
 end
 
@@ -220,22 +286,7 @@ function ui_obj:create_panels()
     lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
     lbox:MoveTo(x,y)
     lbox:Resize(w,h)
-
-    --[[do
-        local w,h,x,y = left_panel_listview:Bounds(), left_panel_listview:Position()
-        mct:log("LVIEW: ("..tostring(w)..", "..tostring(h)..") ("..tostring(x)..", "..tostring(y)..").")
-    end
-
-    do
-        local w,h,x,y = lclip:Bounds(), lclip:Position()
-        mct:log("LCLIP: ("..tostring(w)..", "..tostring(h)..") ("..tostring(x)..", "..tostring(y)..").")
-    end
-
-    do
-        local w,h,x,y = lbox:Bounds(), lbox:Position()
-        mct:log("LBOX: ("..tostring(w)..", "..tostring(h)..") ("..tostring(x)..", "..tostring(y)..").")
-    end]]
-
+    
     -- save the listview and list box into the obj
     self.mod_row_list_view = left_panel_listview
     self.mod_row_list_box = lbox
@@ -380,7 +431,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
 
     local former_mod = nil
     if is_string(former_mod_key) then
-        former_mod = mct:get_mod_with_name(former_mod_key)
+        former_mod = mct:get_mod_by_key(former_mod_key)
     end
 
     mct:log("Mod selected ["..selected_mod:get_key().."]")
@@ -834,7 +885,8 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                 local type_to_command = {
                     dropdown = self.new_dropdown_box,
                     checkbox = self.new_checkbox,
-                    slider = self.new_slider
+                    slider = self.new_slider,
+                    textbox = self.new_textbox,
                 }
         
                 local func = type_to_command[option_obj._type]
@@ -891,6 +943,18 @@ function ui_obj.new_checkbox(self, option_obj, row_parent)
     end
 
     option_obj:set_selected_setting(default_val)
+
+    return new_uic
+end
+
+function ui_obj.new_textbox(self, option_obj, row_parent)
+    local template = option_obj:get_uic_template()
+
+    local new_uic = core:get_or_create_component("mct_textbox", template, row_parent)
+
+    -- TODO auto-type the default value
+    -- TODO a button next to the textbox to "submit" the new value?
+        -- TODO if above, setup some way for the modder to set up specific values and some UX for "this isn't valid!"
 
     return new_uic
 end
@@ -998,11 +1062,14 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
     return new_uic
 end
 
+
+
 -- UIC Properties:
 -- Value
 -- minValue
 -- maxValue
 -- Notify (unused?)
+-- update_frequency (doesn't change anything?)
 function ui_obj.new_slider(self, option_obj, row_parent)
     local template = option_obj:get_uic_template()
     local values = option_obj:get_values()
@@ -1014,9 +1081,9 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     local new_uic = core:get_or_create_component("mct_horizontal_slider", template, row_parent)
     new_uic:SetVisible(true)
 
-    new_uic:SetProperty("Value", current)
+    --[[new_uic:SetProperty("Value", current)
     new_uic:SetProperty("minValue", min)
-    new_uic:SetProperty("maxValue", max)
+    new_uic:SetProperty("maxValue", max)]]
 
     local displ = core:get_or_create_component("display_text", "ui/vandy_lib/text/la_gioconda", new_uic)
     displ:SetDockingPoint(4)
@@ -1057,9 +1124,9 @@ function ui_obj:new_mod_row(mod_obj)
     local date = find_uicomponent(row, "date")
     local author_txt = mod_obj:get_author()
 
-    if not is_string(author_txt) then
+    --[[if not is_string(author_txt) then
         author_txt = "No author assigned"
-    end
+    end]]
 
     date:SetDockingPoint(6)
     self:uic_SetStateText(date, author_txt)
@@ -1138,9 +1205,6 @@ core:add_listener(
     true
 )
 
--- TODO refactor these to be option methods
--- dropdown and checkbox
-
 -- Set Selected listeners
 core:add_listener(
     "mct_dropdown_box_option_selected",
@@ -1148,7 +1212,7 @@ core:add_listener(
     function(context)
         local uic = UIComponent(context.component)
         
-        return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box" 
+        return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box"
     end,
     function(context)
         core:remove_listener("mct_dropdown_box_close")
@@ -1163,40 +1227,8 @@ core:add_listener(
         local mod_obj = mct:get_selected_mod()
         local option_obj = mod_obj:get_option_by_key(parent_id)
 
-        --option_obj:ui_select_value
-
-        -- set the older option as unselected
-        local current_val = option_obj:get_selected_setting()
-        --mct:log(current_val)
-
-        local currently_selected_uic = find_uicomponent(popup_list, current_val)
-
-        if is_uicomponent(currently_selected_uic) then
-            ui_obj:uic_SetState(currently_selected_uic, "unselected")
-        else
-            -- errmsg, wtf
-            return false
-        end
-
-        -- set the new option as "selected", so it's highlighted in the list
-        ui_obj:uic_SetState(uic, "selected")
-        option_obj:set_selected_setting(context.string)
-
-        -- set the state text of the dropdown box to be the state text of the row
-        local t = find_uicomponent(uic, "row_tx"):GetStateText()
-        local tt = find_uicomponent(uic, "row_tx"):GetTooltipText()
-        local tx = find_uicomponent(dropdown_box, "dy_selected_txt")
-
-        ui_obj:uic_SetStateText(tx, t)
-        ui_obj:uic_SetTooltipText(dropdown_box, tt, true)
-
-        -- set the menu invisible and unclick the box
-        if dropdown_box:CurrentState() == "selected" then
-            ui_obj:uic_SetState(dropdown_box, "active")
-        end
-
-        popup_menu:SetVisible(false)
-        popup_menu:RemoveTopMost()
+        -- this operation is set externally (so we can perform the same operation outside of here)
+        option_obj:ui_select_value(uic:Id())
     end,
     true
 )
