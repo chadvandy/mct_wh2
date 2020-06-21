@@ -14,11 +14,7 @@ mct._valid_option_types = {
 }
 
 local mct_mod = {
-    _name = "",
-    _title = "No Title Assigned",
-    _author = "No Author Assigned",
-    _description = "No Description Assigned",
-    --_workshop_link = "",
+    --_name = "",
     --_options = {},
 
     _valid_option_types = mct._valid_option_types
@@ -57,6 +53,11 @@ function mct_mod.new(key)
     self._sections = {
         {key = "default", txt = "Default Category"},
     }
+
+    self._title = "No Title Assigned"
+    self._author = "No Author Assigned"
+    self._description = "No Description Assigned"
+    --self._workshop_link = ""
 
 
     return self
@@ -428,10 +429,10 @@ function mct_mod:get_author()
     end
 
     --if author == "" then
-        --return 
+        --return
     --end
 
-    return self._author or "No author assigned"
+    return self._author --or "No author assigned"
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
