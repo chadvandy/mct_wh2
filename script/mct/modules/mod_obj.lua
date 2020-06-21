@@ -427,11 +427,11 @@ function mct_mod:get_author()
         return author
     end
 
-    if author == "" then
-        return "No author assigned"
-    end
+    --if author == "" then
+        --return 
+    --end
 
-    return self._author
+    return self._author or "No author assigned"
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
