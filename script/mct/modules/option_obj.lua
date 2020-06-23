@@ -573,6 +573,11 @@ function mct_option:add_dropdown_value(key, text, tt, is_default)
 
     self._values[#self._values+1] = val
 
+    -- check if it's the first value being assigned to the dropdown, to give at least one default value
+    if #self._values == 1 then
+        self:set_default_value(key)
+    end
+
     if is_default then
         self:set_default_value(key)
     end

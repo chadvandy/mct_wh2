@@ -533,10 +533,15 @@ function mct_mod:add_new_option(option_key, option_type)
 
     local new_option = mct._MCT_OPTION.new(mod, option_key, option_type)
 
+    -- set a default value of unticked if it's a checkbox
+    if option_type == "checkbox" then
+        new_option:set_default_value(false)
+    end
+
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
 
-    mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
+    --mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
 
     return new_option
 end
