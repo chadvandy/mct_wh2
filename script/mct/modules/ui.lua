@@ -243,7 +243,7 @@ function ui_obj:create_close_button()
 
     -- bottom center
     close_button_uic:SetDockingPoint(8)
-    close_button_uic:SetDockOffset(0, 0)
+    close_button_uic:SetDockOffset(0, -5)
 end
 
 function ui_obj:create_panels()
