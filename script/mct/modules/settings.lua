@@ -115,7 +115,6 @@ function settings:load()
     if not file then
         -- first time load, no settings file exists!
     else
-
         mct:log("Loading settings file!")
         local content = loadfile(self.settings_file)
         content = content()

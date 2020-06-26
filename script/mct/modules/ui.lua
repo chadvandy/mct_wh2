@@ -1232,7 +1232,7 @@ core:add_listener(
         return context.string == "button_mct_finalize_settings"
     end,
     function(context)
-        mct.settings:finalize()
+        mct:finalize()
     end,
     true
 )

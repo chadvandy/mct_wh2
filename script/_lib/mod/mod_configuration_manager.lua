@@ -10,6 +10,8 @@ local mod_configuration_tool = {
     _filepath = "/script/mct/settings/",
     _logpath = "mct_log.txt",
 
+    -- default to false - if a mct_settings.lua file is found on load, then it's set to true
+    _finalized = not not io.open("mct_settings.lua", "r"),
 
     write_to_log = true,
 
@@ -27,7 +29,7 @@ function mod_configuration_tool:init(loading_game_context)
         self:log("********\nLOADING INTERNAL MODULES\n********")
 
         -- add the modules and modules/extern/ paths to the Lua field
-        local path = "script/mct/modules/?.lua;script/mct/modules/extern/?.lua;"
+        local path = "script/mct/modules/?.lua;"
         package.path = path .. package.path
 
         -- load vandy-lib stuff
@@ -264,6 +266,15 @@ end
 
 function mod_configuration_tool:get_mod_with_name(mod_name)
     return self:get_mod_by_key(mod_name)
+end
+
+--- Internal use only. Triggers all the functionality for "Finalize Settings!"
+function mod_configuration_tool:finalize()
+    self.settings:finalize()
+
+    self._finalized = true
+
+    core:trigger_custom_event("MctFinalized", {["mct"] = self})
 end
 
 --- Getter for the @{mct_mod} with the supplied key.
