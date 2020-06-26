@@ -1,6 +1,9 @@
+local enabled_here = false
+
 -- edits the global environment to reenable out()'s
 local function enable_logging(enable)
     if enable then
+        enabled_here = true
         __write_output_to_logfile = true
 
         if __logfile_path == "" then
@@ -8,7 +11,10 @@ local function enable_logging(enable)
             _G.logfile_path = __logfile_path
         end
     else
-        __write_output_to_logfile = false
+        if enabled_here then
+            enabled_here = false
+            __write_output_to_logfile = false
+        end
     end
 end
 
