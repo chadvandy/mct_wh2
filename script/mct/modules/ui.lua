@@ -258,7 +258,7 @@ function ui_obj:create_panels()
     left_panel_bg:SetDockingPoint(4)
     left_panel_bg:SetDockOffset(20, 0)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.25, panel:Height() - 175)
+    left_panel_bg:Resize(panel:Width() * 0.20, panel:Height() - 175)
 
     local w,h = left_panel_bg:Dimensions()
 
