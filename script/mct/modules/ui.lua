@@ -237,7 +237,8 @@ function ui_obj:create_close_button()
     local panel = self.panel
     
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_medium_button", panel)
-    close_button_uic:SetImagePath("ui/skins/warhammer2/icon_check.png")
+    local img_path = effect.get_skinned_image_path("icon_check.png")
+    close_button_uic:SetImagePath(img_path)
     close_button_uic:SetTooltipText("Close panel", true)
 
     -- bottom center
@@ -248,11 +249,12 @@ end
 function ui_obj:create_panels()
     local panel = self.panel
     -- LEFT SIDE
+    local img_path = effect.get_skinned_image_path("parchment_texture.png")
 
     -- create image background
     local left_panel_bg = core:get_or_create_component("left_panel_bg", "ui/vandy_lib/custom_image_tiled", panel)
     left_panel_bg:SetState("custom_state_2") -- 50/50/50/50 margins
-    left_panel_bg:SetImagePath("ui/skins/warhammer2/parchment_texture.png", 1) -- img attached to custom_state_2
+    left_panel_bg:SetImagePath(img_path, 1) -- img attached to custom_state_2
     left_panel_bg:SetDockingPoint(4)
     left_panel_bg:SetDockOffset(20, 0)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
@@ -315,7 +317,7 @@ function ui_obj:create_panels()
     -- top side
     local mod_details_panel = core:get_or_create_component("mod_details_panel", "ui/vandy_lib/custom_image_tiled", right_panel)
     mod_details_panel:SetState("custom_state_2") -- 50/50/50/50 margins
-    mod_details_panel:SetImagePath("ui/skins/warhammer2/parchment_texture.png", 1) -- img attached to custom_state_2
+    mod_details_panel:SetImagePath(img_path, 1) -- img attached to custom_state_2
     mod_details_panel:SetDockingPoint(2)
     mod_details_panel:SetDockOffset(0, 50)
     mod_details_panel:SetCanResizeWidth(true) mod_details_panel:SetCanResizeHeight(true)
@@ -370,7 +372,7 @@ function ui_obj:create_panels()
     -- bottom side
     local mod_settings_panel = core:get_or_create_component("mod_settings_panel", "ui/vandy_lib/custom_image_tiled", right_panel)
     mod_settings_panel:SetState("custom_state_2") -- 50/50/50/50 margins
-    mod_settings_panel:SetImagePath("ui/skins/warhammer2/parchment_texture.png", 1) -- img attached to custom_state_2
+    mod_settings_panel:SetImagePath(img_path, 1) -- img attached to custom_state_2
     mod_settings_panel:SetDockingPoint(2)
     mod_settings_panel:SetDockOffset(0, mod_details_panel:Height() + 70)
     mod_settings_panel:SetCanResizeWidth(true) mod_settings_panel:SetCanResizeHeight(true)

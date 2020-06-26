@@ -343,7 +343,8 @@ if __game_mode == __lib_type_campaign then
 
         -- set the tooltip to the one on the frontend button
         new_button:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
-        new_button:SetImagePath("ui/skins/warhammer2/icon_options.png")
+        local img_path = effect.get_skinned_image_path("icon_options.png")
+        new_button:SetImagePath(img_path)
 
         -- make sure it's on the button group, and set its z-priority to be as high as its parents
         new_button:PropagatePriority(button_group:Priority())
