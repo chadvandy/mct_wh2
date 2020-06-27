@@ -274,6 +274,9 @@ function mod_configuration_tool:finalize()
 
     self._finalized = true
 
+    -- remove the "locally_edited" field
+    self.ui.locally_edited = false
+
     core:trigger_custom_event("MctFinalized", {["mct"] = self})
 end
 

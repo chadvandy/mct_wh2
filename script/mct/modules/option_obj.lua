@@ -447,6 +447,9 @@ function mct_option:ui_select_value(val)
         mct.ui:uic_SetState(new_selected_uic, "selected")
         self:set_selected_setting(val)
 
+        -- set the UI obj's "locally_edited" field as true so the close button will know!
+        mct.ui.locally_edited = true
+
         -- set the state text of the dropdown box to be the state text of the row
         local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
         local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()

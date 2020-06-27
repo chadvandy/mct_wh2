@@ -34,6 +34,8 @@ core:add_listener(
 
             -- turn off highlight!
             uic:Highlight(false, false)
+            -- return tooltip to default
+            uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
         end
     end,
     false

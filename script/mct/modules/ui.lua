@@ -23,7 +23,10 @@ local ui_obj = {
     mod_settings_box = nil,
 
     -- currently selected mod UIC
-    selected_mod_row = nil
+    selected_mod_row = nil,
+
+    -- var to read whether there have been any settings changed while the panel has been opened
+    locally_edited = false,
 }
 
 mct:mixin(ui_obj)
@@ -156,6 +159,7 @@ function ui_obj:open_frame()
     -- check if one exists already
     local test = self.panel
 
+    self.locally_edited = false
 
     -- make a new one!
     if not is_uicomponent(test) then
@@ -225,6 +229,7 @@ function ui_obj:close_frame()
     self.mod_details_panel = nil
     self.mod_settings_box = nil
     self.selected_mod_row = nil
+    self.locally_edited = false
 
     -- clear uic's attached to mct_options
     local mods = mct:get_mods()
@@ -237,7 +242,7 @@ function ui_obj:create_close_button()
     local panel = self.panel
     
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_medium_button", panel)
-    local img_path = effect.get_skinned_image_path("icon_check.png")
+    local img_path = effect.get_skinned_image_path("icon_cross.png")
     close_button_uic:SetImagePath(img_path)
     close_button_uic:SetTooltipText("Close panel", true)
 
@@ -1220,6 +1225,9 @@ core:add_listener(
         local current_state = option_obj:get_selected_setting()
         --mct:log("Option obj found. Current setting is ["..tostring(current_state).."], new is ["..tostring(not current_state).."]")
         option_obj:set_selected_setting(not current_state)
+
+        -- TODO put this entire listener into an `option_obj:ui_select_value()` call
+        ui_obj.locally_edited = true
     end,
     true
 )
@@ -1232,7 +1240,102 @@ core:add_listener(
         return context.string == "button_mct_finalize_settings"
     end,
     function(context)
+        -- TODO temporary disable the popup while I work on the UI!
+        -- before finalizing, trigger a popup that lists all the changed settings and very kindly asks "Are you sure?"
+        --[[local popup = core:get_or_create_component("mct_changed_settings", "ui/common ui/dialogue_box")
+        local tx = UIComponent(popup:Find("DY_text"))]]
+
+        --tx:SetStateText("[[col:red]]Are you sure?[[/col]]")
+
+        --[[tx:SetDockingPoint(2)
+        tx:SetDockOffset(0, 15)
+        tx:Resize(100, 50)
+
+        tx:SetCanResizeHeight(false) tx:SetCanResizeWidth(false)
+        popup:SetCanResizeHeight(true) popup:SetCanResizeWidth(true)
+        popup:Resize(popup:Width() * 2, popup:Height() * 2)
+        popup:SetCanResizeHeight(false) popup:SetCanResizeWidth(false)
+        local w,h = popup:Dimensions()
+
+        -- create listview
+        local listview = UIComponent(popup:CreateComponent("list_view", "ui/vandy_lib/vlist"))
+        listview:SetCanResizeWidth(true) listview:SetCanResizeHeight(true)
+        listview:Resize(w,h - (265))
+        listview:SetDockingPoint(1)
+        listview:SetDockOffset(0, 65)
+
+        local x,y = listview:Position()
+        local w,h = listview:Dimensions()
+
+        local lclip = find_uicomponent(listview, "list_clip")
+        lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
+        lclip:MoveTo(x,y)
+        lclip:Resize(w,h)
+
+        local lbox = find_uicomponent(lclip, "list_box")
+        lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
+        lbox:MoveTo(x,y)
+        lbox:Resize(w,h)
+
+        lbox:Layout()
+
+        -- from here, add the children: First, the mod title, then all the [Option]: {Setting} pairs, then a div between each mod
+
+        local mods = mct:get_mods()
+
+        for mod_key, mod_obj in pairs(mods) do
+            local mod_title = core:get_or_create_component(mod_key.."_title", "ui/vandy_lib/text/la_gioconda", lbox)
+            mod_title:SetStateText(mod_obj:get_title())
+
+
+            for option_key, option_obj in pairs(mod_obj:get_options()) do
+                local option_tx = core:get_or_create_component(mod_key.."_"..option_key, "ui/vandy_lib/text/la_gioconda", lbox)
+                local t1 = option_obj:get_text()
+                local t2 = ""
+
+                local fin = option_obj:get_finalized_setting()
+
+                if option_obj:get_type() == "dropdown" then
+                    for i = 1, #option_obj._values do
+                        local val = option_obj._values[i]
+                        if val.key == fin then
+                            t2 = val.text
+                        end
+                    end
+                elseif option_obj:get_type() == "checkbox" then
+                    t2 = tostring(fin)
+                end
+
+                option_tx:SetStateText(t1..":\t\t"..t2)
+            end
+        end
+
+        -- list for "Ok" or "Cancel"
+        core:add_listener(
+            "popup_changed_settings",
+            "ComponentLClickUp",
+            function(context)
+                local button = UIComponent(context.component)
+                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_changed_settings"
+            end,
+            function(context)
+                local id = context.string
+
+                ui_obj:delete_component(popup)
+
+                if id == "button_tick" then
+                    -- just close and finalize!
+                    mct:finalize()                    
+                else
+                    -- don't finalize!
+                end
+            end,
+            false
+        )]]
+
         mct:finalize()
+
+
     end,
     true
 )
@@ -1244,7 +1347,43 @@ core:add_listener(
         return context.string == "button_mct_close"
     end,
     function(context)
-        ui_obj:close_frame()
+        -- check if MCT was finalized or no changes were done during the latest UI operation
+        if not ui_obj.locally_edited then
+            ui_obj:close_frame()
+        else
+            -- trigger a popup to either close with unsaved changes, or cancel the close procedure
+            local uic = core:get_or_create_component("mct_unsaved", "ui/common ui/dialogue_box")
+
+            -- grey out the rest of the world
+            uic:LockPriority()
+
+            local tx = find_uicomponent(uic, "DY_text")
+            tx:SetStateText("[[col:red]]WARNING: Unsaved Changes![[/col]]\n\nThere are unsaved changes in the Mod Configuration Tool!\nIf you would like to close anyway, press accept. If you want to go back and save your changes, press cancel and use Finalize Settings!")
+
+            core:add_listener(
+                "mct_unsaved_button_pressed",
+                "ComponentLClickUp",
+                function(context)
+                    local button = UIComponent(context.component)
+                    return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_unsaved"
+                end,
+                function(context)
+                    local button = UIComponent(context.component)
+                    local id = context.string
+
+                    -- close the popup
+                    ui_obj:delete_component(uic)
+
+                    if id == "button_tick" then
+                        -- close anyway
+                        ui_obj:close_frame()
+                    else
+                                                
+                    end
+                end,
+                false
+            )
+        end
     end,
     true
 )
