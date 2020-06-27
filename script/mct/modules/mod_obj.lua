@@ -310,10 +310,13 @@ function mct_mod:finalize_settings()
 
     local ret = {}
     for key, option in pairs(options) do
-        --mct:log("In option ["..key.."].")
         ret[key] = {}
-        option:set_finalized_setting(option:get_selected_setting())
-        --mct:log("Finalized setting: "..tostring(option:get_finalized_setting()))
+
+        -- only trigger the option-changed event if it's actually changing setting
+        if option:get_finalized_setting() ~= option:get_selected_setting() then
+            option:set_finalized_setting(option:get_selected_setting())
+        end
+
         ret[key] = option:get_finalized_setting()
     end
 
