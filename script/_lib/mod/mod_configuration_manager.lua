@@ -65,9 +65,6 @@ function mod_configuration_tool:init(loading_game_context)
     end)
     if not ok then self:log(err) end
 
-    core:add_static_object("mod_configuration_tool", self, false)
-
-
     core:trigger_custom_event("MctInitialized", {["mct"] = self})
 end
 
@@ -344,5 +341,7 @@ function get_mct()
     return core:get_static_object("mod_configuration_tool")
     --return mod_configuration_tool
 end
+
+core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)
 
 _G.get_mct = get_mct
