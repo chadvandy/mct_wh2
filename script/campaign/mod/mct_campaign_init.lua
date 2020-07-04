@@ -7,11 +7,11 @@ core:add_listener(
     "LoadingGame",
     true, 
     function(context)
-        if not cm:is_multiplayer() then
+        if not cm.game_interface:model():is_multiplayer() then
             ModLog("henk")
             mct:init(context)
         else
-            ModLog("ferk")
+            ModLog("MP: ferk")
         end
     end, 
     true
