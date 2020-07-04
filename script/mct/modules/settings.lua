@@ -113,7 +113,10 @@ end
 function settings:load()
     local file = io.open(self.settings_file, "r")
     if not file then
-        -- first time load, no settings file exists!
+        -- create a file with all the defaults!
+        mct:log("First time load - creating settings file! Using defaults for every option.")
+        self:finalize()
+        mct:log("Settings file created, all defaults applied!")
     else
         mct:log("Loading settings file!")
         local content = loadfile(self.settings_file)
@@ -138,8 +141,10 @@ function settings:load()
                     else
                         mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(option_data._setting).."]")
 
+                        -- check the .lua file for a ._setting 
                         local setting = option_data._setting
                         if is_nil(setting) then
+                            -- if none is found, return the extant one (or the default)
                             setting = option_obj:get_finalized_setting()
                         end
 
@@ -178,6 +183,7 @@ function settings:load_game_callback(context)
                     option_obj:set_read_only(option_data._read_only)
                 end
             end
+            mod_obj:load_finalized_settings()
         end
     end
 end
