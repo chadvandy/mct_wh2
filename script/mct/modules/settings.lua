@@ -78,7 +78,7 @@ function settings:save_mct_settings(data)
     file:close()
 end
 
-function settings:finalize()
+function settings:finalize(force)
     --mct:log("Finalizing Settings!")
     local ret = {}
     local mods = mct:get_mods()
@@ -107,7 +107,9 @@ function settings:finalize()
         ret[key] = data
     end
 
-    self:save_mct_settings(ret)
+    if __game_mode ~= __lib_type_campaign or (__game_mode == __lib_type_campaign and force) then
+        self:save_mct_settings(ret)
+    end
 end
 
 function settings:load()
@@ -115,7 +117,7 @@ function settings:load()
     if not file then
         -- create a file with all the defaults!
         mct:log("First time load - creating settings file! Using defaults for every option.")
-        self:finalize()
+        self:finalize(true)
         mct:log("Settings file created, all defaults applied!")
     else
         mct:log("Loading settings file!")
@@ -123,44 +125,61 @@ function settings:load()
         content = content()
 
         --local content = table.load(self.settings_file)
-        for mod_key, data in pairs(content) do
+        local all_mods = mct:get_mods()
+
+        for mod_key, mod_obj in pairs(all_mods) do
             mct:log("Loading settings for mod ["..mod_key.."].")
 
-            local mod_obj = mct:get_mod_by_key(mod_key)
+            -- check if there's any saved data for this mod obj
+            local data = content[mod_key]
 
             if not mct:is_mct_mod(mod_obj) then
                 mct:error("Running settings:load(), but a mct_mod in the mct_data with key ["..mod_key.."] is not a valid mct_mod! Skipping!")
             else
             --mod_obj._finalized_setings = data
 
-                for option_key, option_data in pairs(data) do
-                    local option_obj = mod_obj:get_option_by_key(option_key)
+                -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
+                local all_options = mod_obj:get_options()
 
-                    if not mct:is_mct_option(option_obj) then
-                        mct:error("Running settings:load(), but an option in the mct_data ["..option_key.."] is not a valid option for mct_mod ["..mod_key.."]. Skipping!")
-                    else
-                        mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(option_data._setting).."]")
+                for option_key, option_obj in pairs(all_options) do
+                    local setting = nil
+                    local read_only = nil
 
-                        -- check the .lua file for a ._setting 
-                        local setting = option_data._setting
-                        if is_nil(setting) then
-                            -- if none is found, return the extant one (or the default)
-                            setting = option_obj:get_finalized_setting()
+                    -- grab data attached to this option key in the .lua settings file
+                    if not is_nil(data) then
+                        local saved_data = data[option_key]
+
+                        -- grab the saved data in the .lua file for this option!
+                        if not is_nil(saved_data) then
+                            setting = saved_data._setting
+                            read_only = saved_data._read_only
                         end
-
-                        local read_only = option_data._read_only
-                        if is_nil(read_only) then
-                            read_only = option_obj:get_read_only()
-                        end
-
-                        option_obj:set_finalized_setting_event_free(setting)
-                        option_obj:set_read_only(read_only)
                     end
+
+                    -- if no setting was found, default to whatever the default_value is
+                    if is_nil(setting) then
+                        -- this returns the default value
+                        setting = option_obj:get_finalized_setting()
+                    end
+
+                    -- ditto
+                    if is_nil(read_only) then
+                        -- ditto
+                        read_only = option_obj:get_read_only()
+                    end
+
+                    -- set the finalized setting and read only stuffs
+                    option_obj:set_finalized_setting_event_free(setting)
+                    option_obj:set_read_only(read_only)
+
+                    mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."] and read_only value ["..tostring(read_only).."]")
                 end
                 
                 mod_obj:load_finalized_settings()
             end
         end
+
+        self:finalize()
     end
 end
 
@@ -168,19 +187,29 @@ end
 function settings:load_game_callback(context)
     local retval = {}
 
+    mct:log("Loading settings from the save file!")
+
     local mods = mct:get_mods()
 
     for mod_key, mod_obj in pairs(mods) do
         local saved_data = cm:load_named_value("mct_"..mod_key, {}, context)
-        
+
+        mct:log("Testing for mod ["..mod_key.."]")
+
         -- check if there's anything actually saved for this mod key
         if is_table(saved_data) then
+            mct:log("Saved data found; checking through options saved!")
+
             for option_key, option_data in pairs(saved_data) do
+                mct:log("Testing for option ["..option_key.."].")
                 local option_obj = mod_obj:get_option_by_key(option_key)
                 if option_obj then
                     -- save the option details in Lua-state
                     option_obj:set_finalized_setting_event_free(option_data._setting)
                     option_obj:set_read_only(option_data._read_only)
+
+                    mct:log("Setting: "..tostring(option_data._setting))
+                    mct:log("Read only: "..tostring(option_data._read_only))
                 end
             end
             mod_obj:load_finalized_settings()

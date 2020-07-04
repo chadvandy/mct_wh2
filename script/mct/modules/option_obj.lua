@@ -370,7 +370,7 @@ end
 -- @local
 function mct_option:set_finalized_setting(val)
     if self:is_val_valid_for_type(val) then
-        if self:get_read_only() then
+        if self:get_read_only() and __game_mode == __lib_type_campaign then
             -- can't change finalized setting for read onlys! Error!
             mct:error("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is read only! This REALLY shouldn't happen, investigate.")
             return false
