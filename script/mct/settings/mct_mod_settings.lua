@@ -20,6 +20,7 @@ mct1:add_dropdown_value("option_4", "Option 4", "This is option4")
 local mct2 = mct_mod:add_new_option("mct2", "checkbox", "This is also a test")
 --mct2:set_default_value(true)
 mct2:set_text("mct2")
+mct2:set_read_only(true)
 
 --local mct3 = mct_mod:add_new_option("mct3", "textbox", "ouaihybefiouaywbefouawyebyf")
 --mct3:set_text("mct3")

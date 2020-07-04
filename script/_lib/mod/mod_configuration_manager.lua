@@ -46,6 +46,7 @@ function mod_configuration_tool:init(loading_game_context)
         -- load mods in mct/settings/!
         self:load_mods()
 
+        -- TODO offload this elsewhere?
         if __game_mode == __lib_type_campaign then
             -- if it's a new game, read the settings file and save that into the save file
             if cm:is_new_game() then
