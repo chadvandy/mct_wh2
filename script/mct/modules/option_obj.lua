@@ -332,7 +332,19 @@ end
 -- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set, or the latest saved value if in a campaign, or the latest settings-value if in a new campaign or in frontend.
 -- @within API
 function mct_option:get_finalized_setting()
-    return self._finalized_setting
+    local test = self._finalized_setting
+    if is_nil(test) then
+        local further_test = self._selected_setting
+        if is_nil(further_test) then
+            mct:log("get_finalized_setting() called, but there is no finalized or selected setting picked for this option ["..self:get_key().."]. This should never happen!")
+            return
+        end
+        --mct:log("returning as finalized default value ["..tostring(further_test).."] for option ["..self:get_key().."]")
+        self._finalized_setting = further_test
+        return further_test
+    end
+    --mct:log("returning finalized value ["..tostring(test).."] for option ["..self:get_key().."]")
+    return test
 end
 
 --- Internal use only.

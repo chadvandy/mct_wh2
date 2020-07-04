@@ -313,8 +313,9 @@ function mct_mod:finalize_settings()
         ret[key] = {}
 
         -- only trigger the option-changed event if it's actually changing setting
-        if option:get_finalized_setting() ~= option:get_selected_setting() then
-            option:set_finalized_setting(option:get_selected_setting())
+        local selected = option:get_selected_setting()
+        if option:get_finalized_setting() ~= selected then
+            option:set_finalized_setting(selected)
         end
 
         ret[key] = option:get_finalized_setting()
