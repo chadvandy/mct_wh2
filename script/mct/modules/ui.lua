@@ -903,7 +903,7 @@ function ui_obj.new_checkbox(self, option_obj, row_parent)
     new_uic:SetVisible(true)
 
     -- returns the default value if none has been selected
-    local default_val = option_obj:get_selected_setting()
+    local default_val = option_obj:get_finalized_setting()
 
     if default_val == true then
         new_uic:SetState("selected")
@@ -952,7 +952,7 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
     local w = 0
     local h = 0
 
-    local default_value = option_obj:get_selected_setting()
+    local default_value = option_obj:get_finalized_setting()
 
     local values = option_obj:get_values()
     for i = 1, #values do
@@ -1073,7 +1073,7 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     local min = values.min or 0
     local max = values.max or 100
-    local current = option_obj:get_selected_setting()
+    local current = option_obj:get_finalized_setting()
 
     text_input:SetStateText(tostring(current))
     text_input:SetInteractive(false)
@@ -1122,7 +1122,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     -- TODO text input
     local function set_value(new)
 
-
     end
 
 
@@ -1150,24 +1149,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
         "enter_pressed_on_text_input",
 
     )]]
-
-    --[[new_uic:SetProperty("Value", current)
-    new_uic:SetProperty("minValue", min)
-    new_uic:SetProperty("maxValue", max)]]
-
-    --[[local displ = core:get_or_create_component("display_text", "ui/vandy_lib/text/la_gioconda", new_uic)
-    displ:SetDockingPoint(4)
-    displ:SetDockOffset(-80, displ:Height() /2)
-    displ:SetStateText(tostring(current))
-
-    option_obj:set_selected_setting(current)]]
-
-    -- TODO notify system
-
-    --new_uic:SetProperty("Notify", displ:Address())
-
-    --new_uic:SetMoveable(true)
-    --new_uic:SetDockingPoint(2)
 
     return new_uic
 end

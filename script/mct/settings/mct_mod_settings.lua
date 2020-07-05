@@ -29,5 +29,5 @@ local mct4 = mct_mod:add_new_option("mct4", "slider", "baowefubawef")
 mct4:set_text("mct4")
 
 -- min/max/default
-mct4:slider_set_min_max(0, 10)
-mct4:set_default_value(2)
+mct4:slider_set_min_max(-6, 6)
+mct4:set_default_value(-1)
