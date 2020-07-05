@@ -1074,6 +1074,7 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     local min = values.min or 0
     local max = values.max or 100
     local current = option_obj:get_finalized_setting()
+    option_obj:set_selected_setting(current)
 
     text_input:SetStateText(tostring(current))
     text_input:SetInteractive(false)
