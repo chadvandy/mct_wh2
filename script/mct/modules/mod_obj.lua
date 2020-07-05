@@ -201,9 +201,10 @@ function mct_mod:set_positions_for_options()
         local any_added_on_current_row = false
         local slider_added_on_current_row = false
 
+        -- TODO disabled for now with the new sliders
         local function valid_for_type(type, x,y)
             -- hard check for sliders, must be in center and can't have any other options on the same row
-            if type == "slider" then
+            --[[if type == "slider" then
                 if x == 2 and not any_added_on_current_row then return true end
                 return false
             end
@@ -211,7 +212,7 @@ function mct_mod:set_positions_for_options()
             -- only sliders!
             if slider_added_on_current_row then
                 return false
-            end
+            end]]
             
             -- everything else is fine (for now!!!!!!)
             return true

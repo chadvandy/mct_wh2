@@ -494,22 +494,36 @@ function mct_option:get_selected_setting()
     return self._selected_setting
 end
 
+function mct_option:slider_set_step_size(step_size)
+    if not self:get_type() == "slider" then
+        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
+        return false
+    end
+
+    if not is_number(step_size) then
+        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(step_size).."] is not a number! Returning false.")
+        return false
+    end
+
+    self._values.step_size = step_size
+end
+
 --- set-value wrapped for sliders. Temporarily unhooked, sliders aren't implemented.
 -- @todo Not done!
 -- @within API
 function mct_option:slider_set_min_max(min, max)
     if not self:get_type() == "slider" then
-        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
+        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
         return false
     end
 
     if not is_number(min) then
-        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(min).."] is not a number! Returning false.")
+        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(min).."] is not a number! Returning false.")
         return false
     end
 
     if not is_number(max) then
-        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the max value supplied ["..tostring(max).."] is not a number! Returning false.")
+        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the max value supplied ["..tostring(max).."] is not a number! Returning false.")
         return false
     end
 

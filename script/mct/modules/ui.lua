@@ -1068,11 +1068,14 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
-    left_button:SetTooltipText("-1", true)
-    right_button:SetTooltipText("+1", true)
-
+    -- TODO put defaults into the mct_option.new() function
     local min = values.min or 0
     local max = values.max or 100
+    local step_size = values.step_size or 1
+
+    left_button:SetTooltipText("-"..tostring(step_size), true)
+    right_button:SetTooltipText("+"..tostring(step_size), true)
+
     local current = option_obj:get_finalized_setting()
     option_obj:set_selected_setting(current)
 
@@ -1100,18 +1103,22 @@ function ui_obj.new_slider(self, option_obj, row_parent)
         right_button:SetState("active")
         left_button:SetState("active")
 
+        if new >= max then
+            right_button:SetState("inactive")
+            left_button:SetState("active")
+
+            new = max
+        elseif new <= min then
+            left_button:SetState("inactive")
+            right_button:SetState("active")
+
+            new = min
+        end
+
         option_obj:set_selected_setting(new)
         mct:log("New selected slider setting: "..tostring(new))
         current = option_obj:get_selected_setting()
         mct:log("New current: "..tostring(current))
-
-        if current == max then
-            right_button:SetState("inactive")
-            left_button:SetState("active")
-        elseif current == min then
-            left_button:SetState("inactive")
-            right_button:SetState("active")
-        end
 
         text_input:SetStateText(tostring(current))
 
@@ -1138,9 +1145,9 @@ function ui_obj.new_slider(self, option_obj, row_parent)
             local step = context.string
 
             if step == "right" then
-                jump_value(1)
+                jump_value(step_size)
             elseif step == "left" then
-                jump_value(-1)
+                jump_value(step_size * -1)
             end
         end,
         true

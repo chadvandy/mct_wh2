@@ -28,6 +28,7 @@ mct2:set_read_only(true)
 local mct4 = mct_mod:add_new_option("mct4", "slider", "baowefubawef")
 mct4:set_text("mct4")
 
--- min/max/default
-mct4:slider_set_min_max(-6, 6)
-mct4:set_default_value(-1)
+-- min/max/step size/default
+mct4:slider_set_min_max(-6, 5)
+mct4:slider_set_step_size(3)
+mct4:set_default_value(0)
