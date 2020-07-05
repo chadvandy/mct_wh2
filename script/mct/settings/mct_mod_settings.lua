@@ -25,5 +25,9 @@ mct2:set_read_only(true)
 --local mct3 = mct_mod:add_new_option("mct3", "textbox", "ouaihybefiouaywbefouawyebyf")
 --mct3:set_text("mct3")
 
---local mct4 = mct_mod:add_new_option("mct4", "slider", "baowefubawef")
---mct4:set_text("mct4")
+local mct4 = mct_mod:add_new_option("mct4", "slider", "baowefubawef")
+mct4:set_text("mct4")
+
+-- min/max/default
+mct4:slider_set_min_max(0, 10)
+mct4:set_default_value(2)

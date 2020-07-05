@@ -15,7 +15,7 @@ local mct_option = {
         checkbox = "ui/templates/checkbox_toggle",
         dropdown = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"},
         textbox = "ui/common ui/text_box",
-        slider = "ui/templates/panel_slider_horizontal"
+        slider = {"ui/templates/cycle_button_arrow_previous", "ui/common ui/text_box", "ui/templates/cycle_button_arrow_next"}
     },
 
     ui = mct.ui
@@ -497,7 +497,7 @@ end
 --- set-value wrapped for sliders. Temporarily unhooked, sliders aren't implemented.
 -- @todo Not done!
 -- @within API
-function mct_option:slider_set_values(min, max, current)
+function mct_option:slider_set_min_max(min, max)
     if not self:get_type() == "slider" then
         mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
         return false
@@ -513,18 +513,18 @@ function mct_option:slider_set_values(min, max, current)
         return false
     end
 
-    if not is_number(current) then
+    --[[if not is_number(current) then
         mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the current value supplied ["..tostring(current).."] is not a number! Returning false.")
         return false
-    end
+    end]]
 
     self._values = {
         min = min,
         max = max,
-        current = current
+        --current = current
     }
 
-    self:set_default_value(current)
+    --self:set_default_value(current)
 end
 
 --- Method to set the `dropdown_values`. This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.

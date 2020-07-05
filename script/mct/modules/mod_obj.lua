@@ -7,7 +7,7 @@ local mct = mct
 
 -- TODO this can be done cleaner. Read all option obj types?
 mct._valid_option_types = {
-    slider = false,
+    slider = true,
     dropdown = true,
     checkbox = true,
     textbox = false,

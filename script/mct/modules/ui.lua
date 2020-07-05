@@ -1040,26 +1040,127 @@ end
 -- Notify (unused?)
 -- update_frequency (doesn't change anything?)
 function ui_obj.new_slider(self, option_obj, row_parent)
-    local template = option_obj:get_uic_template()
+    local templates = option_obj:get_uic_template()
     local values = option_obj:get_values()
+
+    local left_button_template = templates[1]
+    local right_button_template = templates[3]
+    
+    local text_input_template = templates[2]
+
+    -- hold it all in a dummy
+    local new_uic = core:get_or_create_component("mct_slider", "ui/mct/script_dummy", row_parent)
+    new_uic:SetVisible(true)
+    new_uic:Resize(row_parent:Width() * 0.4, row_parent:Height())
+
+    local left_button = core:get_or_create_component("left", left_button_template, new_uic)
+    local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
+    local right_button = core:get_or_create_component("right", right_button_template, new_uic)
+
+    text_input:SetCanResizeWidth(true)
+    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
+    text_input:SetCanResizeWidth(false)
+
+    left_button:SetDockingPoint(4)
+    text_input:SetDockingPoint(5)
+    right_button:SetDockingPoint(6)
+
+    left_button:SetDockOffset(0,0)
+    right_button:SetDockOffset(0,0)
+
+    left_button:SetTooltipText("-1", true)
+    right_button:SetTooltipText("+1", true)
 
     local min = values.min or 0
     local max = values.max or 100
-    local current = values.current or 50
+    local current = option_obj:get_selected_setting()
 
-    local new_uic = core:get_or_create_component("mct_horizontal_slider", template, row_parent)
-    new_uic:SetVisible(true)
+    text_input:SetStateText(tostring(current))
+    text_input:SetInteractive(false)
+
+    if current == min then
+        left_button:SetState("inactive")
+    elseif current == max then
+        right_button:SetState("inactive")
+    end
+    
+    local function jump_value(i)
+        local new = current + i
+
+        --[[if new >= max then
+            -- do nothing and disable right
+            right_button:SetState("inactive")
+        elseif new <= min then
+            -- do nothing and disable left 
+            left_button:SetState("inactive")
+        else]]
+
+        -- enable both buttons & push new value
+        right_button:SetState("active")
+        left_button:SetState("active")
+
+        option_obj:set_selected_setting(new)
+        mct:log("New selected slider setting: "..tostring(new))
+        current = option_obj:get_selected_setting()
+        mct:log("New current: "..tostring(current))
+
+        if current == max then
+            right_button:SetState("inactive")
+            left_button:SetState("active")
+        elseif current == min then
+            left_button:SetState("inactive")
+            right_button:SetState("active")
+        end
+
+        text_input:SetStateText(tostring(current))
+
+        if current ~= option_obj:get_finalized_setting() then
+            self.locally_edited = true
+        end
+    end
+
+    -- TODO text input
+    local function set_value(new)
+
+
+    end
+
+
+    -- TODO outsource this to ui_select_value
+    core:add_listener(
+        "left_or_right_pressed",
+        "ComponentLClickUp",
+        function(context)
+            local uic = UIComponent(context.component)
+            return uic == left_button or uic == right_button
+        end,
+        function(context)
+            local step = context.string
+
+            if step == "right" then
+                jump_value(1)
+            elseif step == "left" then
+                jump_value(-1)
+            end
+        end,
+        true
+    )
+
+    --[[core:add_listener(
+        "enter_pressed_on_text_input",
+
+    )]]
 
     --[[new_uic:SetProperty("Value", current)
     new_uic:SetProperty("minValue", min)
     new_uic:SetProperty("maxValue", max)]]
 
-    local displ = core:get_or_create_component("display_text", "ui/vandy_lib/text/la_gioconda", new_uic)
+    --[[local displ = core:get_or_create_component("display_text", "ui/vandy_lib/text/la_gioconda", new_uic)
     displ:SetDockingPoint(4)
     displ:SetDockOffset(-80, displ:Height() /2)
     displ:SetStateText(tostring(current))
 
-    option_obj:set_selected_setting(current)
+    option_obj:set_selected_setting(current)]]
 
     -- TODO notify system
 
