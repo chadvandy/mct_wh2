@@ -58,6 +58,9 @@ function mct_option.new(mod, option_key, type)
     -- whether this option obj is read only for campaign
     self._read_only = false
 
+    self._local_only = false
+    self._mp_disabled = false
+
     -- the UICs linked to this option (the option + the txt)
     self._uics = {}
 
@@ -75,6 +78,50 @@ function mct_option.new(mod, option_key, type)
     --self._wrapped = wrapped
 
     return self
+end
+
+--- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
+-- @treturn boolean local_only Whether this option is only edited on the local PC, instead of both.
+function mct_option:get_local_only()
+    return self._local_only
+end
+
+--- Set whether this mct_option is edited for just the local PC, or sent to both PC's.
+-- For instance, this is useful for settings that don't edit the model, like enabling script logging.
+-- @tparam boolean enabled True for local-only, false for passed-in-MP-and-only-editable-by-the-host.
+function mct_option:set_local_only(enabled)
+    if is_nil(enabled) then
+        enabled = true
+    end
+
+    if not is_boolean(enabled) then
+        -- errmsg
+        return false
+    end
+
+    self._local_only = enabled
+end
+
+--- Read whether this mct_option is available in multiplayer.
+-- @treturn boolean mp_disabled Whether this mct_option is available in multiplayer or completely disabled.
+function mct_option:get_mp_disabled()
+    return self._mp_disabled
+end
+
+--- Set whether this mct_option exists for MP campaigns.
+-- If set to true, this option is invisible for MP and completely untracked by MCT.
+-- @tparam boolean enabled True for MP-disabled, false to MP-enabled
+function mct_option:set_mp_disabled(enabled)
+    if is_nil(enabled) then
+        enabled = true
+    end
+
+    if not is_boolean(enabled) then
+        -- errmsg
+        return false
+    end
+
+    self._mp_disabled = enabled
 end
 
 --- Read whether this mct_option can be edited or not at the moment.
