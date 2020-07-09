@@ -112,6 +112,76 @@ function settings:finalize(force)
     end
 end
 
+-- only used for new games in MP
+function settings:mp_load()
+    mct:log("mp_load() start")
+    -- first up: set up the events to respond to the MP stuff
+    ClMultiplayerEvents.registerForEvent(
+        "MctMpInitialLoad","MctMpInitialLoad",
+        function(mct_data)
+            -- mct_data = {mod_key = {option_key = {setting = xxx, read_only = true}, option_key_2 = {setting = yyy, read_only = false}}, mod_key2 = {etc}}
+            mct:log("MctMpInitialLoad begun!")
+            for mod_key, options in pairs(mct_data) do
+                local mod_obj = mct:get_mod_by_key(mod_key)
+                mct:log("Looping through mod obj ["..mod_key.."].")
+
+                for option_key, option_data in pairs(options) do
+                    mct:log("At object ["..option_key.."]")
+                    local option_obj = mod_obj:get_option_by_key(option_key)
+
+                    local setting = option_data._setting
+                    local read_only = option_data._read_only
+
+                    mct:log("Setting: "..tostring(setting))
+                    mct:log("Read only: "..tostring(read_only))
+
+                    option_obj:set_finalized_setting_event_free(setting)
+                    option_obj:set_read_only(read_only)
+                end
+            end
+
+            mct:log("MctMpInitialLoad end!")
+
+            mct:log("Triggering MctInitializedMp, enjoy")
+            core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = true})
+        end
+    )
+
+    mct:log("Is this being called too early?")
+    local test_faction = cm:get_saved_value("mct_host")
+    mct:log("Host faction key is: "..test_faction)
+
+    --mct:log("Local faction is: "..local_faction)
+
+    mct:log("Is THIS?")
+    --if cm.game_interface:model():faction_is_local(test_faction) then
+    if core:svr_load_bool("local_is_host") then
+        mct:log("mct_host found!")
+        self:load()
+
+        local tab = {}
+
+        local all_mods = mct:get_mods()
+        for mod_key, mod_obj in pairs(all_mods) do
+            tab[mod_key] = {}
+
+            local options = mod_obj:get_options()
+
+            for option_key, option_obj in pairs(options) do
+                tab[mod_key][option_key] = {}
+
+                tab[mod_key][option_key]._setting = option_obj:get_finalized_setting()
+                tab[mod_key][option_key]._read_only = option_obj:get_read_only()
+
+            end
+        end
+
+        mct:log("Triggering MctMpInitialLoad")
+
+        ClMultiplayerEvents.notifyEvent("MctMpInitialLoad", 0, tab)
+    end
+end
+
 function settings:load()
     local file = io.open(self.settings_file, "r")
     if not file then
@@ -224,34 +294,39 @@ end
 
 -- called whenever saving
 function settings:save_game_callback(context)
-    local file = io.open(self.settings_file, "r")
-    if not file then
+    --local file = io.open(self.settings_file, "r")
+    --if not file then
         -- ISSUE
-    else
+    --else
         mct:log("Saving settings to the save file.")
 
-        -- read the settings file
-        local content = loadfile(self.settings_file)
-        mct_data = content()
+        -- DO NOT read the settings file
+        --[[run_through_tableocal content = loadfile(self.settings_file)
+        mct_data = content()]]
+
+        local all_mods = mct:get_mods()
+
 
         -- go through each mod in the settings file, and save a table with all the info into it
-        for mod_key, mod_data in pairs(mct_data) do
-            local mod_obj = mct:get_mod_by_key(mod_key)
+        for mod_key, mod_obj in pairs(all_mods) do
+            --local mod_obj = mct:get_mod_by_key(mod_key)
             local mod_table = {}
 
-            for option_key, settings_val in pairs(mod_data) do
-                local option_obj = mod_obj:get_option_by_key(option_key)
+            local options = mod_obj:get_options()
+
+            for option_key, option_obj in pairs(options) do
+                --local option_obj = mod_obj:get_option_by_key(option_key)
                 if option_obj --[[and option_obj:get_read_only()]] then
                     mod_table[option_key] = {
-                        _setting = settings_val._setting,
-                        _read_only = settings_val._read_only
+                        _setting = option_obj:get_finalized_setting(),
+                        _read_only = option_obj:get_read_only(),
                     }
                 end
             end
 
             cm:save_named_value("mct_"..mod_key, mod_table, context)
         end
-    end
+    --end
 end
 
 return settings
