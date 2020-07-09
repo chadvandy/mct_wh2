@@ -20,7 +20,7 @@ local mod_configuration_tool = {
 }
 
 -- startup function
-function mod_configuration_tool:init(loading_game_context)
+function mod_configuration_tool:init()
     -- initialize the log
     self:log_init()
 
@@ -46,8 +46,66 @@ function mod_configuration_tool:init(loading_game_context)
         -- load mods in mct/settings/!
         self:load_mods()
 
-        -- TODO offload this elsewhere?
-        if __game_mode == __lib_type_campaign then
+        --self:load_and_start(loading_game_context, is_mp)
+    end)
+    if not ok then self:log(err) end
+end
+
+-- triggers the listeners for MP communication events!
+function mod_configuration_tool:mp_prep()
+    ClMultiplayerEvents.registerForEvent(
+        "MctMpFinalized","MctMpFinalized",
+        function(mct_data)
+            -- mct_data = {mod_key = {option_key = {setting = xxx, read_only = true}, option_key_2 = {setting = yyy, read_only = false}}, mod_key2 = {etc}}
+            for mod_key, options in pairs(mct_data) do
+                local mod_obj = self:get_mod_by_key(mod_key)
+
+                for option_key, option_data in pairs(options) do
+                    local option_obj = mod_obj:get_option_by_key(option_key)
+
+                    local setting = option_data._setting
+                    local read_only = option_data._read_only
+
+                    option_obj:set_finalized_setting_event_free(setting)
+                    option_obj:set_read_only(read_only)
+                end
+            end
+
+            core:trigger_custom_event("MctFinalized", {["mct"] = self})
+        end
+    )
+
+end
+
+function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
+    local function trigger()
+        self:log("Triggering MctInitialized, enjoy")
+        core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = false})
+    end
+
+    -- TODO offload this elsewhere?
+    self:log("load and start!")
+    if __game_mode == __lib_type_campaign then
+        self:log("is campaign yes yes")
+        if is_mp then
+            self:log("is mp yerp")
+            cm:add_pre_first_tick_callback(function()
+                self:log("MP init")
+                if cm:is_new_game() then
+                    self.settings:mp_load()
+                else
+                    self.settings:load_game_callback(loading_game_context)
+                end
+
+                self:mp_prep()
+
+                --trigger()
+            end)
+
+            cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
+
+        else
+            self:log("someone's playing alone :(")
             -- if it's a new game, read the settings file and save that into the save file
             if cm:is_new_game() then
                 self.settings:load()
@@ -56,25 +114,38 @@ function mod_configuration_tool:init(loading_game_context)
             end
 
             cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
-            --cm:add_loading_game_callback(function(context)
-                
-            --end)
-        else
-            -- read the settings file
-            self.settings:load()
-        end
-    end)
-    if not ok then self:log(err) end
 
-    core:trigger_custom_event("MctInitialized", {["mct"] = self})
+            trigger()
+        end
+    else
+        self:log("frontend?")
+        -- read the settings file
+        self.settings:load()
+
+        trigger()
+    end
 end
 
 function mod_configuration_tool:log_init()
+    --[[local num = 1
+    local log = "mct_log"..num..".txt"
+    if io.open(log, "r") ~= nil then
+        ModLog("MCT_LOG1 EXISTS")
+        num = 2
+        log = "mct_log"..num..".txt"
+    else
+        ModLog("NO MCT_LOG1 EXISTS")
+    end]]
+
     local file = io.open(self._logpath, "w+")
     file:write("NEW LOG INITIALIZED \n")
     local time_stamp = os.date("%d, %m %Y %X")
     file:write("[" .. time_stamp .. "]\n")
     file:close()
+
+    --self._logpath = log
+
+    --return num
 end
 
 --- Basic logging function for outputting text into the MCT log file.
@@ -269,14 +340,47 @@ end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mod_configuration_tool:finalize()
-    self.settings:finalize()
+    if __game_mode == __lib_type_campaign then
+        -- check if it's MP!
+        if cm.game_interface:model():is_multiplayer() then
+            self:log("Finalizing settings mid-campaign for MP.")
+            self.settings:finalize(false)
 
-    self._finalized = true
+            self._finalized = true
+            self.ui.locally_edited = false
 
-    -- remove the "locally_edited" field
-    self.ui.locally_edited = false
+            -- communicate to both clients that this is happening!
+            local mct_data = {}
+            local all_mods = self:get_mods()
+            for mod_key, mod_obj in pairs(all_mods) do
+                self:log("Looping through mod obj ["..mod_key.."]")
+                mct_data[mod_key] = {}
+                local all_options = mod_obj:get_options()
 
-    core:trigger_custom_event("MctFinalized", {["mct"] = self})
+                for option_key, option_obj in pairs(all_options) do
+                    self:log("Looping through option obj ["..option_key.."]")
+                    mct_data[mod_key][option_key] = {}
+
+                    self:log("Setting: "..tostring(option_obj:get_finalized_setting()))
+                    self:log("Read only: "..tostring(option_obj:get_read_only()))
+
+                    mct_data[mod_key][option_key]._setting = option_obj:get_finalized_setting()
+                    mct_data[mod_key][option_key]._read_only = option_obj:get_read_only()
+                end
+            end
+            ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
+
+        end
+    else
+        self.settings:finalize()
+
+        self._finalized = true
+
+        -- remove the "locally_edited" field
+        self.ui.locally_edited = false
+
+        core:trigger_custom_event("MctFinalized", {["mct"] = self})
+    end
 end
 
 --- Getter for the @{mct_mod} with the supplied key.
@@ -344,5 +448,7 @@ function get_mct()
 end
 
 core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)
+
+mod_configuration_tool:init()
 
 _G.get_mct = get_mct
