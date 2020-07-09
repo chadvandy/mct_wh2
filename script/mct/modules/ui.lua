@@ -877,16 +877,39 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
 
             -- read if the option is read-only in campaign (and that we're in campaign)
-            if __game_mode == __lib_type_campaign and option_obj:get_read_only() then
-                local state = new_option:CurrentState()
+            if __game_mode == __lib_type_campaign then
+                if option_obj:get_read_only() then
+                    local state = new_option:CurrentState()
 
-                --mct:log("UIc state is ["..state.."]")
+                    --mct:log("UIc state is ["..state.."]")
 
-                -- selected_inactive for checkbox buttons
-                if state == "selected" then
-                    new_option:SetState("selected_inactive")
-                else
-                    new_option:SetState("inactive")
+                    -- selected_inactive for checkbox buttons
+                    if state == "selected" then
+                        new_option:SetState("selected_inactive")
+                    else
+                        new_option:SetState("inactive")
+                    end
+                end
+
+                -- if game is MP, and the local faction isn't the host, lock any non-local settings
+                mct:log("local faction: "..cm:get_local_faction(true))
+                mct:log("host faction: "..cm:get_saved_value("mct_host"))
+                if cm:is_multiplayer() and cm:get_local_faction(true) ~= cm:get_saved_value("mct_host") then
+                    -- if the option isn't local only, disable it
+                    mct:log("mp and client")
+                    if not option_obj:get_local_only() then
+                        mct:log("option ["..option_obj:get_key().."] is not local only, locking!")
+                        local state = new_option:CurrentState()
+
+                        --mct:log("UIc state is ["..state.."]")
+    
+                        -- selected_inactive for checkbox buttons
+                        if state == "selected" then
+                            new_option:SetState("selected_inactive")
+                        else
+                            new_option:SetState("inactive")
+                        end
+                    end
                 end
             end
 
@@ -1330,102 +1353,7 @@ core:add_listener(
         return context.string == "button_mct_finalize_settings"
     end,
     function(context)
-        -- TODO temporary disable the popup while I work on the UI!
-        -- before finalizing, trigger a popup that lists all the changed settings and very kindly asks "Are you sure?"
-        --[[local popup = core:get_or_create_component("mct_changed_settings", "ui/common ui/dialogue_box")
-        local tx = UIComponent(popup:Find("DY_text"))]]
-
-        --tx:SetStateText("[[col:red]]Are you sure?[[/col]]")
-
-        --[[tx:SetDockingPoint(2)
-        tx:SetDockOffset(0, 15)
-        tx:Resize(100, 50)
-
-        tx:SetCanResizeHeight(false) tx:SetCanResizeWidth(false)
-        popup:SetCanResizeHeight(true) popup:SetCanResizeWidth(true)
-        popup:Resize(popup:Width() * 2, popup:Height() * 2)
-        popup:SetCanResizeHeight(false) popup:SetCanResizeWidth(false)
-        local w,h = popup:Dimensions()
-
-        -- create listview
-        local listview = UIComponent(popup:CreateComponent("list_view", "ui/vandy_lib/vlist"))
-        listview:SetCanResizeWidth(true) listview:SetCanResizeHeight(true)
-        listview:Resize(w,h - (265))
-        listview:SetDockingPoint(1)
-        listview:SetDockOffset(0, 65)
-
-        local x,y = listview:Position()
-        local w,h = listview:Dimensions()
-
-        local lclip = find_uicomponent(listview, "list_clip")
-        lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
-        lclip:MoveTo(x,y)
-        lclip:Resize(w,h)
-
-        local lbox = find_uicomponent(lclip, "list_box")
-        lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
-        lbox:MoveTo(x,y)
-        lbox:Resize(w,h)
-
-        lbox:Layout()
-
-        -- from here, add the children: First, the mod title, then all the [Option]: {Setting} pairs, then a div between each mod
-
-        local mods = mct:get_mods()
-
-        for mod_key, mod_obj in pairs(mods) do
-            local mod_title = core:get_or_create_component(mod_key.."_title", "ui/vandy_lib/text/la_gioconda", lbox)
-            mod_title:SetStateText(mod_obj:get_title())
-
-
-            for option_key, option_obj in pairs(mod_obj:get_options()) do
-                local option_tx = core:get_or_create_component(mod_key.."_"..option_key, "ui/vandy_lib/text/la_gioconda", lbox)
-                local t1 = option_obj:get_text()
-                local t2 = ""
-
-                local fin = option_obj:get_finalized_setting()
-
-                if option_obj:get_type() == "dropdown" then
-                    for i = 1, #option_obj._values do
-                        local val = option_obj._values[i]
-                        if val.key == fin then
-                            t2 = val.text
-                        end
-                    end
-                elseif option_obj:get_type() == "checkbox" then
-                    t2 = tostring(fin)
-                end
-
-                option_tx:SetStateText(t1..":\t\t"..t2)
-            end
-        end
-
-        -- list for "Ok" or "Cancel"
-        core:add_listener(
-            "popup_changed_settings",
-            "ComponentLClickUp",
-            function(context)
-                local button = UIComponent(context.component)
-                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_changed_settings"
-            end,
-            function(context)
-                local id = context.string
-
-                ui_obj:delete_component(popup)
-
-                if id == "button_tick" then
-                    -- just close and finalize!
-                    mct:finalize()                    
-                else
-                    -- don't finalize!
-                end
-            end,
-            false
-        )]]
-
         mct:finalize()
-
-
     end,
     true
 )
