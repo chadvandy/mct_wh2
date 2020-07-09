@@ -1,4 +1,4 @@
 local mct = get_mct()
 
 
-mct:init()
+mct:load_and_start()
