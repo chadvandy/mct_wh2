@@ -154,6 +154,18 @@ end
 -- Triggered once the file which housed this `mod_obj` is done loading
 -- @local
 function mct_mod:finalize()
+    -- disable mp-disabled options in mp
+    if __game_mode == __lib_type_campaign and cm.game_interface:model():is_multiplayer() then
+        local options = self:get_options()
+
+        for key, option_obj in pairs(options) do
+            if option_obj:get_mp_disabled() == true then
+                -- literally just remove it
+                self._options[key] = nil
+            end
+        end
+    end
+
     self:set_positions_for_options()
 end
 
@@ -177,10 +189,16 @@ function mct_mod:set_positions_for_options()
         local ordered_option_keys = {}
 
         for key,_ in pairs(attached_options) do
+            -- disable options in MP if they're, well, mp-disabled
+            --local option_obj = self:get_option_by_key(key)
+            --if __game_mode == __lib_type_campaign and (cm:is_multiplayer() and option_obj:get_mp_disabled()) then
+                -- do nothing
+            --else
             --mct:log("option with key ["..key.."] detected in section.")
-            table.insert(ordered_option_keys, key)
+                table.insert(ordered_option_keys, key)
             --total = total + 1
             --option_keys[#option_keys+1] = key
+           -- end
         end
 
         table.sort(ordered_option_keys)
