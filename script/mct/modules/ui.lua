@@ -214,6 +214,8 @@ function ui_obj:open_frame()
     else
         test:SetVisible(true)
     end
+
+    core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 end
 
 function ui_obj:close_frame()
@@ -537,6 +539,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
         mct:log("BOX: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
     end]]
 
+    core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = selected_mod})
 end
 
 function ui_obj:section_visibility_change(section_key, enable)
@@ -876,10 +879,13 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
 
+            -- TODO do all this shit through /script/campaign/mod/ or similar
+
             -- read if the option is read-only in campaign (and that we're in campaign)
             if __game_mode == __lib_type_campaign then
                 if option_obj:get_read_only() then
-                    local state = new_option:CurrentState()
+                    option_obj:ui_lock_option()
+                    --[[local state = new_option:CurrentState()
 
                     --mct:log("UIc state is ["..state.."]")
 
@@ -888,18 +894,19 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                         new_option:SetState("selected_inactive")
                     else
                         new_option:SetState("inactive")
-                    end
+                    end]]
                 end
 
                 -- if game is MP, and the local faction isn't the host, lock any non-local settings
-                mct:log("local faction: "..cm:get_local_faction(true))
-                mct:log("host faction: "..cm:get_saved_value("mct_host"))
+                --mct:log("local faction: "..cm:get_local_faction(true))
+                --mct:log("host faction: "..cm:get_saved_value("mct_host"))
                 if cm:is_multiplayer() and cm:get_local_faction(true) ~= cm:get_saved_value("mct_host") then
                     -- if the option isn't local only, disable it
                     mct:log("mp and client")
                     if not option_obj:get_local_only() then
                         mct:log("option ["..option_obj:get_key().."] is not local only, locking!")
-                        local state = new_option:CurrentState()
+                        option_obj:ui_lock_option()
+                        --[[local state = new_option:CurrentState()
 
                         --mct:log("UIc state is ["..state.."]")
     
@@ -908,11 +915,15 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                             new_option:SetState("selected_inactive")
                         else
                             new_option:SetState("inactive")
-                        end
+                        end]]
                     end
                 end
             end
 
+            -- read-only in battle (do this elsewhere? (TODO))
+            if __game_mode == __lib_type_battle then
+                option_obj:ui_lock_option()
+            end
 
             --dummy_option:SetVisible(option_obj:get_uic_visibility())
         end
@@ -1178,7 +1189,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     --[[core:add_listener(
         "enter_pressed_on_text_input",
-
     )]]
 
     return new_uic
