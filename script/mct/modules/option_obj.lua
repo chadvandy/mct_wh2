@@ -66,6 +66,7 @@ function mct_option.new(mod, option_key, type)
 
     -- UIC options for construction
     self._uic_visible = true
+    self._uic_locked = false
 
     self._pos = {
         x = 0,
@@ -524,6 +525,83 @@ function mct_option:ui_select_value(val)
 
         popup_menu:SetVisible(false)
         popup_menu:RemoveTopMost()
+    end
+end
+
+function mct_option:get_uic_locked()
+    return self._uic_locked
+end
+
+--- Internal function to set the option UIC as disabled, for read-only/mp-disabled
+function mct_option:ui_lock_option(enable)
+    local type = self:get_type()
+    local option_uic = self:get_uics()[1]
+    
+    if is_nil(enable) then
+        enable = true
+    end
+
+    if not is_boolean(enable) then
+        mct:log("ui_lock_option() called for option ["..self:get_key().."], but the argument provided is not a boolean or nil. Returning false!")
+        return false
+    end
+
+    self._uic_locked = enable
+
+    -- if the UIC exists, lock 'em
+    
+    -- TODO if the UIC isn't made yet, lock it when it is next created, similar to set_uic_visibility
+    if not is_uicomponent(option_uic) then
+        -- errmsg
+        return
+    end
+
+    local locked = self:get_uic_locked()
+    
+    if type == "slider" then
+        local left = find_uicomponent(option_uic, "left")
+        local right = find_uicomponent(option_uic, "right")
+
+        local state = "active"
+        if locked then
+            state = "inactive"
+        end
+
+        mct.ui:uic_SetState(left, state)
+        mct.ui:uic_SetState(right, state)
+    end
+
+    if type == "checkbox" then
+        local value = self:get_finalized_setting()
+
+        local state = "active"
+
+        if locked then
+            -- disable the checkbox, set it as checked if the finalized setting is true
+            if value == true then
+                state = "selected_inactive"
+            else
+                state = "inactive"
+            end
+        else
+            if value == true then
+                state = "selected"
+            else
+                state = "active"
+            end
+        end
+
+        mct.ui:uic_SetState(option_uic, state)
+    end
+
+    if type == "dropdown" then
+        -- disable the dropdown box
+        local state = "active"
+        if locked then
+            state = "inactive"
+        end
+
+        mct.ui:uic_SetState(option_uic, state)
     end
 end
 
