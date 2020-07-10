@@ -78,6 +78,40 @@ function settings:save_mct_settings(data)
     file:close()
 end
 
+function settings:local_only_finalize()
+    -- it's the client; only finalize local-only stuff
+    mct:log("Finalizing settings mid-campaign for MP, local-only.")
+    local all_mods = mct:get_mods()
+
+    for mod_key, mod_obj in pairs(all_mods) do
+        local fin = mod_obj:get_settings()
+
+        mct:log("Looping through mct_mod ["..mod_key.."]")
+        local all_options = mod_obj:get_options()
+
+        for option_key, option_obj in pairs(all_options) do
+            if option_obj:get_local_only() then
+                mct:log("Editing mct_option ["..option_key.."]")
+
+                -- only trigger the option-changed event if it's actually changing setting
+                local selected = option_obj:get_selected_setting()
+                if option_obj:get_finalized_setting() ~= selected then
+                    option_obj:set_finalized_setting(selected)
+                    fin[option_key] = selected
+                end
+            end
+        end
+
+        mod_obj._finalized_settings = fin
+    end
+
+    mct._finalized = true
+    
+    mct.ui.locally_edited = false
+
+    core:trigger_custom_event("MctFinalized", {["mct"] = mct})
+end
+
 function settings:finalize(force)
     --mct:log("Finalizing Settings!")
     local ret = {}
@@ -101,7 +135,6 @@ function settings:finalize(force)
         for option_key, option_obj in pairs(options) do
             data[option_key] = {}
             data[option_key]._setting = option_obj:get_finalized_setting()
-            data[option_key]._read_only = option_obj:get_read_only()
         end
 
         ret[key] = data
@@ -126,17 +159,15 @@ function settings:mp_load()
                 mct:log("Looping through mod obj ["..mod_key.."].")
 
                 for option_key, option_data in pairs(options) do
+                    
                     mct:log("At object ["..option_key.."]")
                     local option_obj = mod_obj:get_option_by_key(option_key)
 
                     local setting = option_data._setting
-                    local read_only = option_data._read_only
 
                     mct:log("Setting: "..tostring(setting))
-                    mct:log("Read only: "..tostring(read_only))
 
                     option_obj:set_finalized_setting_event_free(setting)
-                    option_obj:set_read_only(read_only)
                 end
             end
 
@@ -168,11 +199,12 @@ function settings:mp_load()
             local options = mod_obj:get_options()
 
             for option_key, option_obj in pairs(options) do
-                tab[mod_key][option_key] = {}
+                -- don't send local-only settings to both
+                if option_obj:get_local_only() == false then
+                    tab[mod_key][option_key] = {}
 
-                tab[mod_key][option_key]._setting = option_obj:get_finalized_setting()
-                tab[mod_key][option_key]._read_only = option_obj:get_read_only()
-
+                    tab[mod_key][option_key]._setting = option_obj:get_finalized_setting()
+                end
             end
         end
 
@@ -213,7 +245,6 @@ function settings:load()
 
                 for option_key, option_obj in pairs(all_options) do
                     local setting = nil
-                    local read_only = nil
 
                     -- grab data attached to this option key in the .lua settings file
                     if not is_nil(data) then
@@ -222,7 +253,6 @@ function settings:load()
                         -- grab the saved data in the .lua file for this option!
                         if not is_nil(saved_data) then
                             setting = saved_data._setting
-                            read_only = saved_data._read_only
                         end
                     end
 
@@ -232,17 +262,12 @@ function settings:load()
                         setting = option_obj:get_finalized_setting()
                     end
 
-                    -- ditto
-                    if is_nil(read_only) then
-                        -- ditto
-                        read_only = option_obj:get_read_only()
-                    end
+
 
                     -- set the finalized setting and read only stuffs
                     option_obj:set_finalized_setting_event_free(setting)
-                    option_obj:set_read_only(read_only)
 
-                    mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."] and read_only value ["..tostring(read_only).."]")
+                    mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
                 end
                 
                 mod_obj:load_finalized_settings()
