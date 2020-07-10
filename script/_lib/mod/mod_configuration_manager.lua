@@ -64,10 +64,8 @@ function mod_configuration_tool:mp_prep()
                     local option_obj = mod_obj:get_option_by_key(option_key)
 
                     local setting = option_data._setting
-                    local read_only = option_data._read_only
 
-                    option_obj:set_finalized_setting_event_free(setting)
-                    option_obj:set_read_only(read_only)
+                    option_obj:set_finalized_setting(setting)
                 end
             end
 
@@ -78,6 +76,9 @@ function mod_configuration_tool:mp_prep()
 end
 
 function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
+    self:init()
+
+    
     local function trigger()
         self:log("Triggering MctInitialized, enjoy")
         core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = false})
@@ -343,33 +344,43 @@ function mod_configuration_tool:finalize()
     if __game_mode == __lib_type_campaign then
         -- check if it's MP!
         if cm.game_interface:model():is_multiplayer() then
-            self:log("Finalizing settings mid-campaign for MP.")
-            self.settings:finalize(false)
+            -- check if it's the host
+            if cm:get_local_faction(true) == cm:get_saved_value("mct_host") then
+                self:log("Finalizing settings mid-campaign for MP.")
+                self.settings:finalize(false)
 
-            self._finalized = true
-            self.ui.locally_edited = false
+                self._finalized = true
+                self.ui.locally_edited = false
 
-            -- communicate to both clients that this is happening!
-            local mct_data = {}
-            local all_mods = self:get_mods()
-            for mod_key, mod_obj in pairs(all_mods) do
-                self:log("Looping through mod obj ["..mod_key.."]")
-                mct_data[mod_key] = {}
-                local all_options = mod_obj:get_options()
+                -- TODO don't use MP to communicate local-only changes
 
-                for option_key, option_obj in pairs(all_options) do
-                    self:log("Looping through option obj ["..option_key.."]")
-                    mct_data[mod_key][option_key] = {}
+                -- communicate to both clients that this is happening!
+                local mct_data = {}
+                local all_mods = self:get_mods()
+                for mod_key, mod_obj in pairs(all_mods) do
+                    self:log("Looping through mod obj ["..mod_key.."]")
+                    mct_data[mod_key] = {}
+                    local all_options = mod_obj:get_options()
 
-                    self:log("Setting: "..tostring(option_obj:get_finalized_setting()))
-                    self:log("Read only: "..tostring(option_obj:get_read_only()))
+                    for option_key, option_obj in pairs(all_options) do
+                        if not option_obj:get_local_only() then
+                            self:log("Looping through option obj ["..option_key.."]")
+                            mct_data[mod_key][option_key] = {}
 
-                    mct_data[mod_key][option_key]._setting = option_obj:get_finalized_setting()
-                    mct_data[mod_key][option_key]._read_only = option_obj:get_read_only()
+                            self:log("Setting: "..tostring(option_obj:get_finalized_setting()))
+
+                            mct_data[mod_key][option_key]._setting = option_obj:get_finalized_setting()
+                        else
+                            --?
+                        end
+                    end
                 end
-            end
-            ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
+                ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
 
+                self.settings:local_only_finalize()
+            else
+                self.settings:local_only_finalize()
+            end
         end
     else
         self.settings:finalize()
@@ -449,6 +460,6 @@ end
 
 core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)
 
-mod_configuration_tool:init()
+--mod_configuration_tool:init()
 
 _G.get_mct = get_mct
