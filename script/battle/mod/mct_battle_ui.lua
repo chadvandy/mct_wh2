@@ -1,4 +1,5 @@
-local bm = battle_manager:new(empire_battle:new())
+local bm = get_bm()
+local mct = get_mct()
 
 local function create_button()
     -- parent for the buttons on the top-left bar
@@ -15,6 +16,8 @@ local function create_button()
     new_button:PropagatePriority(button_group:Priority())
     button_group:Adopt(new_button:Address())
     --ModLog("end")
+
+    mct:load_and_start()
 end
 
 bm:repeat_callback(

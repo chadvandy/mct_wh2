@@ -19,6 +19,7 @@ core:add_listener(
     true
 )
 
+-- TODO this should go elsewhere, huh
 -- listen for the host changing settings in MP, so the client can get some form of UX
 core:add_listener(
     "MCT_ClientMpUX",

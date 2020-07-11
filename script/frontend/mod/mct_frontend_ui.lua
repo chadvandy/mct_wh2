@@ -1,28 +1,64 @@
 local mct = get_mct()
 
-real_timer.register_repeating("mct_button_highlight", 100)
+local function check_highlight()
+    local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
+
+    if not mct._finalized then
+
+        uic:Highlight(true, false)
+        uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069").."||"..effect.get_localised_string("mct_button_unfinalized"), true)
+    end
+end
 
 core:add_listener(
-    "check_for_button",
+    "button_check!",
     "RealTimeTrigger",
-    function(context) 
-        return context.string == "mct_button_highlight" and
-        is_uicomponent(find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options"))
+    function(context)
+        return context.string == "check_for_da_button" and is_uicomponent(find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar"))
     end,
     function(context)
-        local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
+        mct:log("button_check!")
+        real_timer.unregister("check_for_da_button")
+        core:remove_listener("button_check!")
 
-        real_timer.unregister("mct_button_highlight")
-        core:remove_listener("check_for_button")
+        local parent = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar")
+        local button = UIComponent(parent:Find("button_mct_options"))
 
-        if not mct._finalized then
+        --[[local button = UIComponent(parent:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
 
-            uic:Highlight(true, false)
-            uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069").."||"..effect.get_localised_string("mct_button_unfinalized"), true)
-        end
+        -- set the tooltip
+        button:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
+        local img_path = effect.get_skinned_image_path("icon_options.png")
+        button:SetImagePath(img_path)
+
+        -- make sure it's on the button group, and set its z-priority to be as high as its parents
+        button:PropagatePriority(parent:Priority())
+        parent:Adopt(button:Address())
+
+        for i = 0, parent:ChildCount() -1 do
+            local child = UIComponent(parent:Find(i))
+            if child:Id() == "button_mct_options" then
+                local backwards = UIComponent(parent:Find(i-1))
+                if not is_uicomponent(backwards) then
+                    mct:log("???? da fuq")
+                    return
+                end
+
+                local x,y = backwards:Position()
+                local w,h = backwards:Dimensions()
+
+                child:MoveTo(x+(w*1.1), y)
+            end
+        end]]
+
+        mct:load_and_start()
+
+        check_highlight()
     end,
-    true
+    false
 )
+
+real_timer.register_repeating("check_for_da_button", 100)
 
 core:add_listener(
     "check_for_finalization",
