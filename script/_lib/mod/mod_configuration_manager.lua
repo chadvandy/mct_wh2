@@ -78,6 +78,26 @@ end
 function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
     self:init()
 
+    core:add_listener(
+        "who_is_the_host_tell_me_now_please",
+        "UITriggerScriptEvent",
+        function(context)
+            return context:trigger():starts_with() == "mct_host|"
+        end,
+        function(context)
+            self:log('does this trigger pls')
+            local str = context:trigger()
+            local faction_key = string.gsub(str, "mct_host|", "")
+
+            cm:set_saved_value("mct_host", faction_key)
+
+            self:log('yes hey cool ['..faction_key..']')
+
+            self.settings:mp_load()
+        end,
+        false
+    )
+
     
     local function trigger()
         self:log("Triggering MctInitialized, enjoy")
@@ -93,7 +113,23 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
             cm:add_pre_first_tick_callback(function()
                 self:log("MP init")
                 if cm:is_new_game() then
-                    self.settings:mp_load()
+                    local my_faction = cm:get_local_faction(true)
+                    --[[local their_faction = ""
+                    local faction_keys = cm:get_human_factions()
+                    if faction_keys[1] == my_faction then
+                        their_faction = faction_keys[2]
+                    else
+                        their_faction = faction_keys[1]
+                    end]]
+    
+                    local is_host = core:svr_load_bool("local_is_host")
+                    self:log("local faction: "..my_faction)
+                    self:log("is_host: "..tostring(is_host))
+                    if is_host then
+                        CampaignUI.TriggerCampaignScriptEvent(0, "mct_host|"..my_faction)
+                    end
+
+                    --self.settings:mp_load()
                 else
                     self.settings:load_game_callback(loading_game_context)
                 end
@@ -119,7 +155,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
             trigger()
         end
     else
-        self:log("frontend?")
+        --self:log("frontend?")
         -- read the settings file
         self.settings:load()
 
@@ -351,8 +387,6 @@ function mod_configuration_tool:finalize()
 
                 self._finalized = true
                 self.ui.locally_edited = false
-
-                -- TODO don't use MP to communicate local-only changes
 
                 -- communicate to both clients that this is happening!
                 local mct_data = {}
