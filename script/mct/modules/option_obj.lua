@@ -533,6 +533,7 @@ function mct_option:get_uic_locked()
 end
 
 --- Internal function to set the option UIC as disabled, for read-only/mp-disabled
+-- @tparam boolean enable Lock this UI option, preventing it from being interacted with.
 function mct_option:ui_lock_option(enable)
     local type = self:get_type()
     local option_uic = self:get_uics()[1]
@@ -549,8 +550,6 @@ function mct_option:ui_lock_option(enable)
     self._uic_locked = enable
 
     -- if the UIC exists, lock 'em
-    
-    -- TODO if the UIC isn't made yet, lock it when it is next created, similar to set_uic_visibility
     if not is_uicomponent(option_uic) then
         -- errmsg
         return
