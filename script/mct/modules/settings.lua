@@ -76,7 +76,7 @@ function settings:save_mct_settings(data)
     file:close()
 end
 
-function settings:local_only_finalize()
+function settings:local_only_finalize(sent_by_host)
     -- it's the client; only finalize local-only stuff
     mct:log("Finalizing settings mid-campaign for MP, local-only.")
     local all_mods = mct:get_mods()
@@ -107,7 +107,7 @@ function settings:local_only_finalize()
     
     mct.ui.locally_edited = false
 
-    core:trigger_custom_event("MctFinalized", {["mct"] = mct})
+    core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = sent_by_host})
 end
 
 function settings:finalize(force)
@@ -176,13 +176,13 @@ function settings:mp_load()
         end
     )
 
-    mct:log("Is this being called too early?")
+    --mct:log("Is this being called too early?")
     local test_faction = cm:get_saved_value("mct_host")
     mct:log("Host faction key is: "..test_faction)
 
     --mct:log("Local faction is: "..local_faction)
 
-    mct:log("Is THIS?")
+    --mct:log("Is THIS?")
     --if cm.game_interface:model():faction_is_local(test_faction) then
     if core:svr_load_bool("local_is_host") then
         mct:log("mct_host found!")

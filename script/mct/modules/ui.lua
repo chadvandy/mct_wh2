@@ -224,6 +224,10 @@ function ui_obj:close_frame()
         self:delete_component(panel)
     end
 
+    core:remove_listener("left_or_right_pressed")
+    core:remove_listener("MctRowClicked")
+    core:remove_listener("MCT_SectionHeaderPressed")
+
     -- clear saved vars
     self.panel = nil
     self.mod_row_list_view = nil
@@ -898,9 +902,9 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                 end
 
                 -- if game is MP, and the local faction isn't the host, lock any non-local settings
-                --mct:log("local faction: "..cm:get_local_faction(true))
-                --mct:log("host faction: "..cm:get_saved_value("mct_host"))
                 if cm:is_multiplayer() and cm:get_local_faction(true) ~= cm:get_saved_value("mct_host") then
+                    mct:log("local faction: "..cm:get_local_faction(true))
+                    mct:log("host faction: "..cm:get_saved_value("mct_host"))
                     -- if the option isn't local only, disable it
                     mct:log("mp and client")
                     if not option_obj:get_local_only() then
@@ -1221,7 +1225,7 @@ function ui_obj:new_mod_row(mod_obj)
     self:uic_SetStateText(date, author_txt)
 
     core:add_listener(
-        "MctRowClicked"..mod_obj:get_key(),
+        "MctRowClicked",
         "ComponentLClickUp",
         function(context)
             return UIComponent(context.component) == row

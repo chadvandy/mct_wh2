@@ -69,7 +69,7 @@ function mod_configuration_tool:mp_prep()
                 end
             end
 
-            core:trigger_custom_event("MctFinalized", {["mct"] = self})
+            --core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = true})
         end
     )
 
@@ -82,7 +82,9 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         "who_is_the_host_tell_me_now_please",
         "UITriggerScriptEvent",
         function(context)
-            return context:trigger():starts_with() == "mct_host|"
+            self:log("test uitriggerscroptevent")
+            self:log(context:trigger())
+            return context:trigger():starts_with("mct_host|")
         end,
         function(context)
             self:log('does this trigger pls')
@@ -99,9 +101,9 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
     )
 
     
-    local function trigger()
+    local function trigger(is_multi)
         self:log("Triggering MctInitialized, enjoy")
-        core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = false})
+        core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = is_multi})
     end
 
     -- TODO offload this elsewhere?
@@ -110,34 +112,44 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         self:log("is campaign yes yes")
         if is_mp then
             self:log("is mp yerp")
+            
             cm:add_pre_first_tick_callback(function()
-                self:log("MP init")
-                if cm:is_new_game() then
-                    local my_faction = cm:get_local_faction(true)
-                    --[[local their_faction = ""
-                    local faction_keys = cm:get_human_factions()
-                    if faction_keys[1] == my_faction then
-                        their_faction = faction_keys[2]
-                    else
-                        their_faction = faction_keys[1]
-                    end]]
-    
-                    local is_host = core:svr_load_bool("local_is_host")
-                    self:log("local faction: "..my_faction)
-                    self:log("is_host: "..tostring(is_host))
-                    if is_host then
-                        CampaignUI.TriggerCampaignScriptEvent(0, "mct_host|"..my_faction)
-                    end
+                if not cm:get_saved_value("mct_mp_init") then
+                    self:log("MP init")
+                    --if cm:is_new_game() then
+                        local my_faction = cm:get_local_faction(true)
+                        --[[local their_faction = ""
+                        local faction_keys = cm:get_human_factions()
+                        if faction_keys[1] == my_faction then
+                            their_faction = faction_keys[2]
+                        else
+                            their_faction = faction_keys[1]
+                        end]]
+        
+                        local is_host = core:svr_load_bool("local_is_host")
+                        self:log("local faction: "..my_faction)
+                        self:log("is_host: "..tostring(is_host))
+                        if is_host then
+                            self:log("triggering scropt event")
+                            CampaignUI.TriggerCampaignScriptEvent(0, "mct_host|"..my_faction)
+                            self:log("mp scropt event sent")
+                        end
 
-                    --self.settings:mp_load()
+                        cm:set_saved_value("mct_mp_init", true)
+                        --self.settings:mp_load()
+
+                    --trigger()
                 else
-                    self.settings:load_game_callback(loading_game_context)
+                    -- trigger during pre-first-tick-callback to prevent time fuckery
+                    trigger(true)
                 end
-
-                self:mp_prep()
-
-                --trigger()
             end)
+            self.settings:load_game_callback(loading_game_context)
+            --trigger(true)
+            
+
+            self:mp_prep()
+
 
             cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
 
@@ -152,14 +164,14 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
             cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
 
-            trigger()
+            trigger(false)
         end
     else
         --self:log("frontend?")
         -- read the settings file
         self.settings:load()
 
-        trigger()
+        trigger(false)
     end
 end
 
@@ -411,10 +423,20 @@ function mod_configuration_tool:finalize()
                 end
                 ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
 
-                self.settings:local_only_finalize()
+                self.settings:local_only_finalize(true)
             else
-                self.settings:local_only_finalize()
+                self.settings:local_only_finalize(false)
             end
+        else
+            -- it's SP, do regular stuff
+            self.settings:finalize()
+
+            self._finalized = true
+    
+            -- remove the "locally_edited" field
+            self.ui.locally_edited = false
+    
+            core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
         end
     else
         self.settings:finalize()
@@ -424,7 +446,7 @@ function mod_configuration_tool:finalize()
         -- remove the "locally_edited" field
         self.ui.locally_edited = false
 
-        core:trigger_custom_event("MctFinalized", {["mct"] = self})
+        core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
     end
 end
 
