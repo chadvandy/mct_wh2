@@ -72,6 +72,22 @@
 	<td class="summary">For internal use only.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_local_only">mct_option:get_local_only ()</a></td>
+	<td class="summary">Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_local_only">mct_option:set_local_only (enabled)</a></td>
+	<td class="summary">Set whether this mct_option is edited for just the local PC, or sent to both PC's.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_mp_disabled">mct_option:get_mp_disabled ()</a></td>
+	<td class="summary">Read whether this mct_option is available in multiplayer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_mp_disabled">mct_option:set_mp_disabled (enabled)</a></td>
+	<td class="summary">Set whether this mct_option exists for MP campaigns.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_read_only">mct_option:get_read_only ()</a></td>
 	<td class="summary">Read whether this mct_option can be edited or not at the moment.</td>
 	</tr>
@@ -120,11 +136,15 @@
 	<td class="summary">Set the default selected setting when the mct_mod is first created and loaded.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_option:ui_lock_option">mct_option:ui_lock_option (enable)</a></td>
+	<td class="summary">Internal function to set the option UIC as disabled, for read-only/mp-disabled</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_selected_setting">mct_option:get_selected_setting ()</a></td>
 	<td class="summary">Getter for the current selected setting.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:slider_set_values">mct_option:slider_set_values (min, max, current)</a></td>
+	<td class="name" nowrap><a href="#mct_option:slider_set_min_max">mct_option:slider_set_min_max (min, max)</a></td>
 	<td class="summary">set-value wrapped for sliders.</td>
 	</tr>
 	<tr>
@@ -188,6 +208,90 @@
 
 
 
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_local_only"></a>
+    <strong>mct_option:get_local_only ()</strong>
+    </dt>
+    <dd>
+    Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        local_only Whether this option is only edited on the local PC, instead of both.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_local_only"></a>
+    <strong>mct_option:set_local_only (enabled)</strong>
+    </dt>
+    <dd>
+    Set whether this mct_option is edited for just the local PC, or sent to both PC's.
+ For instance, this is useful for settings that don't edit the model, like enabling script logging.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">enabled</span>
+            <span class="types"><span class="type">boolean</span></span>
+         True for local-only, false for passed-in-MP-and-only-editable-by-the-host.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_mp_disabled"></a>
+    <strong>mct_option:get_mp_disabled ()</strong>
+    </dt>
+    <dd>
+    Read whether this mct_option is available in multiplayer.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        mp<em>disabled Whether this mct</em>option is available in multiplayer or completely disabled.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_mp_disabled"></a>
+    <strong>mct_option:set_mp_disabled (enabled)</strong>
+    </dt>
+    <dd>
+    Set whether this mct_option exists for MP campaigns.
+ If set to true, this option is invisible for MP and completely untracked by MCT.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">enabled</span>
+            <span class="types"><span class="type">boolean</span></span>
+         True for MP-disabled, false to MP-enabled
         </li>
     </ul>
 
@@ -464,6 +568,27 @@ end
 
 </dd>
     <dt>
+    <a name = "mct_option:ui_lock_option"></a>
+    <strong>mct_option:ui_lock_option (enable)</strong>
+    </dt>
+    <dd>
+    Internal function to set the option UIC as disabled, for read-only/mp-disabled
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">enable</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Lock this UI option, preventing it from being interacted with.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "mct_option:get_selected_setting"></a>
     <strong>mct_option:get_selected_setting ()</strong>
     </dt>
@@ -485,8 +610,8 @@ end
 
 </dd>
     <dt>
-    <a name = "mct_option:slider_set_values"></a>
-    <strong>mct_option:slider_set_values (min, max, current)</strong>
+    <a name = "mct_option:slider_set_min_max"></a>
+    <strong>mct_option:slider_set_min_max (min, max)</strong>
     </dt>
     <dd>
     set-value wrapped for sliders.  Temporarily unhooked, sliders aren't implemented.
@@ -500,11 +625,6 @@ end
 
         </li>
         <li><span class="parameter">max</span>
-
-
-
-        </li>
-        <li><span class="parameter">current</span>
 
 
 
@@ -686,7 +806,7 @@ end
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-06-20 14:28:09 </i>
+<i style="float:right;">Last updated 2020-07-10 22:03:48 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
