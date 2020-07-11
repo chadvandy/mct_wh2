@@ -1,8 +1,6 @@
 --- Settings Object. INTERNAL USE ONLY.
 -- @classmod mct_settings
 
--- TODO multiplayer shit
-
 local mct = mct
 
 local settings = {
@@ -280,7 +278,7 @@ end
 
 -- load saved details for all mods 
 function settings:load_game_callback(context)
-    local retval = {}
+    --local retval = {}
 
     mct:log("Loading settings from the save file!")
 
@@ -324,10 +322,6 @@ function settings:save_game_callback(context)
         -- ISSUE
     --else
         mct:log("Saving settings to the save file.")
-
-        -- DO NOT read the settings file
-        --[[run_through_tableocal content = loadfile(self.settings_file)
-        mct_data = content()]]
 
         local all_mods = mct:get_mods()
 
