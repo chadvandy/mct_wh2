@@ -34,7 +34,7 @@ Wherein `mct_mod` can be replaced with whatever, it's just a local variable, and
 
 We'll cover @{manual.md.Localisation|localisation} for the mct_mod further down; for now, options!
 
-The @{mct_option} object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only two types of options - checkbox & dropdown. As of writing, there are two mid-hookup: slider (a number-based slider) & text input. The documentation will be edited once those are incorporated.
+The @{mct_option} object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only three types of options - checkbox, dropdown & slider. As of writing, there are two mid-hookup: text input and tweakers (and/or buttons). The documentation will be edited once those are incorporated.
 
 To make a new mct_option, you use the following:
 
@@ -44,9 +44,11 @@ local mct_mod = mct:register_mod("my_mod")
 local mct_option = mct_mod:add_new_option("option_key", "option_type")
 ```
 
-Where, once more, `option_key` has to be unique (to your `mct_mod`). `option_type` is either "checkbox" or "dropdown".
+Where, once more, `option_key` has to be unique (to your `mct_mod`). `option_type` is either "checkbox", "dropdown" or "slider".
 
 First up, if you are using a dropdown, you'll want to use @{mct_option:add_dropdown_value} or @{mct_option:add_dropdown_values}, to add the separate dropdown values for the box. This'll create the actual values within the dropdown box. There isn't an upper limit, but I recommend not doing too much, it'll start looking potentially ugly above 6 or 8 or so, depending on resolution.
+
+Alternatively, if you're using a slider, you'll want to use @{mct_option:slider_set_min_max}, @{mct_option:slider_set_step_size}, and/or @{mct_option:slider_set_precision}. Those'll give you more fine control over the specifics of the slider.
 
 Next up, you'll want to set a default value.
 ```lua
@@ -56,12 +58,22 @@ local mct_option = mct_mod:add_new_option("my_cool_option", "dropdown")
 mct_option:add_dropdown_value("value1", "My Dropdown Value", "This dropdown value does this.", true)
 mct_option:add_dropdown_value("value2", "Another Dropdown Value", "This dropdown value does something.", false)
 
+-- Default to "Another Dropdown Value"
 mct_option:set_default_value("value2")
 
 -- OR --
 local mct_option = mct_mod:add_new_option("my_cool_checkbox", "checkbox")
 
+-- Default to unchecked
 mct_option:set_default_value(false)
+
+-- OR ALSO --
+local mct_option = mct_mod:add_new_option("look_mom_a_slider", "slider")
+mct_option:slider_set_min_max(0, 100)
+mct_option:slider_set_step_size(1)
+
+-- Default to 10
+mct_option:set_default_value(10)
 ```
 
 There's not much beyond that that's needed to really expand functionality, though you can jump through the API to find any extra methods that you'd like. Before we get into reading the settings in-campaign, we're going to do localisation.
@@ -337,7 +349,7 @@ core:add_listener(
 
 ## Further Updates
 
-As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&C Modding Den, in `#just_vandy_things`.
+As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&C Modding Den, in [`#just_vandy_things`](https://discord.gg/mFQwX4A).
 
 I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now:
 

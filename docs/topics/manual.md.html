@@ -109,7 +109,7 @@
 
 <p>We'll cover <a href="../topics/manual.md.html#Localisation">localisation</a> for the mct_mod further down; for now, options!</p>
 
-<p>The <a href="../classes/mct_option.html#">mct_option</a> object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only two types of options - checkbox &amp; dropdown. As of writing, there are two mid-hookup: slider (a number-based slider) &amp; text input. The documentation will be edited once those are incorporated.</p>
+<p>The <a href="../classes/mct_option.html#">mct_option</a> object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only three types of options - checkbox, dropdown &amp; slider. As of writing, there are two mid-hookup: text input and tweakers (and/or buttons). The documentation will be edited once those are incorporated.</p>
 
 <p>To make a new mct_option, you use the following:</p>
 
@@ -121,9 +121,11 @@
 </pre>
 
 
-<p>Where, once more, <code>option_key</code> has to be unique (to your <a href="../classes/mct_mod.html#">mct_mod</a>). <code>option_type</code> is either "checkbox" or "dropdown".</p>
+<p>Where, once more, <code>option_key</code> has to be unique (to your <a href="../classes/mct_mod.html#">mct_mod</a>). <code>option_type</code> is either "checkbox", "dropdown" or "slider".</p>
 
 <p>First up, if you are using a dropdown, you'll want to use <a href="../classes/mct_option.html#mct_option:add_dropdown_value">mct_option:add_dropdown_value</a> or <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a>, to add the separate dropdown values for the box. This'll create the actual values within the dropdown box. There isn't an upper limit, but I recommend not doing too much, it'll start looking potentially ugly above 6 or 8 or so, depending on resolution.</p>
+
+<p>Alternatively, if you're using a slider, you'll want to use <a href="../classes/mct_option.html#mct_option:slider_set_min_max">mct_option:slider_set_min_max</a>, <a href="../classes/mct_option.html#mct_option:slider_set_step_size">mct_option:slider_set_step_size</a>, and/or <a href="../classes/mct_option.html#mct_option:slider_set_precision">mct_option:slider_set_precision</a>. Those'll give you more fine control over the specifics of the slider.</p>
 
 <p>Next up, you'll want to set a default value.</p>
 
@@ -134,12 +136,22 @@
 mct_option:add_dropdown_value(<span class="string">"value1"</span>, <span class="string">"My Dropdown Value"</span>, <span class="string">"This dropdown value does this."</span>, <span class="keyword">true</span>)
 mct_option:add_dropdown_value(<span class="string">"value2"</span>, <span class="string">"Another Dropdown Value"</span>, <span class="string">"This dropdown value does something."</span>, <span class="keyword">false</span>)
 
-mct_option:set_default_value(<span class="string">"value2"</span>)
+<span class="comment">-- Default to "Another Dropdown Value"
+</span>mct_option:set_default_value(<span class="string">"value2"</span>)
 
 <span class="comment">-- OR --
 </span><span class="keyword">local</span> mct_option = mct_mod:add_new_option(<span class="string">"my_cool_checkbox"</span>, <span class="string">"checkbox"</span>)
 
-mct_option:set_default_value(<span class="keyword">false</span>)
+<span class="comment">-- Default to unchecked
+</span>mct_option:set_default_value(<span class="keyword">false</span>)
+
+<span class="comment">-- OR ALSO --
+</span><span class="keyword">local</span> mct_option = mct_mod:add_new_option(<span class="string">"look_mom_a_slider"</span>, <span class="string">"slider"</span>)
+mct_option:slider_set_min_max(<span class="number">0</span>, <span class="number">100</span>)
+mct_option:slider_set_step_size(<span class="number">1</span>)
+
+<span class="comment">-- Default to 10
+</span>mct_option:set_default_value(<span class="number">10</span>)
 </pre>
 
 
@@ -447,7 +459,7 @@ core:add_listener(
 <p><a name="Further_Updates"></a></p>
 <h2>Further Updates</h2>
 
-<p>As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&amp;C Modding Den, in <code>#just_vandy_things</code>.</p>
+<p>As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&amp;C Modding Den, in <a href="https://discord.gg/mFQwX4A"><code>#just_vandy_things</code></a>.</p>
 
 <p>I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now:</p>
 
@@ -464,7 +476,7 @@ core:add_listener(
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-10 22:03:48 </i>
+<i style="float:right;">Last updated 2020-07-24 17:48:15 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
