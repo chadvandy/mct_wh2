@@ -5,7 +5,9 @@ local mct = mct
 
 local settings = {
     settings_file = "mct_settings.lua",
-    tab = 0
+    tab = 0,
+
+    new_settings = {},
 }
 
 local tab = 0
@@ -224,6 +226,8 @@ function settings:load()
         local content = loadfile(self.settings_file)
         content = content()
 
+        local any_added = false
+
         --local content = table.load(self.settings_file)
         local all_mods = mct:get_mods()
 
@@ -233,9 +237,9 @@ function settings:load()
             -- check if there's any saved data for this mod obj
             local data = content[mod_key]
 
-            if not mct:is_mct_mod(mod_obj) then
-                mct:error("Running settings:load(), but a mct_mod in the mct_data with key ["..mod_key.."] is not a valid mct_mod! Skipping!")
-            else
+            --if not mct:is_mct_mod(mod_obj) then
+                --mct:error("Running settings:load(), but a mct_mod in the mct_data with key ["..mod_key.."] is not a valid mct_mod! Skipping!")
+            --else
             --mod_obj._finalized_setings = data
 
                 -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
@@ -251,6 +255,24 @@ function settings:load()
                         -- grab the saved data in the .lua file for this option!
                         if not is_nil(saved_data) then
                             setting = saved_data._setting
+                        else -- this is a new setting!
+                            mct:log("New setting found! ["..option_key.."]")
+                            if is_nil(self.new_settings[mod_key]) then
+                                mct:log("?")
+                                self.new_settings[mod_key] = {}
+                                mct:log("??")
+                            end
+
+                            mct:log("???")
+
+                            -- save the option key in the new_settings table, so we can look back later and see that it's new!
+                            self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
+
+                            mct:log("????")
+
+                            any_added = true
+
+                            mct:log("?????")
                         end
                     end
 
@@ -260,8 +282,6 @@ function settings:load()
                         setting = option_obj:get_finalized_setting()
                     end
 
-
-
                     -- set the finalized setting and read only stuffs
                     option_obj:set_finalized_setting_event_free(setting)
 
@@ -269,10 +289,65 @@ function settings:load()
                 end
                 
                 mod_obj:load_finalized_settings()
-            end
+            --end
         end
 
+        mct:log("!")
+
         self:finalize()
+
+        mct:log("!!")
+
+        -- TODO
+        -- this needs to be triggered when the UI exists!
+        -- if any new settings exist, trigger the popup
+
+        mct:log("Any added:")
+        mct:log(tostring(any_added))
+        if any_added then
+            mct:log("does this exist")
+            mct.ui:add_ui_created_callback(function()
+                local ok, err = pcall(function()
+                local mod_keys = {}
+                for k, _ in pairs(self.new_settings) do
+                    mod_keys[#mod_keys+1] = k
+                end
+
+                local key = "mct_new_settings"
+                local text = "[[col:red]]MCT - New Settings Found![[/col]]\n\nNew settings have been added since the last time you've played, in mods "
+
+                for i = 1, #mod_keys do
+                    local mod_obj = mct:get_mod_by_key(mod_keys[i])
+                    local title = mod_obj:get_title()
+
+                    -- there's only one changed mod
+                    if 1 == #mod_keys then
+                        text = text .. "\"" .. title .. "\"" .. ". "
+                    else
+                        if i == #mod_keys then
+                            text = text .. "and \"" .. title .. "\"" .. ". "
+                        else
+                            text = text .. "\"" .. title .. "\"" .. ", "
+                        end
+                    end
+                end
+
+                -- TODO Localise this text entirely
+                text = text .. "\nPress the check to open MCT. Or, press the x to accept all default values for the new settings."
+
+                mct.ui:create_popup(
+                    key,
+                    text,
+                    true, -- this uses two buttons
+                    function() -- the "ok" button was triggered - show the MCT panel
+                        mct.ui:open_frame()
+                    end,
+                    function()  -- the "cancel" button was triggered - do nuffin, really
+                    end
+                )
+            end) if not ok then mct:log(err) end
+            end)
+        end
     end
 end
 

@@ -27,6 +27,10 @@ local ui_obj = {
 
     -- var to read whether there have been any settings changed while the panel has been opened
     locally_edited = false,
+
+    game_ui_created = false,
+
+    ui_created_callbacks = {},
 }
 
 mct:mixin(ui_obj)
@@ -52,6 +56,99 @@ function ui_obj:delete_component(uic)
     end
 
     dummy:DestroyChildren()
+end
+
+function ui_obj:ui_created()
+    mct:log("ui created")
+    self.game_ui_created = true
+
+    mct:log("loopin'")
+    for i = 1, #self.ui_created_callbacks do
+        mct:log("doing callback")
+        local f = self.ui_created_callbacks[i]
+        f()
+    end
+
+    mct:log("done")
+end
+
+function ui_obj:add_ui_created_callback(callback)
+    mct:log("adding ui created callback")
+    if not is_function(callback) then
+        -- errmsg
+        mct:log("not a function")
+        return false
+    end
+
+    self.ui_created_callbacks[#self.ui_created_callbacks+1] = callback
+end
+
+function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+    mct:log("Creating new popup!")
+    local function func()
+        mct:log("starting popup stuff")
+
+        -- verify shit is alright
+        if not is_string(key) then
+            -- errmsg
+            return false
+        end
+
+        if not is_string(text) then
+            -- errmsg
+            return false
+        end
+
+        if not is_boolean(two_buttons) then
+            -- errmsg
+            return false
+        end
+
+        if not two_buttons then button_two_callback = nil end
+
+        mct:log("Creating UIC")
+
+        -- build the popup panel itself
+        local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
+
+        -- grey out the rest of the world
+        popup:LockPriority()
+
+        -- grab and set the text
+        local tx = find_uicomponent(popup, "DY_text")
+        tx:SetStateText(text)
+
+        core:add_listener(
+            key.."_button_pressed",
+            "ComponentLClickUp",
+            function(context)
+                local button = UIComponent(context.component)
+                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == key
+            end,
+            function(context)
+                local button = UIComponent(context.component)
+                local id = context.string
+
+                -- close the popup
+                ui_obj:delete_component(popup)
+
+                if id == "button_tick" then
+                    button_one_callback()
+                else
+                    button_two_callback()
+                end
+            end,
+            false
+        )
+    end
+    -- if the game UI hasn't been created, set this as a callback
+    if not self.game_ui_created then
+        mct:log("Adding popup as ui created thing")
+        self:add_ui_created_callback(func)
+    else
+        mct:log("Triggering now!")
+        func()
+    end
 end
 
 --[[function ui_obj:set_uic_can_resize(uic, enable)
@@ -434,6 +531,9 @@ end
 function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     mct:log("populating panel!")
     local selected_mod = mct:get_selected_mod()
+
+    -- set the positions for all options in the mod
+    selected_mod:set_positions_for_options()
 
     local former_mod = nil
     if is_string(former_mod_key) then
@@ -929,6 +1029,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                 option_obj:ui_lock_option()
             end
 
+            if option_obj:get_uic_locked() then
+                option_obj:ui_lock_option()
+            end
+
             --dummy_option:SetVisible(option_obj:get_uic_visibility())
         end
     end
@@ -1070,7 +1174,6 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
 end
 
 
-
 -- UIC Properties:
 -- Value
 -- minValue
@@ -1110,11 +1213,21 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     local min = values.min or 0
     local max = values.max or 100
     local step_size = values.step_size or 1
+    local step_size_precision = values.step_size_precision or 0
 
-    left_button:SetTooltipText("-"..tostring(step_size), true)
-    right_button:SetTooltipText("+"..tostring(step_size), true)
+    local precision = values.precision or 0
+
+    -- [string "script\mct\modules\ui.lua"]:1218: invalid option to 'format'
+    local step_size_str = string.format("%."..tostring(step_size_precision).."f", step_size)
+
+    left_button:SetTooltipText("-"..tostring(step_size_str), true)
+    right_button:SetTooltipText("+"..tostring(step_size_str), true)
+
+    --step_size = tonumber(step_size)
 
     local current = option_obj:get_finalized_setting()
+    current = string.format("%."..tostring(precision).."f", current)
+
     option_obj:set_selected_setting(current)
 
     text_input:SetStateText(tostring(current))
@@ -1153,9 +1266,15 @@ function ui_obj.new_slider(self, option_obj, row_parent)
             new = min
         end
 
-        option_obj:set_selected_setting(new)
+        mct:log("Pre format: "..tostring(new))
+
+        new = string.format("%."..tostring(precision).."f", new)
+        mct:log("Post format: "..tostring(new))
+
+        option_obj:set_selected_setting(tonumber(new))
         mct:log("New selected slider setting: "..tostring(new))
         current = option_obj:get_selected_setting()
+        current = string.format("%."..tostring(precision).."f", current)
         mct:log("New current: "..tostring(current))
 
         text_input:SetStateText(tostring(current))
@@ -1384,37 +1503,10 @@ core:add_listener(
             ui_obj:close_frame()
         else
             -- trigger a popup to either close with unsaved changes, or cancel the close procedure
-            local uic = core:get_or_create_component("mct_unsaved", "ui/common ui/dialogue_box")
+            local key = "mct_unsaved"
+            local text = "[[col:red]]WARNING: Unsaved Changes![[/col]]\n\nThere are unsaved changes in the Mod Configuration Tool!\nIf you would like to close anyway, press accept. If you want to go back and save your changes, press cancel and use Finalize Settings!"
 
-            -- grey out the rest of the world
-            uic:LockPriority()
-
-            local tx = find_uicomponent(uic, "DY_text")
-            tx:SetStateText("[[col:red]]WARNING: Unsaved Changes![[/col]]\n\nThere are unsaved changes in the Mod Configuration Tool!\nIf you would like to close anyway, press accept. If you want to go back and save your changes, press cancel and use Finalize Settings!")
-
-            core:add_listener(
-                "mct_unsaved_button_pressed",
-                "ComponentLClickUp",
-                function(context)
-                    local button = UIComponent(context.component)
-                    return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_unsaved"
-                end,
-                function(context)
-                    local button = UIComponent(context.component)
-                    local id = context.string
-
-                    -- close the popup
-                    ui_obj:delete_component(uic)
-
-                    if id == "button_tick" then
-                        -- close anyway
-                        ui_obj:close_frame()
-                    else
-                                                
-                    end
-                end,
-                false
-            )
+            ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() end, nil)
         end
     end,
     true

@@ -10,13 +10,16 @@ local mod_configuration_tool = {
     _filepath = "/script/mct/settings/",
     _logpath = "mct_log.txt",
 
-    -- default to false - if a mct_settings.lua file is found on load, then it's set to true
-    _finalized = not not io.open("mct_settings.lua", "r"),
+    -- default to false
+    _finalized = false,
+    _initialized = false,
 
     write_to_log = true,
 
     _registered_mods = {},
-    _selected_mod = nil
+    _selected_mod = nil,
+
+    ui_created_callbacks = {},
 }
 
 -- startup function
@@ -173,6 +176,102 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
         trigger(false)
     end
+
+    self.ui:ui_created()
+
+    local new_options_added = {}
+    local booly = false
+
+    local function start_delay()
+        core:add_listener(
+            "do_stuff",
+            "RealTimeTrigger",
+            function(context)
+                return context.string == "mct_new_option_created"
+            end,
+            function(context)
+                local mod_keys = {}
+
+                for k,_ in pairs(new_options_added) do
+                    self:log("Adding mod key: "..k)
+                    mod_keys[#mod_keys+1] = k
+                end
+
+                local key = context.string
+                local text = "[[col:red]]MCT - New Options Created![[/col]]\n\nThe following mods have new options created since loading up this session (either due to a lord choice, or something happening in the game, etc): "
+
+                for i = 1, #mod_keys do
+                    local mod_obj = self:get_mod_by_key(mod_keys[i])
+                    local mod_title = mod_obj:get_title()
+
+                    if 1 == #mod_keys then
+                        text = text .. "\"" .. mod_title .. "\"" .. ". "
+                    else
+
+                        if i == #mod_keys then
+                            text = text .. "and \"" .. mod_title .. "\"" .. ". "
+                        else
+                            text = text .. "\"" .. mod_title .. "\"" .. ", "
+                        end
+                    end
+
+                end
+
+                text = text .. "\nPress the check mark to open up the MCT panel. Press the x to set to the default values for the new options."
+
+                self.ui:create_popup(
+                    key,
+                    text,
+                    true,
+                    function()
+                        self.ui:open_frame()
+                    end,
+                    function()
+                        -- do nothing?
+                    end
+                )
+
+                booly = false
+                new_options_added = {}
+            end,
+            false
+        )
+
+        -- trigger above listener in 2.5s
+        real_timer.register_singleshot("mct_new_option_created", 2500)
+    end
+
+    self._initialized = true
+
+    -- check for new options created after MCT has been started and loaded.
+    -- ~2s after a new option has been created, trigger a popup. This'll prevent triggering like 60 popups if 60 new options are added within a tick or two.
+    core:add_listener(
+        "mct_new_option_created",
+        "MctNewOptionCreated",
+        true,
+        function(context)
+            if not booly then
+                -- in 2.5s, trigger the popup
+                booly = true
+                start_delay()
+                
+            end
+
+            local mod_key = context:mod():get_key()
+            local option_key = context:option():get_key()
+
+            if is_nil(new_options_added[mod_key]) then
+                new_options_added[mod_key] = {}
+            end
+
+            self:log("New option added for mod: "..option_key)
+
+            local tab = new_options_added[mod_key]
+
+            tab[#tab+1] = option_key
+        end,
+        true
+    )
 end
 
 function mod_configuration_tool:log_init()
