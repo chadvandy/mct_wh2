@@ -532,28 +532,44 @@ function mct_option:get_uic_locked()
     return self._uic_locked
 end
 
---- Internal function to set the option UIC as disabled, for read-only/mp-disabled
+--- Set this option as disabled in the UI, so the user can't interact with it.
+-- This will result in `mct_option:ui_lock_option()` being called later on.
 -- @tparam boolean enable Lock this UI option, preventing it from being interacted with.
-function mct_option:ui_lock_option(enable)
+function mct_option:set_uic_locked(enable)
+    if is_nil(enable) then enable = true end
+    if not is_boolean(enable) then --[[errmsg]] return false end
+
+    self._uic_locked = enable
+
+    -- if the option already exists in UI, lock it
+    if self._uic_locked and is_uicomponent(self:get_uics()[1]) then
+        self:ui_lock_option()
+    end
+end
+
+--- Internal function to set the option UIC as disabled, for read-only/mp-disabled.
+-- Use `mct_option:set_uic_locked()` for the external version of this.
+-- @see mct_option:set_uic_locked
+function mct_option:ui_lock_option()
     local type = self:get_type()
     local option_uic = self:get_uics()[1]
     
-    if is_nil(enable) then
+    --[[if is_nil(enable) then
         enable = true
     end
 
     if not is_boolean(enable) then
         mct:log("ui_lock_option() called for option ["..self:get_key().."], but the argument provided is not a boolean or nil. Returning false!")
         return false
-    end
+    end]]
 
-    self._uic_locked = enable
+    --[[self._uic_locked = enable
 
     -- if the UIC exists, lock 'em
     if not is_uicomponent(option_uic) then
         -- errmsg
         return
-    end
+    end]]
 
     local locked = self:get_uic_locked()
     
@@ -618,22 +634,54 @@ function mct_option:get_selected_setting()
     return self._selected_setting
 end
 
-function mct_option:slider_set_step_size(step_size)
+--- Set function to set the step size for moving left/right through the slider.
+-- Works with floats and other numbers. Use the optional second argument if using floats/decimals
+-- @tparam number step_size The number to jump when using the left/right button.
+-- @tparam number step_size_precision The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
+function mct_option:slider_set_step_size(step_size, step_size_precision)
     if not self:get_type() == "slider" then
         mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
         return false
     end
 
     if not is_number(step_size) then
-        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(step_size).."] is not a number! Returning false.")
+        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the step size value supplied ["..tostring(step_size).."] is not a number! Returning false.")
+        return false
+    end
+
+    if is_nil(step_size_precision) then
+        step_size_precision = 0
+    end
+
+    if not is_number(step_size_precision) then
+        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the step size precision value supplied ["..tostring(step_size_precision).."] is not a number! Returning false.")
         return false
     end
 
     self._values.step_size = step_size
+    self._values.step_size_precision = step_size_precision
 end
 
---- set-value wrapped for sliders. Temporarily unhooked, sliders aren't implemented.
--- @todo Not done!
+--- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
+-- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
+-- @tparam number precision The precision used for floats.
+function mct_option:slider_set_precision(precision)
+    if not self:get_type() == "slider" then
+        mct:error("slider_set_precision() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
+        return false
+    end
+
+    if not is_number(precision) then
+        mct:error("slider_set_precision() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(precision).."] is not a number! Returning false.")
+        return false
+    end
+
+    self._values.precision = precision
+end
+
+--- Setter for the minimum and maximum values for the slider.
+-- @tparam number min The minimum number the slider value can reach.
+-- @tparam number max The maximum number the slider value can reach.
 -- @within API
 function mct_option:slider_set_min_max(min, max)
     if not self:get_type() == "slider" then
