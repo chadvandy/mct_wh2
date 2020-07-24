@@ -122,6 +122,7 @@ end
 
 -- TODO turn sections into Lua objects!
 -- TODO change the below ui method to also change the section header state
+-- TODO change the below UI method to work before the section is created!
 
 --- Set the rows of a section visible or invisible.
 -- @tparam string section_key The unique identifier for the desired section.
@@ -133,7 +134,7 @@ function mct_mod:set_section_visibility(section_key, visible)
         return false
     end
 
-    self.ui:section_visibility_change(section_key, visible)
+    mct.ui:section_visibility_change(section_key, visible)
 end
 
 --- Internal use only, no real need for use anywhere else.
@@ -166,7 +167,7 @@ function mct_mod:finalize()
         end
     end
 
-    self:set_positions_for_options()
+    --self:set_positions_for_options()
 end
 
 --- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
@@ -561,10 +562,22 @@ function mct_mod:add_new_option(option_key, option_type)
         new_option:set_default_value(false)
     end
 
+    mct:log("??")
+
+
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
 
     --mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
+
+    mct:log("????")
+
+    --if mct._initalized then
+        mct:log("Triggering MctNewOptionCreated")
+        core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = mod, ["option"] = new_option})
+    --end
+
+    mct:log("??????")
 
     return new_option
 end
