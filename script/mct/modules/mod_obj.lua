@@ -562,7 +562,7 @@ function mct_mod:add_new_option(option_key, option_type)
         new_option:set_default_value(false)
     end
 
-    mct:log("??")
+    --mct:log("??")
 
 
     self._options[option_key] = new_option
@@ -570,14 +570,14 @@ function mct_mod:add_new_option(option_key, option_type)
 
     --mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
 
-    mct:log("????")
+    --mct:log("????")
 
     --if mct._initalized then
         mct:log("Triggering MctNewOptionCreated")
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = mod, ["option"] = new_option})
     --end
 
-    mct:log("??????")
+    --mct:log("??????")
 
     return new_option
 end

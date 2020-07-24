@@ -260,19 +260,19 @@ function settings:load()
                             if is_nil(self.new_settings[mod_key]) then
                                 mct:log("?")
                                 self.new_settings[mod_key] = {}
-                                mct:log("??")
+                                --mct:log("??")
                             end
 
-                            mct:log("???")
+                            --mct:log("???")
 
                             -- save the option key in the new_settings table, so we can look back later and see that it's new!
                             self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
 
-                            mct:log("????")
+                            --mct:log("????")
 
                             any_added = true
 
-                            mct:log("?????")
+                            --mct:log("?????")
                         end
                     end
 
@@ -292,20 +292,20 @@ function settings:load()
             --end
         end
 
-        mct:log("!")
+        --mct:log("!")
 
         self:finalize()
 
-        mct:log("!!")
+        --mct:log("!!")
 
         -- TODO
         -- this needs to be triggered when the UI exists!
         -- if any new settings exist, trigger the popup
 
-        mct:log("Any added:")
+        --mct:log("Any added:")
         mct:log(tostring(any_added))
         if any_added then
-            mct:log("does this exist")
+            --mct:log("does this exist")
             mct.ui:add_ui_created_callback(function()
                 local ok, err = pcall(function()
                 local mod_keys = {}
