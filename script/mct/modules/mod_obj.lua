@@ -50,9 +50,17 @@ function mct_mod.new(key)
     } -- read from the mct_settings.lua file
 
     -- start with the default section, if none are specified this is what's used
+    local default_section = mct._MCT_SECTION.new("default", self)
+    default_section:set_localised_text("mct_mct_mod_default_section_text", true)
+
     self._sections = {
-        {key = "default", txt = "Default Category"},
+        default = default_section,
     }
+
+    self._last_section = self._sections.default
+
+    -- used for the Logging functionality
+    self._log_file_path = nil
 
     self._title = "No Title Assigned"
     self._author = "No Author Assigned"
@@ -63,31 +71,62 @@ function mct_mod.new(key)
     return self
 end
 
+function mct_mod:get_section_by_key(section_key)
+    if not is_string(section_key) then
+        -- errmsg
+        return nil
+    end
+
+    local t = self._sections[section_key]
+    if not mct:is_mct_section(t) then
+        -- errmsg
+        return nil
+    end
+
+    return t
+end
+
 --- Add a new section to the mod's settings view, to separate them into several categories.
 -- When this function is called, it assumes all following options being defined are being assigned to this section, unless further specified with
 -- mct_option.
 -- @tparam string section_key The unique identifier for this section.
 -- @tparam string localised_name The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_section_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned"
-function mct_mod:add_new_section(section_key, localised_name)
+function mct_mod:add_new_section(section_key, localised_name, is_localised)
     if not is_string(section_key) then
         mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
         return false
     end
 
-    local table = {
-        key = section_key,
-        txt = localised_name
-    }
+    if not is_string(localised_name) then
+        mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the localised_name supplied was not a string! Returning false.")
+        return false
+    end
 
-    -- put the section key at the bottom of the sections list - used to find the last-made section, which is what new options will default to
-    self._sections[#self._sections+1] = table
+    if is_nil(is_localised) then is_localised = false end
+
+    if not is_boolean(is_localised) then
+        mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the is_localised supplied was not nil or a boolean! Returning false.")
+        return false
+    end
+
+    local new_section = mct._MCT_SECTION.new(section_key, self)
+    new_section:set_localised_text(localised_name, is_localised)
+
+    self._sections[new_section:get_key()] = new_section
+    self._last_section = new_section
+
+    return new_section
 end
 
 --- Returns a k/v table of {option_key=option_obj} for options that are linked to this section.
 -- Shouldn't need to be used externally.
 -- @tparam string section_key The unique identifier for this section.
 function mct_mod:get_options_by_section(section_key)
-    local options = self:get_options()
+    local section = self:get_section_by_key(section_key)
+
+    return section:get_options()
+
+    --[[local options = self:get_options()
     local retval = {}
     for option_key, option_obj in pairs(options) do
         if option_obj:get_assigned_section() == section_key then
@@ -95,7 +134,7 @@ function mct_mod:get_options_by_section(section_key)
         end
     end
 
-    return retval
+    return retval]]
     --return self._options_by_section[section_key]
 end
 
@@ -108,7 +147,7 @@ end
 --- Return a specific section within the mct_mod.
 -- This is returned as a single table, with two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
 -- @tparam string section_key The unique identifier for the desired section.
-function mct_mod:get_section_by_key(section_key)
+--[[function mct_mod:get_section_by_key(section_key)
     local sections = self:get_sections()
     for i = 1, #sections do
         local section = sections[i]
@@ -118,6 +157,28 @@ function mct_mod:get_section_by_key(section_key)
     end
 
     return nil
+end]]
+
+function mct_mod:set_log_file_path(path)
+    if not is_string(path) then
+        -- errmsg
+        return false
+    end
+
+    local file = io.open(path, "r+")
+    -- should this return or just do a warning?
+    if not file then
+        mct:error("WARNING: set_log_file_path() called for mct_mod with key ["..self:get_key().."], but no file with the name ["..path.."] exists on disk!")
+    end
+
+    -- don't hold it hostage anymore
+    file:close()
+
+    self._log_file_path = path
+end
+
+function mct_mod:get_log_file_path()
+    return self._log_file_path
 end
 
 -- TODO turn sections into Lua objects!
@@ -141,8 +202,8 @@ end
 -- Specifically used when creating new options, to find the last-made section.
 -- @local
 function mct_mod:get_last_section()
-    -- return the last index in the _sections table
-    return self._sections[#self._sections] or ""
+    -- return the last created section
+    return self._last_section
 end
 
 --- Getter for the mct_mod's key
@@ -178,8 +239,8 @@ function mct_mod:set_positions_for_options()
 
     mct:log("setting positions for options in mod ["..self:get_key().."]")
     
-    for i = 1, #sections do
-        local section_key = sections[i].key
+    for section_key, section_obj in pairs(sections) do
+        --local section_key = sections[i].key
         local attached_options = self:get_options_by_section(section_key)
 
         mct:log("in section ["..section_key.."].")

@@ -46,7 +46,7 @@ function mct_option.new(mod, option_key, type)
     self._values = {}
 
     -- assigned section, used for UI, defaults to the last created section unless one is specified
-    self._assigned_section = mod:get_last_section().key
+    self._assigned_section = mod:get_last_section():get_key()
 
     -- a callback triggered whenever the setting is changed within the UI
     self._option_set_callback = nil

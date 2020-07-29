@@ -71,11 +71,11 @@ local uic_mixins = {
             return false
         end
 
-        if is_nil(resize_children) then
-            resize_children = true
-        end
+        --if is_nil(resize_children) then
+        --    resize_children = true
+        --end
 
-        if not is_boolean(resize_children) then
+        if is_nil(resize_children) == false and not is_boolean(resize_children) == false then
             mct:error("ERROR: uic_Resize() called but the [resize_children] provided (["..tostring(resize_children).."]) is not a valid boolean!")
             return false
         end

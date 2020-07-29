@@ -488,6 +488,48 @@ function ui_obj:create_panels()
 
     local w, h = mod_settings_panel:Dimensions()
 
+    -- create the tabs
+    local settings_tab = core:get_or_create_component("settings_tab", "ui/templates/square_small_tab_toggle", mod_settings_panel)
+    local logging_tab = core:get_or_create_component("logging_tab", "ui/templates/square_small_tab_toggle", mod_settings_panel)
+
+    settings_tab:SetDockingPoint(1)
+    settings_tab:SetDockOffset(0, settings_tab:Height() * -1)
+
+    logging_tab:SetDockingPoint(1)
+    logging_tab:SetDockOffset(logging_tab:Width() * 1.2, logging_tab:Height() * -1)
+
+    local logging_list_view = core:get_or_create_component("logging_list_view", "ui/vandy_lib/vlist", mod_settings_panel)
+    logging_list_view:MoveTo(mod_settings_panel:Position())
+    logging_list_view:SetDockingPoint(1)
+    logging_list_view:SetDockOffset(0, 10)
+    logging_list_view:SetCanResizeWidth(true) logging_list_view:SetCanResizeHeight(true)
+    logging_list_view:Resize(w,h-20)
+
+    --local x, y = mod_settings_list_view:Position()
+
+    local logging_list_clip = find_uicomponent(logging_list_view, "list_clip")
+    logging_list_clip:SetCanResizeWidth(true) logging_list_clip:SetCanResizeHeight(true)
+    --mod_settings_clip:MoveTo(x,y)
+    logging_list_clip:SetDockingPoint(1)
+    logging_list_clip:SetDockOffset(0, 10)
+    logging_list_clip:Resize(w,h-20)
+
+    local logging_list_box = find_uicomponent(logging_list_clip, "list_box")
+    logging_list_box:SetCanResizeWidth(true) logging_list_box:SetCanResizeHeight(true)
+    --mod_settings_box:MoveTo(x,y)
+    logging_list_box:SetDockingPoint(1)
+    logging_list_box:SetDockOffset(0, 10)
+    logging_list_box:Resize(w,h-20)
+
+    logging_list_box:Layout()
+
+    local l_handle = find_uicomponent(logging_list_view, "vslider")
+    l_handle:SetDockingPoint(6)
+    l_handle:SetDockOffset(-20, 0)
+
+    -- default to no logging list view (this probably won't work :) )
+    logging_list_view:SetVisible(false)
+
     local mod_settings_list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", mod_settings_panel)
     mod_settings_list_view:MoveTo(mod_settings_panel:Position())
     mod_settings_list_view:SetDockingPoint(1)
@@ -622,28 +664,145 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     box:MoveTo(mod_settings_panel:Position())]]
     box:Layout()
 
-    --[[do
-        local x,y = mod_settings_panel:Position()
-        local w,h = mod_settings_panel:Dimensions()
+    -- check if the log tab is valid
+    local settings_tab = find_uicomponent(mod_settings_panel, "settings_tab")
+    local logging_tab = find_uicomponent(mod_settings_panel, "logging_tab")
+    local can_settings = true
+    local can_log = false
 
-        mct:log("PANEL: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
+    local logging_list_view = find_uicomponent(mod_settings_panel, "logging_list_view")
+    local settings_list_view = find_uicomponent(mod_settings_panel, "list_view")
+
+    if selected_mod:get_log_file_path() == nil then
+        logging_tab:SetState("inactive")
+        logging_tab:SetTooltipText("There is no log file set for this mod. Use `mct_mod:set_log_file_path()` to set one, if you're the modder. If not, oh well.", true)
+        can_log = false
+    else
+        logging_tab:SetState("active")
+        logging_tab:SetTooltipText("Open the log file for this mod.", true)
+        can_log = true
     end
-    
-    do 
-        local x,y = view:Position()
-        local w,h = view:Dimensions()
 
-        mct:log("VIEW: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
+    if can_settings then
+        settings_tab:SetState("selected")
+        settings_tab:SetTooltipText("Open the settings path for this mod.", true)
     end
 
-    do 
-        local x,y = box:Position()
-        local w,h = box:Dimensions()
+    core:remove_listener("mct_tab_listeners")
 
-        mct:log("BOX: ("..tostring(x)..", "..tostring(y).."); ("..tostring(w)..", "..tostring(h)..").")
-    end]]
+    core:add_listener(
+        "mct_tab_listeners",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == "settings_tab" or context.string == "logging_tab"
+        end,
+        function(context)
+            if context.string == "settings_tab" then --set the states of each, and make logging invisi and settings visi
+                settings_tab:SetState("selected")
+                
+                if can_log then
+                    logging_tab:SetState("active")
+                else
+                    logging_tab:SetState("inactive")
+                end
+
+                -- logging lview invisi
+                logging_list_view:SetVisible(false)
+
+                settings_list_view:SetVisible(true)
+            else
+                logging_tab:SetState("selected")
+
+                if can_settings then
+                    settings_tab:SetState("active")
+                else
+                    settings_tab:SetState("inactive")
+                end
+
+                settings_list_view:SetVisible(false)
+
+                logging_list_view:SetVisible(true)
+                mct:log("do log list view pre")
+                self:do_log_list_view()
+                mct:log("do log list view post")
+            end
+        end,
+        true
+    )
 
     core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = selected_mod})
+end
+
+function ui_obj:do_log_list_view()
+    mct:log("do_log_list_view 1")
+
+    local selected_mod = mct:get_selected_mod()
+
+    local mod_settings_panel = self.mod_settings_panel
+    local logging_list_view = find_uicomponent(mod_settings_panel, "logging_list_view")
+    local logging_list_box = find_uicomponent(logging_list_view, "list_clip", "list_box")
+
+    mct:log("do_log_list_view 2")
+
+    -- delete any former logging (do this or not?) -- TODO decide the former question <--- ("do this or not?")
+    logging_list_box:DestroyChildren()
+
+    mct:log("do_log_list_view 3")
+
+    local log_file = io.open(selected_mod:get_log_file_path(), "r+")
+
+    if not log_file then
+        mct:error("do_log_list_view() called with mod ["..selected_mod:get_key().."], but no log file with the name ["..selected_mod:get_log_file_path().."] was found. Issue!")
+        return false
+    end
+
+    log_file:close()
+
+    mct:log("do_log_list_view 4")
+
+    local lines = {}
+    for line in io.lines(selected_mod:get_log_file_path()) do
+        --mct:log("io.lines 1")
+        lines[#lines+1] = line
+        --mct:log("io.lines 2")
+    end
+
+    mct:log("do_log_list_view 5")
+
+    for line_num, line_txt in pairs(lines) do
+        --mct:log("do papa exist: "..tostring(is_uicomponent(logging_list_box)))
+        --    mct:log("what papa is: "..tostring(logging_list_box))
+        --mct:log("do_log_list_view 6")
+        local ok, err = pcall(function()
+        local text_component = core:get_or_create_component("line_text_"..tostring(line_num), "ui/vandy_lib/text/la_gioconda", logging_list_box)
+
+        --mct:log("do exist? " .. tostring(is_uicomponent(text_component)))
+       
+        --mct:log("do_log_list_view 7")
+
+        --mct:log("log text: "..line_txt)
+
+        text_component:Resize(text_component:Width()*4, text_component:Height())
+
+        local w,h,num = text_component:TextDimensionsForText(tostring(line_num) .. ": " .. line_txt)
+        --mct:log("this work? "..tostring(w).." "..tostring(h))
+        --self:uic_Resize(text_component, w, h)
+        --text_component:Resize(w*2,h)
+        --mct:log('this prolly, right')
+
+        text_component:SetDockingPoint(1)
+        text_component:SetDockOffset(10, 10)
+        text_component:SetStateText(tostring(line_num) .. ": " .. line_txt)
+
+        text_component:SetVisible(true)
+
+        --mct:log("do_log_list_view 8")
+        end) if not ok then mct:error(err) end
+    end
+
+    logging_list_box:Layout()
+
+    mct:log("do_log_list_view 9")
 end
 
 function ui_obj:section_visibility_change(section_key, enable)
@@ -988,6 +1147,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- read if the option is read-only in campaign (and that we're in campaign)
             if __game_mode == __lib_type_campaign then
                 if option_obj:get_read_only() then
+                    option_obj:set_uic_locked(true)
                     option_obj:ui_lock_option()
                     --[[local state = new_option:CurrentState()
 

@@ -41,6 +41,9 @@ function mod_configuration_tool:init()
         -- load MCT object modules
         self._MCT_OPTION = self:load_module("option_obj", "script/mct/modules/")
         self._MCT_MOD = self:load_module("mod_obj", "script/mct/modules/")
+        self._MCT_SECTION = self:load_module("section_obj", "script/mct/modules")
+
+
 
         -- load the settings and UI files last
         self.settings = self:load_module("settings", "script/mct/modules/")
@@ -285,11 +288,31 @@ function mod_configuration_tool:log_init()
         ModLog("NO MCT_LOG1 EXISTS")
     end]]
 
-    local file = io.open(self._logpath, "w+")
-    file:write("NEW LOG INITIALIZED \n")
-    local time_stamp = os.date("%d, %m %Y %X")
-    file:write("[" .. time_stamp .. "]\n")
-    file:close()
+    local first_load = not core:svr_load_persistent_bool("mct_init")
+
+    if first_load then
+        core:svr_save_persistent_bool("mct_init", true)
+
+        local file = io.open(self._logpath, "w+")
+        file:write("NEW LOG INITIALIZED \n")
+        local time_stamp = os.date("%d, %m %Y %X")
+        file:write("[" .. time_stamp .. "]\n")
+        file:close()
+    else
+        local i_to_game_mode = {
+            [0] = "BATTLE",
+            [1] = "CAMPAIGN",
+            [2] = "FRONTEND",
+        }
+
+        local game_mode = i_to_game_mode[__game_mode]
+
+        local file = io.open(self._logpath, "a+")
+        file:write("**********\nNEW GAME MODE: "..game_mode)
+        local time_stamp = os.date("%d, %m %Y %X")
+        file:write("[" .. time_stamp .. "]\n")
+        file:close()
+    end
 
     --self._logpath = log
 
@@ -606,6 +629,10 @@ end
 
 function mod_configuration_tool:is_mct_option(obj)
     return tostring(obj) == "MCT_OPTION"
+end
+
+function mod_configuration_tool:is_mct_section(obj)
+    return tostring(obj) == "MCT_SECTION"
 end
 
 function get_mct()

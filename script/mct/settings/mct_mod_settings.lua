@@ -2,6 +2,8 @@ local mct = mct
 
 local mct_mod = mct:register_mod("mct_mod")
 
+mct_mod:set_log_file_path("mct_log.txt")
+
 local test = mct_mod:add_new_option("enable_logging", "checkbox")
 test:set_default_value(false)
 test:set_read_only(false)
