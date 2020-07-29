@@ -534,20 +534,20 @@ end
 
 --- Set this option as disabled in the UI, so the user can't interact with it.
 -- This will result in `mct_option:ui_lock_option()` being called later on.
--- @tparam boolean enable Lock this UI option, preventing it from being interacted with.
-function mct_option:set_uic_locked(enable)
-    if is_nil(enable) then enable = true end
-    if not is_boolean(enable) then --[[errmsg]] return false end
+-- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
+function mct_option:set_uic_locked(should_lock)
+    if is_nil(should_lock) then should_lock = true end
+    if not is_boolean(should_lock) then --[[errmsg]] return false end
 
-    self._uic_locked = enable
+    self._uic_locked = should_lock
 
-    -- if the option already exists in UI, lock it
-    if self._uic_locked and is_uicomponent(self:get_uics()[1]) then
-        self:ui_lock_option()
+    -- if the option already exists in UI, update its state
+    if is_uicomponent(self:get_uics()[1]) then
+        self:ui_lock_option() --this currently updates the component's state whether we're locking or unlocking. Can we rename the function to reflect this?
     end
 end
 
---- Internal function to set the option UIC as disabled, for read-only/mp-disabled.
+--- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 -- Use `mct_option:set_uic_locked()` for the external version of this.
 -- @see mct_option:set_uic_locked
 function mct_option:ui_lock_option()
