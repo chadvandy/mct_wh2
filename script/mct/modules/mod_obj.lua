@@ -225,10 +225,6 @@ function mct_mod:get_log_file_path()
     return self._log_file_path
 end
 
--- TODO turn sections into Lua objects!
--- TODO change the below ui method to also change the section header state
--- TODO change the below UI method to work before the section is created!
-
 --- Set the rows of a section visible or invisible.
 -- @tparam string section_key The unique identifier for the desired section.
 -- @tparam boolean visible Set the rows visible (true) or invisible (false)
