@@ -151,39 +151,6 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     end
 end
 
---[[function ui_obj:set_uic_can_resize(uic, enable)
-    mct:log(tostring(enable))
-    enable = enable or true
-
-    if not is_boolean(enable) then
-        -- issue
-        return false
-    end
-
-    if is_uicomponent(uic) then
-        self:uic_SetCanResizeHeight(uic, enable)
-        self:uic_SetCanResizeWidth(uic, enable)
-    end
-end]]
-
---[[function ui_obj:set_uic_children_can_resize(uic, enable)
-    enable = enable or true
-
-    if not is_boolean(enable) then
-        -- issue
-        return false
-    end
-
-    if is_uicomponent(uic) then
-        for i = 0, uic:ChildCount() -1 do
-            local child = UIcomponent(uic:Find(i))
-            if is_uicomponent(child) then
-                child:SetCanResizeHeight(enable)
-                child:SetCanResizeWidth(enable)
-            end
-        end
-    end
-end]]
 
 function ui_obj:set_selected_mod(row_uic)
     if is_uicomponent(row_uic) then
@@ -337,7 +304,8 @@ function ui_obj:close_frame()
     -- clear uic's attached to mct_options
     local mods = mct:get_mods()
     for _, mod in pairs(mods) do
-        mod:clear_uics_for_all_options()
+        --mod:clear_uics_for_all_options()
+        mod:clear_uics(true)
     end
 end
 
@@ -634,7 +602,7 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
 
         if not is_nil(former_mod) then
             -- clear the saved UIC objects on the former mod
-            former_mod:clear_uics_for_all_options()
+            former_mod:clear_uics(false)
         end
     end
 
@@ -805,15 +773,7 @@ function ui_obj:do_log_list_view()
     mct:log("do_log_list_view 9")
 end
 
-function ui_obj:section_visibility_change(section_key, enable)
-    local attached_rows = self._sections_to_rows[section_key]
-    for i = 1, #attached_rows do
-        local row = attached_rows[i]
-        if is_uicomponent(row) then
-            row:SetVisible(enable)
-        end
-    end
-end
+
 
 function ui_obj:create_sections_and_contents(mod_obj)
     local mod_settings_panel = self.mod_settings_panel
@@ -821,18 +781,23 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
     local sections = mod_obj:get_sections()
 
-    self._sections_to_rows = {}
+    --self._sections_to_rows = {}
 
     core:remove_listener("MCT_SectionHeaderPressed")
 
-    for i = 1, #sections do
-        local section_table = sections[i]
-        local section_key = section_table.key
-        self._sections_to_rows[section_key] = {}
+    for section_key, section_obj in pairs(sections) do
+        --local section_table = sections[i]
+        --local section_key = section_table.key
+        --self._sections_to_rows[section_key] = {}
+
+        -- make sure the dummy rows table is clear before doing anything
+        section_obj._dummy_rows = {}
 
         -- first, create the section header
         local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/expandable_row_header", mod_settings_box)
-        local open = true
+        --local open = true
+
+        section_obj._header = section_header
 
         core:add_listener(
             "MCT_SectionHeaderPressed",
@@ -841,8 +806,10 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 return context.string == "mct_section_"..section_key
             end,
             function(context)
-                open = not open
-                self:section_visibility_change(section_key, open)
+                mct:log("Changing visibility for section "..section_key)
+                local visible = section_obj:is_visible()
+                mct:log("Is visible: "..tostring(visible))
+                section_obj:set_visibility(not visible)
             end,
             true
         )
@@ -858,8 +825,9 @@ function ui_obj:create_sections_and_contents(mod_obj)
         local child_count = find_uicomponent(section_header, "child_count")
         child_count:SetVisible(false)
 
-        local text = section_table.txt
-        if not is_nil(text) then
+        local text = section_obj:get_localised_text()
+
+        --[[if not is_nil(text) then
             --text = "No Text Assigned"
         --else
             local test = effect.get_localised_string(text)
@@ -872,10 +840,11 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
         if not is_string(text) or text == "" then
             text = "No Text Assigned"
-        end
+        end]]
 
         local dy_title = find_uicomponent(section_header, "dy_title")
-        dy_title:SetStateText(text)
+        self:uic_SetStateText(dy_title, text)
+        --dy_title:SetStateText(text)
 
         -- lastly, create all the rows and options within
         local num_remaining_options = 0
@@ -965,6 +934,9 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 mct:log("issue? break? dunno?")
                 break
             end
+
+            -- set own visibility (for sections that default to closed)
+            section_obj:uic_visibility_change(true)
     
             -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
             move_to_next()
@@ -973,89 +945,36 @@ function ui_obj:create_sections_and_contents(mod_obj)
     end
 end
 
---[[function ui_obj:create_settings_rows(mod_obj)
-    mct:log("Is This thing On")
-
-    local mod_settings_panel = self.mod_settings_panel
-    local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
-
-    local num_remaining_options = 0
-    local options = mod_obj:get_options()
-    local valid = true
-
-    for k,v in pairs(options) do
-        num_remaining_options = num_remaining_options + 1
-    end
-
-    mct:log("Num remaining options: "..tostring(num_remaining_options))
-
-    local x = 1
-    local y = 1
-
-    -- where [index] is "x,y"
-    -- local option_key = mod_obj._coords[index]
-
-    -- loop through, creating a new row every time x == 1
-    -- grab an option obj for the valid option key at each coord
-    -- if there are no more option keys, break
-    while valid do
-        if num_remaining_options < 1 then
-            mct:log("No more remaining options!")
-            -- no more options, abort!
-            break
-        end
-
-        local index = tostring(x) .. "," .. tostring(y)
-        local option_key = mod_obj:get_option_key_for_coords(x, y)
-        mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
-        local option_obj
-        if is_string(option_key) then
-            if option_key == "NONE" then
-                -- no option objects remaining, kill the engine
-                break
-            end
-            if option_key == "MCT_BLANK" then
-                option_obj = option_key
-            else
-                -- only iterate down this iterator when it's a real option
-                num_remaining_options = num_remaining_options - 1
-                option_obj = mod_obj:get_option_by_key(option_key)
-            end
-
-            -- add a new column (and potentially, row, if x==1) for this position
-            self:new_option_row_at_pos(option_obj, x, y)
-        else
-            -- issue? break? dunno?
-        end
-
-        -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
-        if x >= 3 then
-            x = 1 
-            y = y + 1
-        else
-            x = x + 1
-        end        
-    end
-end]]
 
 function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     local mod_settings_panel = self.mod_settings_panel
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
+    local section_obj = option_obj:get_mod():get_section_by_key(section_key)
+
     local w,h = mod_settings_panel:Dimensions()
     w = w * 0.95
     h = h * 0.20
 
-    -- first up, grab the dummy row - it will either create a new one, or get one that's already created
+    if not mct:is_mct_section(section_obj) then
+        mct:log("the section obj isn't a section obj what the heckin'")
+    end
+
+
     local dummy_row = core:get_or_create_component("settings_row_"..section_key.."_"..tostring(y), "ui/mct/script_dummy", mod_settings_box)
 
-    local table = self._sections_to_rows[section_key]
-
-    table[#table+1] = dummy_row
+    --[[if section_obj:is_visible() then
+        dummy_row:SetVisible(true)
+    else
+        dummy_row:SetVisible(false)
+    end]]
 
     -- TODO make sliders the entire row so text and all work fine
-    
+    -- TODO above isn't really needed, huh?
+
     -- check to see if it was newly created, and then apply these settings
     if x == 1 then
+        section_obj:add_dummy_row(dummy_row)
+
         dummy_row:SetVisible(true)
         dummy_row:SetCanResizeHeight(true) dummy_row:SetCanResizeWidth(true)
         dummy_row:Resize(w,h)
@@ -1205,7 +1124,7 @@ function ui_obj.new_checkbox(self, option_obj, row_parent)
     new_uic:SetVisible(true)
 
     -- returns the default value if none has been selected
-    local default_val = option_obj:get_finalized_setting()
+    local default_val = option_obj:get_selected_setting()
 
     if default_val == true then
         new_uic:SetState("selected")
@@ -1213,7 +1132,7 @@ function ui_obj.new_checkbox(self, option_obj, row_parent)
         new_uic:SetState("active")
     end
 
-    option_obj:set_selected_setting(default_val)
+    option_obj:set_selected_setting(default_val, true)
 
     return new_uic
 end
@@ -1254,7 +1173,7 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
     local w = 0
     local h = 0
 
-    local default_value = option_obj:get_finalized_setting()
+    local default_value = option_obj:get_selected_setting()
 
     local values = option_obj:get_values()
     for i = 1, #values do
@@ -1294,7 +1213,7 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
         -- check if this is the default value
         if default_value == key then
             new_entry:SetState("selected")
-            option_obj:set_selected_setting(default_value)
+            option_obj:set_selected_setting(default_value, true)
 
             -- add the value's tt to the actual dropdown box
             selected_tx:SetStateText(text)
@@ -1385,10 +1304,10 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     --step_size = tonumber(step_size)
 
-    local current = option_obj:get_finalized_setting()
+    local current = option_obj:get_selected_setting()
     current = string.format("%."..tostring(precision).."f", current)
 
-    option_obj:set_selected_setting(current)
+    option_obj:set_selected_setting(current, true)
 
     text_input:SetStateText(tostring(current))
     text_input:SetInteractive(false)
