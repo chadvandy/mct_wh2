@@ -690,9 +690,8 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
                 settings_list_view:SetVisible(false)
 
                 logging_list_view:SetVisible(true)
-                mct:log("do log list view pre")
+
                 self:do_log_list_view()
-                mct:log("do log list view post")
             end
         end,
         true
@@ -702,7 +701,6 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
 end
 
 function ui_obj:do_log_list_view()
-    mct:log("do_log_list_view 1")
 
     local selected_mod = mct:get_selected_mod()
 
@@ -710,12 +708,8 @@ function ui_obj:do_log_list_view()
     local logging_list_view = find_uicomponent(mod_settings_panel, "logging_list_view")
     local logging_list_box = find_uicomponent(logging_list_view, "list_clip", "list_box")
 
-    mct:log("do_log_list_view 2")
-
-    -- delete any former logging (do this or not?) -- TODO decide the former question <--- ("do this or not?")
+    -- delete any former logging
     logging_list_box:DestroyChildren()
-
-    mct:log("do_log_list_view 3")
 
     local log_file = io.open(selected_mod:get_log_file_path(), "r+")
 
@@ -726,51 +720,29 @@ function ui_obj:do_log_list_view()
 
     log_file:close()
 
-    mct:log("do_log_list_view 4")
-
     local lines = {}
     for line in io.lines(selected_mod:get_log_file_path()) do
-        --mct:log("io.lines 1")
         lines[#lines+1] = line
-        --mct:log("io.lines 2")
     end
 
-    mct:log("do_log_list_view 5")
 
     for line_num, line_txt in pairs(lines) do
-        --mct:log("do papa exist: "..tostring(is_uicomponent(logging_list_box)))
-        --    mct:log("what papa is: "..tostring(logging_list_box))
-        --mct:log("do_log_list_view 6")
         local ok, err = pcall(function()
         local text_component = core:get_or_create_component("line_text_"..tostring(line_num), "ui/vandy_lib/text/la_gioconda", logging_list_box)
 
-        --mct:log("do exist? " .. tostring(is_uicomponent(text_component)))
-       
-        --mct:log("do_log_list_view 7")
-
-        --mct:log("log text: "..line_txt)
-
         text_component:Resize(text_component:Width()*4, text_component:Height())
 
-        local w,h,num = text_component:TextDimensionsForText(tostring(line_num) .. ": " .. line_txt)
-        --mct:log("this work? "..tostring(w).." "..tostring(h))
-        --self:uic_Resize(text_component, w, h)
-        --text_component:Resize(w*2,h)
-        --mct:log('this prolly, right')
+        --local w,h,num = text_component:TextDimensionsForText(tostring(line_num) .. ": " .. line_txt)
 
         text_component:SetDockingPoint(1)
         text_component:SetDockOffset(10, 10)
         text_component:SetStateText(tostring(line_num) .. ": " .. line_txt)
 
         text_component:SetVisible(true)
-
-        --mct:log("do_log_list_view 8")
         end) if not ok then mct:error(err) end
     end
 
     logging_list_box:Layout()
-
-    mct:log("do_log_list_view 9")
 end
 
 
@@ -1298,8 +1270,25 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     local precision = values.precision or 0
 
+    local function round_num(num, numDecimalPlaces)
+        local mult = 10^(numDecimalPlaces or 0)
+        if num >= 0 then
+            return math.floor(num * mult + 0.5) / mult
+        else
+            return math.ceil(num * mult - 0.5) / mult
+        end
+    end
+
     -- [string "script\mct\modules\ui.lua"]:1218: invalid option to 'format'
-    local step_size_str = string.format("%."..tostring(step_size_precision).."f", step_size)
+    local function round(num, places, is_num)
+        if is_num then
+            return round_num(num, places)
+        end
+
+        return string.format("%."..(places or 0) .. "f", num)
+    end
+
+    local step_size_str = round(step_size, step_size_precision, false)
 
     left_button:SetTooltipText("-"..tostring(step_size_str), true)
     right_button:SetTooltipText("+"..tostring(step_size_str), true)
@@ -1307,29 +1296,22 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     --step_size = tonumber(step_size)
 
     local current = option_obj:get_selected_setting()
-    current = string.format("%."..tostring(precision).."f", current)
+    current = round(current, precision, true)
+    local current_str = round(current, precision, false)
 
     option_obj:set_selected_setting(current, true)
 
-    text_input:SetStateText(tostring(current))
+    text_input:SetStateText(tostring(current_str))
     text_input:SetInteractive(false)
 
-    if current == min then
+    if current <= min then
         left_button:SetState("inactive")
-    elseif current == max then
+    elseif current >= max then
         right_button:SetState("inactive")
     end
     
     local function jump_value(i)
         local new = current + i
-
-        --[[if new >= max then
-            -- do nothing and disable right
-            right_button:SetState("inactive")
-        elseif new <= min then
-            -- do nothing and disable left 
-            left_button:SetState("inactive")
-        else]]
 
         -- enable both buttons & push new value
         right_button:SetState("active")
@@ -1347,25 +1329,25 @@ function ui_obj.new_slider(self, option_obj, row_parent)
             new = min
         end
 
-        mct:log("Pre format: "..tostring(new))
+        local new_num = round(new, precision, true)
+        local new_str = round(new, precision, false)
 
-        new = string.format("%."..tostring(precision).."f", new)
-        mct:log("Post format: "..tostring(new))
 
-        option_obj:set_selected_setting(tonumber(new))
-        mct:log("New selected slider setting: "..tostring(new))
+        option_obj:set_selected_setting(new_num)
+
         current = option_obj:get_selected_setting()
-        current = string.format("%."..tostring(precision).."f", current)
-        mct:log("New current: "..tostring(current))
+        current = round(current, precision, true)
 
-        text_input:SetStateText(tostring(current))
+        local current_str = round(current, precision, false)
+
+        text_input:SetStateText(tostring(current_str))
 
         if current ~= option_obj:get_finalized_setting() then
             self.locally_edited = true
         end
     end
 
-    -- TODO text input
+    -- TODO text input!
     local function set_value(new)
 
     end
