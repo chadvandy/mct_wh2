@@ -76,7 +76,7 @@ function mct_section:set_option_at_index(option_key, x, y)
 
     local index = tostring(x)..","..tostring(y)
 
-    mct:log("Setting option key ["..option_key.."] to pos ["..index.."] in section ["..self:get_key().."]")
+    --mct:log("Setting option key ["..option_key.."] to pos ["..index.."] in section ["..self:get_key().."]")
 
     self._ordered_options[index] = option_key
 end

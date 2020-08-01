@@ -167,12 +167,14 @@ end
 function mct_option:set_assigned_section(section_key)
     local mod = self:get_mod()
     local section = mod:get_section_by_key(section_key)
-    if not mct:is_mct_section(section) then
+    if mct:is_mct_section(section) then
         mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
+        
     end
-
+    
     section:assign_option(self)
+
     self._assigned_section = section_key
 end
 
@@ -480,7 +482,6 @@ end
 --- internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
 -- @todo This function only works for dropdowns and sliders so far - has to be set up for each type!
 -- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
--- @local
 function mct_option:ui_select_value(val)
     if not self:is_val_valid_for_type(val) then
         mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
@@ -711,7 +712,7 @@ function mct_option:get_selected_setting()
         self._selected_setting = self._finalized_setting
     end
 
-    mct:log("["..self._key.."], selected setting iiiiis: "..tostring(self._selected_setting))
+    --mct:log("["..self._key.."], selected setting iiiiis: "..tostring(self._selected_setting))
 
     --mct:log(tostring(self._selected_setting))
     return self._selected_setting

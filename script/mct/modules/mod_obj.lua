@@ -95,7 +95,7 @@ function mct_mod:save_mct_settings()
             retstr = retstr .. "\"" .. v .. "\"" .. ",\n"
         elseif is_number(v) then
             if option_obj:get_type() == "slider" then
-                local precision = option_obj:get_values().precision
+                local precision = option_obj:get_values().precision or 0
 
                 v = string.format("%."..precision.."f", v)
                 
@@ -166,9 +166,10 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     return new_section
 end
 
---- Returns a k/v table of {option_key=option_obj} for options that are linked to this section.
+--- Returns a k/v table of `{option_key=option_obj}` for options that are linked to this section.
 -- Shouldn't need to be used externally.
 -- @tparam string section_key The unique identifier for this section.
+-- @treturn {[string]=mct_option}
 function mct_mod:get_options_by_section(section_key)
     if not is_string(section_key) then
         mct:error("get_options_by_section() called on mct_mod with key ["..self:get_key().."], but the section_key provided was not a string! Returning an empty table.")
@@ -202,7 +203,9 @@ function mct_mod:get_sections()
     return self._sections
 end
 
-
+--- Set the log file path, relative to the Warhammer2.exe folder.
+-- Used for the logging tab. If nothing is set, the logging tab will be locked.
+-- @tparam string path The path to the log file. Include the file extension!
 function mct_mod:set_log_file_path(path)
     if not is_string(path) then
         -- errmsg
@@ -221,6 +224,8 @@ function mct_mod:set_log_file_path(path)
     self._log_file_path = path
 end
 
+--- Getter for the log file path.
+-- @treturn string
 function mct_mod:get_log_file_path()
     return self._log_file_path
 end
@@ -266,6 +271,10 @@ function mct_mod:get_key()
     return self._key
 end
 
+--- Set the option-sort-function for every section
+-- Triggers @{mct_section:set_option_sort_function} for every section.
+-- If you want to make 6 sections with "key_sort", and a 7th with "index_sort", use this first after making all sections and then use @{mct_section:set_option_sort_function} on the 7th afterwards.
+-- @tparam any sort_func See the wrapped function for what this argument needs to be.
 function mct_mod:set_option_sort_function_for_all_sections(sort_func)
     local sections = self:get_sections()
 
@@ -370,7 +379,7 @@ function mct_mod:set_positions_for_options()
                 -- check if it's a valid position for that option's type (sliders only on 2)
                 if valid_for_type(option_obj:get_type(), x, y) then
                     if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
-                    mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
+                    --mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
                     option_obj:override_position(x,y)
 
                     section_obj:set_option_at_index(option_key, x, y)
@@ -439,31 +448,6 @@ function mct_mod:get_settings()
 
     return self._finalized_settings
 end
-
--- Unused
---[[
-function mct_mod:get_last_coord()
-    local coords = self._coords
-    local last_coord = coords[#coords]
-    if last_coord then
-        return #coords, last_coord.x, last_coord.y
-    end
-end
-]]
-
--- Unused
---[[
-function mct_mod:get_option_key_for_coords(x,y)
-    if not is_number(x) or not is_number(y) then
-        mct:error("get_option_key_for_coords() called for mct_mod with key ["..self:get_key().."], but the x/y coordinates supplied are not numbers! Returning false.")
-        return false
-    end
-
-    local index = tostring(x) .. "," .. tostring(y)
-    local object_key = self._coords[index]
-    return object_key or "NONE"
-end
-]]
 
 --- Enable localisation for this mod's title. Accepts either finalized text, or a localisation key.
 -- @tparam string title_text The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui_text_replacements_my_dope_mod". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_title`, and MCT will automatically read that.
@@ -617,7 +601,7 @@ end
 function mct_mod:add_new_option(option_key, option_type)
     -- check first to see if an option with this key already exists; if it does, return that one!
 
-    mct:log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
+    --mct:log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
     if not is_string(option_key) then
         mct:error("Trying `add_new_option()` for mod ["..self:get_key().."] but option key provided ["..tostring(option_key).."] is not a string! Returning false.")
         return false
@@ -651,7 +635,7 @@ function mct_mod:add_new_option(option_key, option_type)
 
 
     --if mct._initalized then
-        mct:log("Triggering MctNewOptionCreated")
+        --mct:log("Triggering MctNewOptionCreated")
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = mod, ["option"] = new_option})
     --end
 
