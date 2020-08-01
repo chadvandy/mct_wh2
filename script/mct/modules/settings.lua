@@ -12,67 +12,27 @@ local settings = {
 
 local tab = 0
 
-local function run_through_table(tabul, str)
-    if not is_table(tabul) then
-        mct:log("run_through_table() called but the table supplied isn't actually a table!")
-		-- issue
-		return str
-    end
-
-    tab = tab + 1
-    
-    --[[local excluded_indices = {
-        --_FILEPATH = true,
-        _uics = true,
-        _mod = true,
-        -- _template = true,
-    }]]
-
-    for k,v in pairs(tabul) do
-        local t = ""
-        for i = 1, tab do t = t .. "\t" end
-        if is_string(k) then
-            str = str .. t.."[\""..k.."\"] = "
-        elseif is_number(k) then
-            str = str .. t.. "["..k.."] = "
-        end
-        
-
-        if is_table(v) then
-            -- if it's an empty table, just do "{},"
-            if next(v) == nil then 
-                str = str .. "{},\n" 
-            else
-                str = str .. "{\n"
-                str = run_through_table(v, str)
-                str = str .. t .. "},\n"
-            end
-        else
-            if is_string(v) then
-                str = str .. "\"" .. v .. "\"" .. ",\n"
-            elseif is_number(v) or is_boolean(v) then
-                str = str .. tostring(v) .. ",\n"
-            end
-        end
-    end
-
-	tab = tab - 1
-
-	--str = str .. "}"
-
-	return str
-end
-
-function settings:save_mct_settings(data)
+function settings:save_mct_settings()
     local file = io.open(self.settings_file, "w+")
+
+    self.tab = 0
 
     local str = "return {\n"
 
+    local mods = mct:get_mods()
+    for mod_key, mod_obj in pairs(mods) do
+        local addendum = mod_obj:save_mct_settings()
+
+        str = str .. addendum
+    end
+
     --mct:log("starting run through table")
-    str = run_through_table(data, str)
+    --str = run_through_table(data, str)
     --mct:log("ending run through table")
 
     str = str .. "}"
+
+    self.tab = 0
 
     file:write(str)
     file:close()
@@ -114,7 +74,7 @@ end
 
 function settings:finalize(force)
     --mct:log("Finalizing Settings!")
-    local ret = {}
+    --local ret = {}
     local mods = mct:get_mods()
 
     -- don't save specific indices that will absolutely break shit or waste space if they're saved to Lua
@@ -129,19 +89,19 @@ function settings:finalize(force)
         mct:log("Finalized mod ["..key.."]")
         mod:finalize_settings()
 
-        local data = {}
+        --local data = {}
 
-        local options = mod:get_options()
-        for option_key, option_obj in pairs(options) do
-            data[option_key] = {}
-            data[option_key]._setting = option_obj:get_finalized_setting()
-        end
+        --local options = mod:get_options()
+        --for option_key, option_obj in pairs(options) do
+            --data[option_key] = {}
+            --data[option_key]._setting = option_obj:get_finalized_setting()
+        --end
 
-        ret[key] = data
+        --ret[key] = data
     end
 
     if __game_mode ~= __lib_type_campaign or (__game_mode == __lib_type_campaign and force) then
-        self:save_mct_settings(ret)
+        self:save_mct_settings()
     end
 end
 

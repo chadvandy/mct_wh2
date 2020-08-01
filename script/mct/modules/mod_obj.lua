@@ -71,6 +71,47 @@ function mct_mod.new(key)
     return self
 end
 
+function mct_mod:save_mct_settings()
+    local retstr = ""
+
+    -- start with the key and start line
+    retstr = "\t[\""..self:get_key().."\"] = {\n"
+
+    -- loop through all options
+    local all_options = self:get_options()
+
+    for option_key, option_obj in pairs(all_options) do
+        retstr = retstr .. "\t\t[\""..option_key.."\"] = {\n"
+
+        retstr = retstr .. "\t\t\t[\"_setting\"] = "
+
+        local v = option_obj:get_finalized_setting()
+
+        if is_string(v) then
+            retstr = retstr .. "\"" .. v .. "\"" .. ",\n"
+        elseif is_number(v) then
+            if option_obj:get_type() == "slider" then
+                local precision = option_obj:get_values().precision
+
+                v = string.format("%."..precision.."f", v)
+                
+                retstr = retstr .. v .. ",\n"
+            else
+                -- issue? what?
+                retstr = retstr .. tostring(v) .. ",\n"
+            end            
+        elseif is_boolean(v) then
+            retstr = retstr .. tostring(v) .. ",\n"
+        end
+        
+        retstr = retstr .. "\t\t},\n"
+    end
+
+    retstr = retstr .. "\t},\n"
+
+    return retstr
+end
+
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
         mct:error("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning nil.")
