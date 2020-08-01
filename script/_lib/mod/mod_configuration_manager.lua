@@ -82,6 +82,7 @@ function mod_configuration_tool:mp_prep()
 end
 
 function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
+    local ok, err = pcall(function()
     self:init()
 
     core:add_listener(
@@ -275,6 +276,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         end,
         true
     )
+end) if not ok then mct:error(err) end
 end
 
 function mod_configuration_tool:log_init()
