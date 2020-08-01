@@ -41,7 +41,7 @@ function mod_configuration_tool:init()
         -- load MCT object modules
         self._MCT_OPTION = self:load_module("option_obj", "script/mct/modules/")
         self._MCT_MOD = self:load_module("mod_obj", "script/mct/modules/")
-        self._MCT_SECTION = self:load_module("section_obj", "script/mct/modules")
+        self._MCT_SECTION = self:load_module("section_obj", "script/mct/modules/")
 
 
 
