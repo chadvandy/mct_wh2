@@ -462,9 +462,15 @@ function ui_obj:create_panels()
 
     settings_tab:SetDockingPoint(1)
     settings_tab:SetDockOffset(0, settings_tab:Height() * -1)
+    local img_path = effect.get_skinned_image_path("icon_options.png")
+    settings_tab:SetImagePath(img_path)
+
 
     logging_tab:SetDockingPoint(1)
     logging_tab:SetDockOffset(logging_tab:Width() * 1.2, logging_tab:Height() * -1)
+    local img_path = effect.get_skinned_image_path("icon_records.png")
+    logging_tab:SetImagePath(img_path)
+
 
     local logging_list_view = core:get_or_create_component("logging_list_view", "ui/vandy_lib/vlist", mod_settings_panel)
     logging_list_view:MoveTo(mod_settings_panel:Position())
@@ -789,7 +795,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
         -- TODO set text & width and shit
         section_header:SetCanResizeWidth(true)
         section_header:SetCanResizeHeight(false)
-        section_header:Resize(mod_settings_box:Width() * 0.99, section_header:Height())
+        section_header:Resize(mod_settings_box:Width() * 0.95, section_header:Height())
         section_header:SetCanResizeWidth(false)
 
         section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
@@ -1065,12 +1071,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- read-only in battle (do this elsewhere? (TODO))
             if __game_mode == __lib_type_battle then
                 option_obj:set_uic_locked(true)
-                --option_obj:ui_lock_option()
             end
 
             if option_obj:get_uic_locked() then
                 option_obj:set_uic_locked(true)
-                --option_obj:ui_lock_option()
             end
 
             --dummy_option:SetVisible(option_obj:get_uic_visibility())
