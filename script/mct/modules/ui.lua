@@ -934,14 +934,14 @@ function ui_obj:create_sections_and_contents(mod_obj)
                 mct:log("issue? break? dunno?")
                 break
             end
-
-            -- set own visibility (for sections that default to closed)
-            section_obj:uic_visibility_change(true)
     
             -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
             move_to_next()
             --end
         end
+
+        -- set own visibility (for sections that default to closed)
+        section_obj:uic_visibility_change(true)
     end
 end
 
@@ -1067,7 +1067,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             if __game_mode == __lib_type_campaign then
                 if option_obj:get_read_only() then
                     option_obj:set_uic_locked(true)
-                    option_obj:ui_lock_option()
+                    --option_obj:ui_change_state()
                     --[[local state = new_option:CurrentState()
 
                     --mct:log("UIc state is ["..state.."]")
@@ -1088,8 +1088,8 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                     mct:log("mp and client")
                     if not option_obj:get_local_only() then
                         mct:log("option ["..option_obj:get_key().."] is not local only, locking!")
-                        option_obj:ui_lock_option()
-                        --[[local state = new_option:CurrentState()
+                        option_obj:set_uic_locked(true)
+                        --[[local state = new_option:CurrentState()f
 
                         --mct:log("UIc state is ["..state.."]")
     
@@ -1105,11 +1105,13 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 
             -- read-only in battle (do this elsewhere? (TODO))
             if __game_mode == __lib_type_battle then
-                option_obj:ui_lock_option()
+                option_obj:set_uic_locked(true)
+                --option_obj:ui_lock_option()
             end
 
             if option_obj:get_uic_locked() then
-                option_obj:ui_lock_option()
+                option_obj:set_uic_locked(true)
+                --option_obj:ui_lock_option()
             end
 
             --dummy_option:SetVisible(option_obj:get_uic_visibility())

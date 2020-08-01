@@ -543,7 +543,7 @@ function mct_option:get_uic_locked()
 end
 
 --- Set this option as disabled in the UI, so the user can't interact with it.
--- This will result in `mct_option:ui_lock_option()` being called later on.
+-- This will result in `mct_option:ui_change_state()` being called later on.
 -- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
 function mct_option:set_uic_locked(should_lock)
     if is_nil(should_lock) then should_lock = true end
@@ -553,36 +553,20 @@ function mct_option:set_uic_locked(should_lock)
 
     -- if the option already exists in UI, update its state
     if is_uicomponent(self:get_uics()[1]) then
-        self:ui_lock_option() --this currently updates the component's state whether we're locking or unlocking. Can we rename the function to reflect this?
+        self:ui_change_state()
     end
 end
 
 --- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 -- Use `mct_option:set_uic_locked()` for the external version of this.
 -- @see mct_option:set_uic_locked
-function mct_option:ui_lock_option()
+function mct_option:ui_change_state()
     local type = self:get_type()
     local option_uic = self:get_uics()[1]
-    
-    --[[if is_nil(enable) then
-        enable = true
-    end
-
-    if not is_boolean(enable) then
-        mct:log("ui_lock_option() called for option ["..self:get_key().."], but the argument provided is not a boolean or nil. Returning false!")
-        return false
-    end]]
-
-    --[[self._uic_locked = enable
-
-    -- if the UIC exists, lock 'em
-    if not is_uicomponent(option_uic) then
-        -- errmsg
-        return
-    end]]
 
     local locked = self:get_uic_locked()
     
+    -- TODO lock the text input!
     if type == "slider" then
         local left = find_uicomponent(option_uic, "left")
         local right = find_uicomponent(option_uic, "right")
