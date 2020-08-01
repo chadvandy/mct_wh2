@@ -570,14 +570,14 @@ function mct_option:ui_change_state()
     if type == "slider" then
         local left = find_uicomponent(option_uic, "left")
         local right = find_uicomponent(option_uic, "right")
-        local text_input = find_uicomponent(option_uic, "text_input")
+        --local text_input = find_uicomponent(option_uic, "text_input")
 
         local state = "active"
         if locked then
             state = "inactive"
         end
 
-        mct.ui:uic_SetInteractive(text_input, not locked)
+        --mct.ui:uic_SetInteractive(text_input, not locked)
         mct.ui:uic_SetState(left, state)
         mct.ui:uic_SetState(right, state)
     end
