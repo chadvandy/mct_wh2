@@ -162,10 +162,10 @@ function mct_section:set_visibility(enable)
 
     self._visible = enable
 
-    -- not really -- test if the UI object exists - if it does, call the UI wrapper!
-    --if is_uicomponent(self._header) then
+    -- test if the UI object exists - if it does, call the UI wrapper!
+    if is_uicomponent(self._header) then
         self:uic_visibility_change()
-    --end
+    end
 end
 
 function mct_section:set_localised_text(text, is_localised)
