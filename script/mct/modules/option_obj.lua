@@ -151,15 +151,18 @@ function mct_option:set_read_only(enabled)
     self._read_only = enabled
 end
 
-
 --- Assigns the section_key that this option is a member of.
+-- Calls @{mct_section:assign_option} internally.
+-- @tparam string section_key The key for the section this option is being added to.
 function mct_option:set_assigned_section(section_key)
     local mod = self:get_mod()
-    if is_nil(mod:get_section_by_key(section_key)) then
+    local section = mod:get_section_by_key(section_key)
+    if not mct:is_mct_section(section) then
         mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
     end
 
+    section:assign_option(self)
     self._assigned_section = section_key
 end
 
@@ -450,6 +453,7 @@ end
 
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the callback set through @{mct_option:add_option_set_callback}.
 -- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
+-- @tparam boolean event_free True to skip the process_callback.
 -- @local
 function mct_option:set_selected_setting(val, event_free)
     if self:is_val_valid_for_type(val) then
