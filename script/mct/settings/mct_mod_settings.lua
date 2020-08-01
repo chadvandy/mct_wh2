@@ -23,7 +23,16 @@ mct1:set_read_only(true)
 
 local mct2 = mct_mod:add_new_option("mct2", "checkbox", "This is also a test")
 mct2:set_default_value(false)
-mct2:set_text("mct2")
+mct2:set_text("Enable Test Section")
+
+mct2:add_option_set_callback(
+    function(option)
+        local setting = option:get_selected_setting()
+        local show_section = setting == true
+
+        mct_mod:set_section_visibility("section_test", show_section)
+    end
+)
 --mct2:set_read_only(true)
 
 --local mct3 = mct_mod:add_new_option("mct3", "textbox", "ouaihybefiouaywbefouawyebyf")
@@ -39,6 +48,21 @@ mct4:slider_set_precision(0)
 mct4:set_default_value(0)
 mct4:set_text("0-precision slider")
 --mct4:set_read_only(true)
+
+local section = mct_mod:add_new_section("section_test")
+section:set_localised_text("This Is My Test Section")
+section:set_visibility(false)
+
+-- change the "Enable Test Section" button when the section's visibility is changed manually
+section:add_section_visibility_change_callback(
+    function(section)
+        local visibility = section:is_visible()
+        
+        -- TODO fix this infinite loop
+        -- don't do this unless you want an infinite loop
+        --mct2:set_selected_setting_event_free(visibility)
+    end
+)
 
 local mct5 = mct_mod:add_new_option("mct5", "dropdown")
 mct5:set_text("Local Only")
