@@ -54,7 +54,7 @@ function mct_mod.new(key)
     default_section:set_localised_text("mct_mct_mod_default_section_text", true)
 
     self._sections = {
-        default = default_section,
+        ["default"] = default_section,
     }
 
     self._last_section = self._sections.default
@@ -73,13 +73,13 @@ end
 
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
-        -- errmsg
+        mct:error("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning nil.")
         return nil
     end
 
     local t = self._sections[section_key]
     if not mct:is_mct_section(t) then
-        -- errmsg
+        mct:error("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section found in self._sections is not an mct_section! Returning nil.")
         return nil
     end
 
@@ -98,8 +98,9 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     end
 
     if not is_string(localised_name) then
-        mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the localised_name supplied was not a string! Returning false.")
-        return false
+        localised_name = ""
+        --mct:error("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the localised_name supplied was not a string! Returning false.")
+        --return false
     end
 
     if is_nil(is_localised) then is_localised = false end
@@ -122,7 +123,17 @@ end
 -- Shouldn't need to be used externally.
 -- @tparam string section_key The unique identifier for this section.
 function mct_mod:get_options_by_section(section_key)
+    if not is_string(section_key) then
+        mct:error("get_options_by_section() called on mct_mod with key ["..self:get_key().."], but the section_key provided was not a string! Returning an empty table.")
+        return {}
+    end
+
     local section = self:get_section_by_key(section_key)
+
+    if is_nil(section) then
+        mct:error("get_options_by_section() called on mct_mod with key ["..self:get_key().."], but there was no section found with the key ["..section_key.."]. Returning an empty table.")
+        return {}
+    end
 
     return section:get_options()
 
@@ -144,20 +155,6 @@ function mct_mod:get_sections()
     return self._sections
 end
 
---- Return a specific section within the mct_mod.
--- This is returned as a single table, with two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
--- @tparam string section_key The unique identifier for the desired section.
---[[function mct_mod:get_section_by_key(section_key)
-    local sections = self:get_sections()
-    for i = 1, #sections do
-        local section = sections[i]
-        if section.key == section_key then
-            return section
-        end
-    end
-
-    return nil
-end]]
 
 function mct_mod:set_log_file_path(path)
     if not is_string(path) then
@@ -189,13 +186,27 @@ end
 -- @tparam string section_key The unique identifier for the desired section.
 -- @tparam boolean visible Set the rows visible (true) or invisible (false)
 function mct_mod:set_section_visibility(section_key, visible)
+    if not is_string(section_key) then
+        -- errmsg
+        return false
+    end
+
+    if is_nil(visible) then visible = true end
+    
+    if not is_boolean(visible) then
+        -- errmsg
+        return false
+    end
+
     local section = self:get_section_by_key(section_key)
     if is_nil(section) then
         mct:error("set_section_visibility() called for mct_mod ["..self:get_key().."] for section with key ["..section_key.."], but no section with that key exists!")
         return false
     end
 
-    mct.ui:section_visibility_change(section_key, visible)
+    section:set_visibility(visible)
+
+    --mct.ui:section_visibility_change(section_key, visible)
 end
 
 --- Internal use only, no real need for use anywhere else.
@@ -241,9 +252,10 @@ function mct_mod:set_positions_for_options()
     
     for section_key, section_obj in pairs(sections) do
         --local section_key = sections[i].key
+        mct:log("in section ["..section_key.."].")
         local attached_options = self:get_options_by_section(section_key)
 
-        mct:log("in section ["..section_key.."].")
+        --mct:log("in section ["..section_key.."].")
 
         --local total = 0
         --local option_keys = {}
@@ -645,10 +657,15 @@ end
 
 --- bloop
 -- @local
-function mct_mod:clear_uics_for_all_options()
+function mct_mod:clear_uics(kill_selected)
     local opts = self:get_options()
     for _, option in pairs(opts) do
-        option:clear_uics()
+        option:clear_uics(kill_selected)
+    end
+
+    local sections = self:get_sections()
+    for _, section in pairs(sections) do
+        section:clear_uics()
     end
 end
 
