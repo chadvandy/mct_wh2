@@ -280,7 +280,22 @@ local uic_mixins = {
         end
 
         return uic:SetVisible(set_visible)
-    end
+    end,
+
+    uic_SetInteractive = function(self, uic, set_interactive)
+        if not is_uicomponent(uic) then
+            mct:error("ERROR: uic_Function() called but the [uic] provided is not a valid UIComponent!")
+            return false
+        end
+
+        if not is_boolean(set_interactive) then
+            mct:error("ERROR: uic_Function() called but the [set_interactive] provided (["..tostring(set_interactive).."]) is not a valid boolean!")
+            return false
+        end
+
+        return uic:SetInteractive(set_interactive)
+    end,
+
 }
 
     --[[ UIC Error
