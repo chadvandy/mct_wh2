@@ -56,6 +56,8 @@ local section = mct_mod:add_new_section("section_test")
 section:set_localised_text("This Is My Test Section")
 section:set_visibility(false)
 
+section:set_option_sort_function("index_sort")
+
 -- change the "Enable Test Section" button when the section's visibility is changed manually
 section:add_section_visibility_change_callback(
     function(section)
@@ -66,6 +68,13 @@ section:add_section_visibility_change_callback(
         --mct2:set_selected_setting_event_free(visibility)
     end
 )
+
+local mct7 = mct_mod:add_new_option("mct7", "slider")
+mct7:set_text("1-precision slider")
+mct7:slider_set_min_max(0, 1)
+mct7:slider_set_step_size(0.2, 1)
+mct7:slider_set_precision(1)
+mct7:set_default_value(0)
 
 local mct5 = mct_mod:add_new_option("mct5", "dropdown")
 mct5:set_text("Local Only")
@@ -79,10 +88,3 @@ local mct6 = mct_mod:add_new_option("mct6", "checkbox")
 mct6:set_text("Mp Disabled")
 mct6:set_default_value(true)
 mct6:set_mp_disabled(true)
-
-local mct7 = mct_mod:add_new_option("mct7", "slider")
-mct7:set_text("1-precision slider")
-mct7:slider_set_min_max(0, 1)
-mct7:slider_set_step_size(0.2, 1)
-mct7:slider_set_precision(1)
-mct7:set_default_value(0)

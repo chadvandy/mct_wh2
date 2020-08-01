@@ -28,7 +28,115 @@ function mct_section.new(key, mod)
 
     self._visibility_change_callback = nil
 
+    self._sort_order_function = self.sort_options_by_key
+
+    self._ordered_options = {}
+
     return self
+end
+
+function mct_section:get_ordered_options()
+    local ordered_options = self._ordered_options
+    local num_total = 0
+
+    for _,_ in pairs(ordered_options) do
+        num_total = num_total + 1
+    end
+    return ordered_options, num_total
+end
+
+function mct_section:set_option_at_index(option_key, x, y)
+    if not is_string(option_key) then
+        mct:error("set_option_at_index() called for section ["..self:get_key().."] in mct mod ["..self:get_mod():get_key().."], but the option_key provided was not a string! Returning false.")
+        return false
+    end
+
+    if not is_number(x) then
+        mct:error("set_option_at_index() called for section ["..self:get_key().."] in mct mod ["..self:get_mod():get_key().."], but the x arg provided was not a number! Returning false.")
+        return false
+    end
+
+    if not is_number(y) then
+        mct:error("set_option_at_index() called for section ["..self:get_key().."] in mct mod ["..self:get_mod():get_key().."], but the y arg provided was not a number! Returning false.")
+        return false
+    end
+
+    local index = tostring(x)..","..tostring(y)
+
+    mct:log("Setting option key ["..option_key.."] to pos ["..index.."] in section ["..self:get_key().."]")
+
+    self._ordered_options[index] = option_key
+end
+
+function mct_section:sort_options()
+    -- perform the wrapped sort order function
+
+    -- TODO protect it?
+    -- protect it with a pcall to catch any issues with a custom sort order func
+    return self:_sort_order_function()
+end
+
+
+function mct_section:sort_options_by_key()
+    local ret = {}
+    local options = self:get_options()
+
+    for option_key, _ in pairs(options) do
+        table.insert(ret, option_key)
+    end
+
+    table.sort(ret)
+
+    return ret
+end
+
+function mct_section:sort_options_by_index()
+    mct:log("are we workin'")
+
+    local ret = {}
+
+    local valid_options = self:get_options()
+
+    mct:log("yes ish")
+
+    -- table that has all mct_mod options listed in the order they were created via mct_mod:add_new_option
+    -- array of option_keys!
+    local order_by_option_added = self:get_mod()._options_by_index_order
+
+    mct:log("get order by option added")
+
+    -- loop through this table, check to see if the option iterated is in this section, and if it is, add it to the ret table, next in line
+    for i = 1, #order_by_option_added do
+        mct:log("in loop "..i)
+        local test = order_by_option_added[i]
+
+        mct:log("found "..test)
+        if valid_options[test] ~= nil then
+            mct:log("this one is a member of our section!")
+            -- set this option key as the next in the ret table
+            ret[#ret+1] = test
+        end
+    end
+
+    return ret
+end
+
+function mct_section:set_option_sort_function(sort_func)
+    if is_string(sort_func) then
+        if sort_func == "key_sort" then
+            self._sort_order_function = self.sort_options_by_key
+        elseif sort_func == "index_sort" then
+            self._sort_order_function = self.sort_options_by_index
+        else
+            -- errmsg
+            return false
+        end
+    elseif is_function(sort_func) then
+        self._sort_order_function = sort_func
+    else
+        -- errmsg
+        return false
+    end
 end
 
 function mct_section:clear_uics()

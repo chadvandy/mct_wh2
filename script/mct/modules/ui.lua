@@ -799,31 +799,17 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
         local text = section_obj:get_localised_text()
 
-        --[[if not is_nil(text) then
-            --text = "No Text Assigned"
-        --else
-            local test = effect.get_localised_string(text)
-            if test ~= "" then
-                text = test
-            --else
-                --text = text
-            end
-        end
-
-        if not is_string(text) or text == "" then
-            text = "No Text Assigned"
-        end]]
-
         local dy_title = find_uicomponent(section_header, "dy_title")
         self:uic_SetStateText(dy_title, text)
         --dy_title:SetStateText(text)
 
         -- lastly, create all the rows and options within
-        local num_remaining_options = 0
-        local options = mod_obj:get_options_by_section(section_key)
+        --local num_remaining_options = 0
         local valid = true
 
-        local options_table = {}
+        -- this is the table with the positions to the options
+        -- ie. options_table["1,1"] = "option 1 key"
+        local options_table, num_remaining_options = section_obj:get_ordered_options() --[[{}
 
         for option_key, option_obj in pairs(options) do
             num_remaining_options = num_remaining_options + 1
@@ -832,7 +818,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
             local index = tostring(x) .. "," .. tostring(y)
 
             options_table[index] = option_key
-        end
+        end]]
 
         local x = 1
         local y = 1
@@ -894,12 +880,13 @@ function ui_obj:create_sections_and_contents(mod_obj)
                     loop_num = 0
                     option_obj = mod_obj:get_option_by_key(option_key)
                 end
-    
-                -- add a new column (and potentially, row, if x==1) for this position
 
-                --local ok, err = pcall(function()
-                self:new_option_row_at_pos(option_obj, x, y, section_key) 
-                --end) if not ok then mct:log(err) end
+                if not mct:is_mct_option(option_obj) then
+                    mct:error("no option found with the key ["..option_key.."]. Issue!")
+                else
+                    -- add a new column (and potentially, row, if x==1) for this position
+                    self:new_option_row_at_pos(option_obj, x, y, section_key) 
+                end
 
             else
                 -- issue? break? dunno?

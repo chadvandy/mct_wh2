@@ -38,6 +38,10 @@ function mct_mod.new(key)
         slider = {},
         textbox = {}
     }
+
+    -- used for the index_sort function
+    self._options_by_index_order = {}
+
     self._coords = {
         --["1,2"] = option_key,
         --["3,5"] = option_key
@@ -264,6 +268,15 @@ function mct_mod:get_key()
     return self._key
 end
 
+function mct_mod:set_option_sort_function_for_all_sections(sort_func)
+    local sections = self:get_sections()
+
+    -- error checking is performed in each individual section object
+    for _, section_obj in pairs(sections) do
+        section_obj:set_option_sort_function(sort_func)
+    end
+end
+
 --- The finalize function is used for all actions needed to be performmed when the `mct_mod` is done being created, like setting positions for all options.
 -- Triggered once the file which housed this `mod_obj` is done loading
 -- @local
@@ -292,37 +305,14 @@ function mct_mod:set_positions_for_options()
     mct:log("setting positions for options in mod ["..self:get_key().."]")
     
     for section_key, section_obj in pairs(sections) do
-        --local section_key = sections[i].key
         mct:log("in section ["..section_key.."].")
-        local attached_options = self:get_options_by_section(section_key)
 
-        --mct:log("in section ["..section_key.."].")
 
-        --local total = 0
-        --local option_keys = {}
-
-        local ordered_option_keys = {}
-
-        for key,_ in pairs(attached_options) do
-            -- disable options in MP if they're, well, mp-disabled
-            --local option_obj = self:get_option_by_key(key)
-            --if __game_mode == __lib_type_campaign and (cm:is_multiplayer() and option_obj:get_mp_disabled()) then
-                -- do nothing
-            --else
-            --mct:log("option with key ["..key.."] detected in section.")
-                table.insert(ordered_option_keys, key)
-            --total = total + 1
-            --option_keys[#option_keys+1] = key
-           -- end
-        end
-
-        table.sort(ordered_option_keys)
+        local ordered_option_keys = section_obj:sort_options()
 
         local total = #ordered_option_keys
 
         mct:log("total num = " .. tostring(total))
-
-        --local num_remaining = total
 
         local x = 1
         local y = 1
@@ -385,34 +375,14 @@ function mct_mod:set_positions_for_options()
                     mct:log("setting pos for ["..option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
                     option_obj:override_position(x,y)
 
+                    section_obj:set_option_at_index(option_key, x, y)
+
                     iterate(true)
 
                     --j = j + 1
                 else
                     -- if the current one is invalid, we should check the next few options to see if any are valid.
                     local done = false
-                    --[[for k = 1, 2 do
-                        if not done then
-                            local next_option_key = ordered_option_keys[j+k]
-                            local next_option_obj = self:get_option_by_key(next_option_key)
-                            if mct:is_mct_option(next_option_obj) then
-                                if valid_for_type(next_option_obj:get_type(), x, y) then
-                                    if next_option_obj:get_type() == "slider" then slider_added_on_current_row = true end
-                                    mct:log("setting pos for ["..next_option_key.."] at ("..tostring(x)..", "..tostring(y)..").")
-                                    next_option_obj:override_position(x,y)
-
-                                    done = true
-
-                                    -- swap the positions of the last two keys
-                                    ordered_option_keys[j] = next_option_key
-                                    ordered_option_keys[j+k] = option_key
-                                    --j = j + 1
-
-                                    --break
-                                end
-                            end
-                        end
-                    end]]
 
                     iterate(done)
                 end
@@ -676,22 +646,17 @@ function mct_mod:add_new_option(option_key, option_type)
         new_option:set_default_value(false)
     end
 
-    --mct:log("??")
-
 
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
+    self._options_by_index_order[#self._options_by_index_order+1] = option_key
 
-    --mct:log("Assigned section: " .. tostring(new_option:get_assigned_section()))
-
-    --mct:log("????")
 
     --if mct._initalized then
         mct:log("Triggering MctNewOptionCreated")
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = mod, ["option"] = new_option})
     --end
 
-    --mct:log("??????")
 
     return new_option
 end
