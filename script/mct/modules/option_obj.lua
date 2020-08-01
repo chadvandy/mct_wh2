@@ -45,6 +45,16 @@ function mct_option.new(mod, option_key, type)
     --self._tooltip_text = tooltip_text or ""
     self._values = {}
 
+    if type == "slider" then
+        values = {
+            min = 0,
+            max = 100,
+            step_size = 1,
+            step_size_precision = 0,
+            precision = 0,
+        }
+    end
+
     -- assigned section, used for UI, defaults to the last created section unless one is specified
     self._assigned_section = mod:get_last_section():get_key()
 
@@ -468,7 +478,7 @@ function mct_option:set_selected_setting(val, event_free)
 end
 
 --- internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
--- @todo This function only works for dropdowns so far - has to be set up for each type!
+-- @todo This function only works for dropdowns and sliders so far - has to be set up for each type!
 -- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 -- @local
 function mct_option:ui_select_value(val)
@@ -777,11 +787,8 @@ function mct_option:slider_set_min_max(min, max)
         return false
     end]]
 
-    self._values = {
-        min = min,
-        max = max,
-        --current = current
-    }
+    self._values.min = min
+    self._values.max = max
 
     --self:set_default_value(current)
 end

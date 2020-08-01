@@ -1253,13 +1253,12 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
-    -- TODO put defaults into the mct_option.new() function
-    local min = values.min or 0
-    local max = values.max or 100
-    local step_size = values.step_size or 1
-    local step_size_precision = values.step_size_precision or 0
+    local min = values.min
+    local max = values.max
+    local step_size = values.step_size
+    local step_size_precision = values.step_size_precision
 
-    local precision = values.precision or 0
+    local precision = values.precision
 
     -- TODO refactor this a lot betterly
 
