@@ -131,6 +131,41 @@ my_option:set_text("ui_text_replacements_localised_text_my_option_text", true)
 my_option:set_tooltip_text("ui_text_replacements_localised_text_my_option_tooltip_text", true)
 ```
 
+## Extra Stuff - Sections and Logging
+
+This header is all about less important stuff for functionality that still needs some sort of documentation!
+
+In MCT, you can create sections to group a bunch of options together visually, and those sections can be opened/closed via the user and through some modder interfacing as well. 
+
+![Sections](./doc_img/01.png)
+
+By default, all MCT options are a part of a default section called, well, "default". This is created automatically. If you're okay with keeping everything in the one category that can open/close on its own, you don't have to do anything at all and can just jump ship to the next header below.
+
+If you'd like a second section, however, you simply use:
+```lua
+local mct_mod = mct:register_mod("my_mod")
+
+local new_section = mct_mod:add_new_section("my_section")
+```
+
+And that'll be it! All options added from that point onward will be defaulted to "my_section" instead of "default".
+
+If you'd like to manually add options to specific sections, you can use:
+```lua
+local option_a = mct_mod:add_new_option("option_a", "dropdown")
+local new_section = mct_mod:add_new_section("my_section")
+
+option_a:set_assigned_section("my_section")
+```
+
+The section has to exist for the option to be added to it, using that function, for the time being.
+
+There are several pretty helpful functions in mct_section's, which can be seen in the page @{mct_section}.
+
+There's also now some internal functionality to read log files within MCT. An mct_mod can add a logging file using @{mct_mod:set_log_file_path}. When a log file is added in, there will be an available tab that will straight up just display the lines from that log file.
+
+![Logging](./doc_img/02.png)
+
 ## Hook Into Scripts
 
 The above is enough to get the UI in the frontend and in the campaign to populate, have localisation, and do stuff, but the settings won't change anything on their own! We're gonna take a bit to look into hooking MCT into your scripts, making MCT an optional mod or a required one, and responding to new settings.
@@ -248,16 +283,24 @@ core:add_listener(
 
 This section will be expanded a lot more in the near future when events are expanded a lot. Planning on making the mod a lot more event-based, since it's just the easiest way of doing it for me and for y'all.
 
-For now, I have two new ones:
+For now, I have some new ones:
 
 - MctPanelOpened
 - MctPanelPopulated
+- MctSectionVisibilityChanged
+- MctNewOptionCreated
 
-The former is triggered **every time the MCT panel is opened**. The latter is triggered **every time a new mod is selected within MCT, including when it is opened and the default MCT page is selected**.
+The first is triggered **every time the MCT panel is opened**. The second is triggered **every time a new mod is selected within MCT, including when it is opened and the default MCT page is selected**.
 
 MctPanelOpened has two contexts: `context:mct()` for the MCT object proper, and `context:ui_obj()` for the UI object that powers all of MCT's UI. This isn't documented yet in the API, sorry. That'll come soon:tm:
 
 MctPanelPopulated has three contexts: `context:mct()` (ditto), `context:ui_obj()` (double ditto), and `context:mod()` for the mct_mod object that matches the mod selected in the UI.
+
+MctSectionVisibilityChanged is called every time a section changes its visibility, excluding its first creation. This is any time that @{mct_section:uic_visibility_change} is called.
+Its contexts are: `context:mct()`, `context:mod()`, `context:section()`, and `context:visibility()` (which is a boolean, true for visible).
+
+MctNewOptionCreated is triggered every time @{mct_mod:add_new_option} is called. This is mostly used for internal stuff, to trigger MCT popups.
+Its contexts are: `context:mct()`, `context:mod()`, and `context:option()`.
 
 ## Multiplayer
 

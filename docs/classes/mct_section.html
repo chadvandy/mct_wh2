@@ -30,6 +30,10 @@
   <li><a href="../index.html">Index</a></li>
 </ul>
 
+<h2>Contents</h2>
+<ul>
+<li><a href="#Methods">Methods</a></li>
+</ul>
 
 
 <h2>Classes</h2>
@@ -48,6 +52,7 @@
 <h2>Topics</h2>
 <ul class="">
   <li><a href="../topics/manual.md.html">manual</a></li>
+  <li><a href="../topics/changenotes.md.html">changenotes</a></li>
 </ul>
 
 </div>
@@ -61,18 +66,395 @@
 </p>
 
 
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:new">mct_section:new (key, mod)</a></td>
+	<td class="summary">For internal use only.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:sort_options_by_key">mct_section:sort_options_by_key ()</a></td>
+	<td class="summary">One of the default sort-option function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:sort_options_by_index">mct_section:sort_options_by_index ()</a></td>
+	<td class="summary">One of the default sort-option functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:set_option_sort_function">mct_section:set_option_sort_function (sort_func)</a></td>
+	<td class="summary">Set the option-sort-function for this section's options.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:uic_visibility_change">mct_section:uic_visibility_change (event_free)</a></td>
+	<td class="summary">The UI trigger for the section opening or closing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:add_section_visibility_change_callback">mct_section:add_section_visibility_change_callback (callback)</a></td>
+	<td class="summary">Add a callback to be triggered after <a href="../classes/mct_section.html#mct_section:uic_visibility_change">mct_section:uic_visibility_change</a> is called.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:get_key">mct_section:get_key ()</a></td>
+	<td class="summary">Get the key for this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:get_mod">mct_section:get_mod ()</a></td>
+	<td class="summary">Get the <a href="../classes/mct_mod.html#">mct_mod</a> that owns this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:get_localised_text">mct_section:get_localised_text ()</a></td>
+	<td class="summary">Get the header text for this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:is_visible">mct_section:is_visible ()</a></td>
+	<td class="summary">Grab whether this mct_section is set to be visible or not - whether it's "opened" or "closed"
+ Works to read the UI, as well.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:set_visibility">mct_section:set_visibility (is_visible)</a></td>
+	<td class="summary">Set the visibility for the mct_section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:set_localised_text">mct_section:set_localised_text (text, is_localised)</a></td>
+	<td class="summary">Set the title for this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:assign_option">mct_section:assign_option (option_obj)</a></td>
+	<td class="summary">Assign an option to this section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_section:get_options">mct_section:get_options ()</a></td>
+	<td class="summary">Return all the options assigned to the mct_section.</td>
+	</tr>
+</table>
 
 <br/>
 <br/>
 
 
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "mct_section:new"></a>
+    <strong>mct_section:new (key, mod)</strong>
+    </dt>
+    <dd>
+    For internal use only.  Use <a href="../classes/mct_mod.html#mct_mod:add_new_section">mct_mod:add_new_section</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key to identify the new mct_section.
+        </li>
+        <li><span class="parameter">mod</span>
+            <span class="types"><a class="type" href="../classes/mct.html#">mct_mod</a></span>
+         The mct_mod this section is a member of.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:sort_options_by_key"></a>
+    <strong>mct_section:sort_options_by_key ()</strong>
+    </dt>
+    <dd>
+    One of the default sort-option function.
+ Sort the options by their option key - from "!my<em>option" to "zzz</em>my_option"
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:sort_options_by_index"></a>
+    <strong>mct_section:sort_options_by_index ()</strong>
+    </dt>
+    <dd>
+    One of the default sort-option functions.
+ Sort the options by the order in which they were added in the <code>mct/settings/?.lua</code> file.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:set_option_sort_function"></a>
+    <strong>mct_section:set_option_sort_function (sort_func)</strong>
+    </dt>
+    <dd>
+    Set the option-sort-function for this section's options.
+ You can pass "key_sort" for <a href="../classes/mct_section.html#mct_section:sort_options_by_key">mct_section:sort_options_by_key</a>
+ You can pass "index_sort" for <a href="../classes/mct_section.html#mct_section:sort_options_by_index">mct_section:sort_options_by_index</a>
+ You can also pass a full function, for example:
+ mct<em>section:set</em>option<em>sort</em>function(</p>
+<pre><code>  function()
+      local ordered_options = {}
+      local options = mct_section:get_sections()
+      for option_key, option_obj in pairs(options) do
+          ordered_options[#ordered_options+1] = option_key
+      end
+
+      -- alphabetically sort the options
+      table.sort(ordered_options)
+
+      -- reverse the order
+      table.sort(ordered_options, function(a,b) return a &gt; b end)
+  end
+</code></pre>
+<p> )
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sort_func</span>
+            <span class="types"><span class="type">function</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The sort function provided. Either use one of the two strings above, or a custom function like the above example.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:uic_visibility_change"></a>
+    <strong>mct_section:uic_visibility_change (event_free)</strong>
+    </dt>
+    <dd>
+    The UI trigger for the section opening or closing.
+ Internal use only. Use <a href="../classes/mct_section.html#mct_section:set_visibility">mct_section:set_visibility</a> if you want to manually change the visibility elsewhere.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">event_free</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Whether to trigger the "MctSectionVisibilityChanged" event. True is sent when the section is first created.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:add_section_visibility_change_callback"></a>
+    <strong>mct_section:add_section_visibility_change_callback (callback)</strong>
+    </dt>
+    <dd>
+    Add a callback to be triggered after <a href="../classes/mct_section.html#mct_section:uic_visibility_change">mct_section:uic_visibility_change</a> is called.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+         The callback to trigger when the visibility is changed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:get_key"></a>
+    <strong>mct_section:get_key ()</strong>
+    </dt>
+    <dd>
+    Get the key for this section.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The key for this section.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:get_mod"></a>
+    <strong>mct_section:get_mod ()</strong>
+    </dt>
+    <dd>
+    Get the <a href="../classes/mct_mod.html#">mct_mod</a> that owns this section.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/mct.html#">mct_mod</a></span>
+        The owning mct_mod for this section.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:get_localised_text"></a>
+    <strong>mct_section:get_localised_text ()</strong>
+    </dt>
+    <dd>
+    Get the header text for this section.
+ Either mct<em>[mct</em>mod<em>key]</em>[section<em>key]</em>section_text, in a .loc file,
+ or the text provided using <a href="../classes/mct_section.html#mct_section:set_localised_text">mct_section:set_localised_text</a>
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The localised text for this section, used as the title.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:is_visible"></a>
+    <strong>mct_section:is_visible ()</strong>
+    </dt>
+    <dd>
+    Grab whether this mct_section is set to be visible or not - whether it's "opened" or "closed"
+ Works to read the UI, as well.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        Whether the mct<em>section is currently visible, or whether the mct</em>section will be visible when it's next created.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:set_visibility"></a>
+    <strong>mct_section:set_visibility (is_visible)</strong>
+    </dt>
+    <dd>
+    Set the visibility for the mct_section.
+ This works while the UI currently exists, or to set its visibility next time the panel is opened.
+ Triggers <a href="../classes/mct_section.html#mct_section:uic_visibility_change">mct_section:uic_visibility_change</a> automatically.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">is_visible</span>
+            <span class="types"><span class="type">boolean</span></span>
+         True for open, false for closed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:set_localised_text"></a>
+    <strong>mct_section:set_localised_text (text, is_localised)</strong>
+    </dt>
+    <dd>
+    Set the title for this section.
+ Works the same as always - you can pass hard text, ie. mct<em>section:set</em>localised<em>text("My Section")
+ or a localised key, ie. mct</em>section:set<em>localised</em>text("my<em>section</em>loc_key", true)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The localised text for this mct_section title. Either hard text, or a loc key.
+        </li>
+        <li><span class="parameter">is_localised</span>
+            <span class="types"><span class="type">boolean</span></span>
+         If setting a loc key as the localised text, set this to true.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:assign_option"></a>
+    <strong>mct_section:assign_option (option_obj)</strong>
+    </dt>
+    <dd>
+    Assign an option to this section.
+ Automatically called through <a href="../classes/mct_option.html#mct_option:set_assigned_section">mct_option:set_assigned_section</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option_obj</span>
+            <span class="types"><a class="type" href="../classes/mct.html#">mct_option</a></span>
+         The option object to assign into this section.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_section:get_options"></a>
+    <strong>mct_section:get_options ()</strong>
+    </dt>
+    <dd>
+    Return all the options assigned to the mct_section.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">{[string]=mct_object,...}</a></span>
+        The table of all the options in this mct_section.
+    </ol>
+
+
+
+
+</dd>
+</dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-24 17:48:15 </i>
+<i style="float:right;">Last updated 2020-08-01 16:36:02 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

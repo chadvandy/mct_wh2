@@ -37,6 +37,7 @@
 <li><a href="#How_It_Works">How It Works </a></li>
 <li><a href="#Create_Settings_File">Create Settings File </a></li>
 <li><a href="#Localisation">Localisation </a></li>
+<li><a href="#Extra_Stuff___Sections_and_Logging">Extra Stuff - Sections and Logging </a></li>
 <li><a href="#Hook_Into_Scripts">Hook Into Scripts </a></li>
 <li><a href="#Other_Events">Other Events </a></li>
 <li><a href="#Multiplayer">Multiplayer </a></li>
@@ -47,6 +48,7 @@
 <h2>Topics</h2>
 <ul class="">
   <li><strong>manual</strong></li>
+  <li><a href="../topics/changenotes.md.html">changenotes</a></li>
 </ul>
 <h2>Scripts</h2>
 <ul class="nowrap">
@@ -225,6 +227,46 @@ my_option:set_tooltip_text(<span class="string">"ui_text_replacements_localised_
 </pre>
 
 
+<p><a name="Extra_Stuff___Sections_and_Logging"></a></p>
+<h2>Extra Stuff - Sections and Logging</h2>
+
+<p>This header is all about less important stuff for functionality that still needs some sort of documentation!</p>
+
+<p>In MCT, you can create sections to group a bunch of options together visually, and those sections can be opened/closed via the user and through some modder interfacing as well. </p>
+
+<p><img src="./doc_img/01.png" alt="Sections"/></p>
+
+<p>By default, all MCT options are a part of a default section called, well, "default". This is created automatically. If you're okay with keeping everything in the one category that can open/close on its own, you don't have to do anything at all and can just jump ship to the next header below.</p>
+
+<p>If you'd like a second section, however, you simply use:</p>
+
+<pre>
+<span class="keyword">local</span> mct_mod = mct:register_mod(<span class="string">"my_mod"</span>)
+
+<span class="keyword">local</span> new_section = mct_mod:add_new_section(<span class="string">"my_section"</span>)
+</pre>
+
+
+<p>And that'll be it! All options added from that point onward will be defaulted to "my_section" instead of "default".</p>
+
+<p>If you'd like to manually add options to specific sections, you can use:</p>
+
+<pre>
+<span class="keyword">local</span> option_a = mct_mod:add_new_option(<span class="string">"option_a"</span>, <span class="string">"dropdown"</span>)
+<span class="keyword">local</span> new_section = mct_mod:add_new_section(<span class="string">"my_section"</span>)
+
+option_a:set_assigned_section(<span class="string">"my_section"</span>)
+</pre>
+
+
+<p>The section has to exist for the option to be added to it, using that function, for the time being.</p>
+
+<p>There are several pretty helpful functions in mct_section's, which can be seen in the page <a href="../classes/mct_section.html#">mct_section</a>.</p>
+
+<p>There's also now some internal functionality to read log files within MCT. An mct_mod can add a logging file using <a href="../classes/mct_mod.html#mct_mod:set_log_file_path">mct_mod:set_log_file_path</a>. When a log file is added in, there will be an available tab that will straight up just display the lines from that log file.</p>
+
+<p><img src="./doc_img/02.png" alt="Logging"/></p>
+
 <p><a name="Hook_Into_Scripts"></a></p>
 <h2>Hook Into Scripts</h2>
 
@@ -352,18 +394,26 @@ core:add_listener(
 
 <p>This section will be expanded a lot more in the near future when events are expanded a lot. Planning on making the mod a lot more event-based, since it's just the easiest way of doing it for me and for y'all.</p>
 
-<p>For now, I have two new ones:</p>
+<p>For now, I have some new ones:</p>
 
 <ul>
     <li>MctPanelOpened</li>
     <li>MctPanelPopulated</li>
+    <li>MctSectionVisibilityChanged</li>
+    <li>MctNewOptionCreated</li>
 </ul>
 
-<p>The former is triggered <strong>every time the MCT panel is opened</strong>. The latter is triggered <strong>every time a new mod is selected within MCT, including when it is opened and the default MCT page is selected</strong>.</p>
+<p>The first is triggered <strong>every time the MCT panel is opened</strong>. The second is triggered <strong>every time a new mod is selected within MCT, including when it is opened and the default MCT page is selected</strong>.</p>
 
 <p>MctPanelOpened has two contexts: <code>context:mct()</code> for the MCT object proper, and <code>context:ui_obj()</code> for the UI object that powers all of MCT's UI. This isn't documented yet in the API, sorry. That'll come soon:tm:</p>
 
 <p>MctPanelPopulated has three contexts: <code>context:mct()</code> (ditto), <code>context:ui_obj()</code> (double ditto), and <code>context:mod()</code> for the mct_mod object that matches the mod selected in the UI.</p>
+
+<p>MctSectionVisibilityChanged is called every time a section changes its visibility, excluding its first creation. This is any time that <a href="../classes/mct_section.html#mct_section:uic_visibility_change">mct_section:uic_visibility_change</a> is called.
+Its contexts are: <code>context:mct()</code>, <code>context:mod()</code>, <code>context:section()</code>, and <code>context:visibility()</code> (which is a boolean, true for visible).</p>
+
+<p>MctNewOptionCreated is triggered every time <a href="../classes/mct_mod.html#mct_mod:add_new_option">mct_mod:add_new_option</a> is called. This is mostly used for internal stuff, to trigger MCT popups.
+Its contexts are: <code>context:mct()</code>, <code>context:mod()</code>, and <code>context:option()</code>.</p>
 
 <p><a name="Multiplayer"></a></p>
 <h2>Multiplayer</h2>
@@ -476,7 +526,7 @@ core:add_listener(
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-24 17:48:15 </i>
+<i style="float:right;">Last updated 2020-08-01 16:36:02 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

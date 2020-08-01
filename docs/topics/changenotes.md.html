@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Mod Configuration Tool</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>MCT</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#MCT_2_1_6___August_1__2020">MCT 2.1.6 - August 1, 2020 </a></li>
+<li><a href="#MCT_2_1_5___July_11__2020">MCT 2.1.5 - July 11, 2020 </a></li>
+</ul>
+
+
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/manual.md.html">manual</a></li>
+  <li><strong>changenotes</strong></li>
+</ul>
+<h2>Scripts</h2>
+<ul class="nowrap">
+  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/mct.html">mct</a></li>
+  <li><a href="../classes/mct_mod.html">mct_mod</a></li>
+  <li><a href="../classes/mct_option.html">mct_option</a></li>
+  <li><a href="../classes/mct_section.html">mct_section</a></li>
+  <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><a href="../classes/mct_ui.html">mct_ui</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Change Notes</h2>
+
+<p><a name="MCT_2_1_6___August_1__2020"></a></p>
+<h3>MCT 2.1.6 - August 1, 2020</h3>
+
+<p><strong>Documentation</strong></p>
+
+<ul>
+    <li>I've added new documentation. For instance, this page here.</li>
+    <li>There will soon be a few more pages available, one for available events. I've also gotta get to fixing up some issues with the "classes" pages.</li>
+</ul>
+
+<p><strong>Features</strong></p>
+
+<ul>
+    <li>There is now much further control over the "sections" objects of an mct_mod. These can be read up at <a href="../classes/mct_section.html#">mct_section</a>.</li>
+    <li>There is more control over positioning of objects, either through <a href="../classes/mct_mod.html#mct_mod:set_option_sort_function_for_all_sections">mct_mod:set_option_sort_function_for_all_sections</a> or <a href="../classes/mct_section.html#mct_section:set_option_sort_function">mct_section:set_option_sort_function</a>. No more being confined to alphanumerical key sorting! (Though that's still the default :) )</li>
+    <li>Beginning incorporation of a tabs system. Currently, there is one new available tab - Logging. This is just a long list of all the text found in a logging file, determined by <a href="../classes/mct_mod.html#mct_mod:set_log_file_path">mct_mod:set_log_file_path</a>. Useful when you don't want to alt-tab endlessly to read logging while the game is open.</li>
+</ul>
+
+<p><strong>Changes and Fixes</strong></p>
+
+<ul>
+    <li>The internal mct_log.txt will no longer start from scratch every time you change between frontend/campaign/battle game modes. There will now be a persisted log file through the entirety of one game session, making it easier for me to read the logs, yay.</li>
+    <li><a href="../classes/mct_option.html#mct_option:set_uic_locked">mct_option:set_uic_locked</a> will work to <em>unlock</em> an option as well as lock it, now.</li>
+    <li><a href="../classes/mct_option.html#mct_option:ui_select_value">mct_option:ui_select_value</a> is set up to work for sliders now. This allows for easy auto-setting of sliders based on other callbacks.</li>
+    <li><a href="../classes/mct_mod.html#mct_mod:set_section_visibility">mct_mod:set_section_visibility</a> will properly work before the UI panel is opened.</li>
+    <li>mct_options are properly disabled and unclickable in MP, battle, etc.,</li>
+    <li>If you change a setting in Mod A, and move to Mod B without finalizing, and go back to Mod A - the changed setting will properly remain at the value you set before switching. If you leave and don't finalize, it will revert to its previous stance.</li>
+    <li><a href="../classes/mct_option.html#mct_option:add_option_set_callback">mct_option:add_option_set_callback</a>'s are no longer called when the mct_option UI is first created, causing some unexpected issues.</li>
+    <li>The section headers will no longer intersect with the scroll bar on the right side of the options panel.</li>
+    <li>Slider values are properly saved into the mct_settings.lua file with the float precision desired.</li>
+</ul>
+
+<p><strong>Known Issues</strong></p>
+
+<ul>
+    <li>You can cause an infinite loop if you do something like <a href="https://github.com/chadvandy/mod_configuration_tool/issues/35">this</a>. Don't do that until I fix it, please. :)</li>
+    <li><a href="../classes/mct_option.html#mct_option:set_assigned_section">mct_option:set_assigned_section</a> doesn't work if you try to assign a not-created section. Ditto for <a href="../classes/mct_section.html#mct_section:assign_option">mct_section:assign_option</a>, but backwards. https://github.com/chadvandy/mod<em>configuration</em>tool/issues/42</li>
+    <li>I've tested it and it seems fine, but I changed how mct_settings.lua is built slightly, so it's more flexible on my end. If you have any issues with it not building properly, please let me know.</li>
+</ul>
+
+<p><strong>Upcoming Features</strong></p>
+
+<ul>
+    <li>My next focus is on fixing up some of the remaining UI issues - work on prettier fonts, work on crushed text, make the panels less ugly, fix spacing all over, try to get a more professional appearance across the board.</li>
+    <li>Meanwhile, gonna be working on getting text input types to work (for text_input as well as sliders).</li>
+    <li>And thirdly, working on Steam API integration - for stuff like automatically reading the mod title, mod description, change notes, similar.</li>
+</ul>
+
+
+<p><a name="MCT_2_1_5___July_11__2020"></a></p>
+<h3>MCT 2.1.5 - July 11, 2020</h3>
+
+<p><strong>Features</strong></p>
+
+<ul>
+    <li>Added more control for the slider options for modders: you can now set decimal-precision using a couple of new methods, <code>option_obj:slider_set_precision()</code>, and <code>option_obj:slider_set_step_size()</code> now has a second optional arg to set precision for the step sizes. This lets you lock numbers to a specific number of decimal places - defaulting to 0 decimal places if none are set.</li>
+    <li>Added a couple of popups, sorry. There will be a popup if new options are found when first loading the game (ie., a mod has updated and added new MCT options that should be checked out), and another if new options are added mid-game (ie., a mod makes a new option only when you play as Dark Elves).
+    -- I'll probably add an mct default option to disable specific popups and notifications, but that'll come after I make popups more flexible on my end.</li>
+    <li><code>option_obj:set_uic_locked()</code> has been added, to change whether or not an option is interactive.</li>
+    <li>Documentation has been edited to include the new methods and any alterations</li>
+</ul>
+
+<p><strong>Fixes</strong></p>
+
+<ul>
+    <li><code>mod_obj:set_section_visibility()</code> has been fixed, it now actually works!</li>
+    <li>the frontend button highlight will properly work on first-time-load or if the mct_settings.lua file is deleted from your disk</li>
+</ul>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-08-01 16:36:02 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
