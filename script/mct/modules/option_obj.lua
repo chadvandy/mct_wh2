@@ -48,6 +48,9 @@ function mct_option.new(mod, option_key, type)
     -- assigned section, used for UI, defaults to the last created section unless one is specified
     self._assigned_section = mod:get_last_section():get_key()
 
+    -- add the option to the mct_section
+    self._mod:get_section_by_key(self._assigned_section):assign_option(self)
+
     -- a callback triggered whenever the setting is changed within the UI
     self._option_set_callback = nil
 
@@ -174,8 +177,13 @@ end
 
 --- Internal use only. Clears all the UIC objects attached to this boy.
 -- @local
-function mct_option:clear_uics()
+function mct_option:clear_uics(kill_selected)
+    --self._selected_setting = nil
     self._uics = {}
+
+    if kill_selected then
+        self._selected_setting = nil
+    end
 end
 
 
@@ -443,13 +451,15 @@ end
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the callback set through @{mct_option:add_option_set_callback}.
 -- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 -- @local
-function mct_option:set_selected_setting(val)
+function mct_option:set_selected_setting(val, event_free)
     if self:is_val_valid_for_type(val) then
         -- save the val as the currently selected setting, used for UI and finalization
         self._selected_setting = val
 
-        -- run the callback, passing the mct_option along as an arg
-        self:process_callback()
+        if not event_free then
+            -- run the callback, passing the mct_option along as an arg
+            self:process_callback()
+        end
     end
 end
 
@@ -625,10 +635,12 @@ end
 -- @treturn any val The value set as the selected_setting for this mct_option.
 -- @within API
 function mct_option:get_selected_setting()
+    if self._selected_setting == nil then
+        -- this should default to the default value, or the finalized setting if there is one
+        self._selected_setting = self._finalized_setting
+    end
+
     mct:log("["..self._key.."], selected setting iiiiis: "..tostring(self._selected_setting))
-    --[[if self._selected_setting == nil then
-        self._selected_setting = self._default_value
-    end]]
 
     --mct:log(tostring(self._selected_setting))
     return self._selected_setting
