@@ -465,13 +465,13 @@ function ui_obj:create_panels()
 
     settings_tab:SetDockingPoint(1)
     settings_tab:SetDockOffset(0, settings_tab:Height() * -1)
-    local img_path = effect.get_skinned_image_path("icon_options.png")
+    local img_path = effect.get_skinned_image_path("icon_options_tab.png")
     settings_tab:SetImagePath(img_path)
 
 
     logging_tab:SetDockingPoint(1)
     logging_tab:SetDockOffset(logging_tab:Width() * 1.2, logging_tab:Height() * -1)
-    local img_path = effect.get_skinned_image_path("icon_records.png")
+    local img_path = effect.get_skinned_image_path("icon_records_tab.png")
     logging_tab:SetImagePath(img_path)
 
 
