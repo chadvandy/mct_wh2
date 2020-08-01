@@ -184,7 +184,19 @@ function settings:load()
     else
         mct:log("Loading settings file!")
         local content = loadfile(self.settings_file)
+
+        if not pcall(function() content() end) then
+            mct:error("The mct_settings.lua file had a script error in it and couldn't be loaded. Investigate!")
+            self:finalize(true)
+            return
+        end
+
         content = content()
+
+        if not content then
+            self:finalize(true)
+            return
+        end
 
         local any_added = false
 
