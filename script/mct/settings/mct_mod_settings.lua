@@ -25,11 +25,9 @@ local mct2 = mct_mod:add_new_option("mct2", "checkbox", "This is also a test")
 mct2:set_default_value(false)
 mct2:set_text("Enable Test Section")
 
-mct:log("mct2 created")
-
 mct2:add_option_set_callback(
     function(option)
-        mct:log("trigger callback?")
+        --mct:log("trigger callback?")
         local setting = option:get_selected_setting()
         local show_section = setting == true
 
