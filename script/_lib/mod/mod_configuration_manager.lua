@@ -624,18 +624,29 @@ function mod_configuration_tool:register_mod(mod_name)
     return new_mod
 end
 
+--- Type-checker for @{mct_mod}s
+-- @tparam any obj Tested value.
+-- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_mod(obj)
     return tostring(obj) == "MCT_MOD"
 end
 
+--- Type-checker for @{mct_option}s
+-- @tparam any obj Tested value.
+-- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_option(obj)
     return tostring(obj) == "MCT_OPTION"
 end
 
+--- Type-checker for @{mct_section}s
+-- @tparam any obj Tested value.
+-- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_section(obj)
     return tostring(obj) == "MCT_SECTION"
 end
 
+--- Global getter for the mct object.
+-- @treturn mct
 function get_mct()
     return core:get_static_object("mod_configuration_tool")
     --return mod_configuration_tool
