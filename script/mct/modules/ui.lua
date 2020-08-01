@@ -112,7 +112,10 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
         local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
 
         -- grey out the rest of the world
+        popup:RegisterTopMost()
+
         popup:LockPriority()
+
 
         -- grab and set the text
         local tx = find_uicomponent(popup, "DY_text")
@@ -288,7 +291,7 @@ function ui_obj:close_frame()
         self:delete_component(panel)
     end
 
-    core:remove_listener("left_or_right_pressed")
+    --core:remove_listener("left_or_right_pressed")
     core:remove_listener("MctRowClicked")
     core:remove_listener("MCT_SectionHeaderPressed")
 
@@ -647,6 +650,10 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     local logging_list_view = find_uicomponent(mod_settings_panel, "logging_list_view")
     local settings_list_view = find_uicomponent(mod_settings_panel, "list_view")
 
+    -- set settings visible and logging invisible on switching mod selected
+    logging_list_view:SetVisible(false)
+    settings_list_view:SetVisible(true)
+
     if selected_mod:get_log_file_path() == nil then
         logging_tab:SetState("inactive")
         logging_tab:SetTooltipText("There is no log file set for this mod. Use `mct_mod:set_log_file_path()` to set one, if you're the modder. If not, oh well.", true)
@@ -872,7 +879,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
             
             local option_obj
             if is_string(option_key) then
-                mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
+                --mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
                 if option_key == "NONE" then
                     -- no option objects remaining, kill the engine
                     break
@@ -972,7 +979,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     if option_obj == "MCT_BLANK" then
         -- no need to do anything, skip
     else
-        local dummy_option = core:get_or_create_component(option_obj._key, "ui/mct/script_dummy", column)
+        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/mct/script_dummy", column)
 
         do
             -- set to be flush with the column dummy
@@ -1253,12 +1260,12 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
-    local min = values.min
-    local max = values.max
-    local step_size = values.step_size
-    local step_size_precision = values.step_size_precision
+    local min = values.min or 0 
+    local max = values.max or 100
+    local step_size = values.step_size or 1
+    local step_size_precision = values.step_size_precision or 0
 
-    local precision = values.precision
+    local precision = values.precision or 0
 
     -- TODO refactor this a lot betterly
 
@@ -1278,6 +1285,8 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
         return string.format("%."..(places or 0) .. "f", num)
     end
+
+    local ok, err = pcall(function()
 
     local step_size_str = round(step_size, step_size_precision, false)
 
@@ -1306,26 +1315,9 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     end
 
-    -- TODO outsource this to ui_select_value
-    core:add_listener(
-        "left_or_right_pressed",
-        "ComponentLClickUp",
-        function(context)
-            local uic = UIComponent(context.component)
-            return uic == left_button or uic == right_button
-        end,
-        function(context)
-            local step = context.string
+end) if not ok then mct:error(err) end
 
-            if step == "right_button" then
-                mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
-                option_obj:ui_select_value(option_obj:get_selected_setting() + step_size)
-            elseif step == "left_button" then
-                option_obj:ui_select_value(option_obj:get_selected_setting() - step_size)
-            end
-        end,
-        true
-    )
+    -- TODO outsource this to ui_select_value
 
     return new_uic
 end
@@ -1457,6 +1449,42 @@ core:add_listener(
         local ok, err = pcall(function()
         option_obj:ui_select_value(uic:Id())
         end) if not ok then mct:error(err) end
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_slider_left_or_right_pressed",
+    "ComponentLClickUp",
+    function(context)
+        local uic = UIComponent(context.component)
+        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider")
+    end,
+    function(context)
+        local ok, err = pcall(function()
+        local step = context.string
+        local uic = UIComponent(context.component)
+
+        local slider = UIComponent(uic:Parent())
+        local dummy_option = UIComponent(slider:Parent())
+
+        local option_key = dummy_option:Id()
+        local mod_obj = mct:get_selected_mod()
+        mct:log("getting mod "..mod_obj:get_key())
+        mct:log("finding option with key "..option_key)
+
+        local option_obj = mod_obj:get_option_by_key(option_key)
+
+        local values = option_obj:get_values()
+        local step_size = values.step_size
+
+        if step == "right_button" then
+            mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
+            option_obj:ui_select_value(option_obj:get_selected_setting() + step_size)
+        elseif step == "left_button" then
+            option_obj:ui_select_value(option_obj:get_selected_setting() - step_size)
+        end
+    end) if not ok then mct:error(err) end
     end,
     true
 )
