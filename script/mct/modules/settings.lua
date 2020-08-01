@@ -258,10 +258,6 @@ function settings:load()
 
         --mct:log("!!")
 
-        -- TODO
-        -- this needs to be triggered when the UI exists!
-        -- if any new settings exist, trigger the popup
-
         --mct:log("Any added:")
         mct:log(tostring(any_added))
         if any_added then
