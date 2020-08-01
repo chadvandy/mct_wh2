@@ -487,6 +487,77 @@ function mct_option:ui_select_value(val)
 
     -- trigger separate functions for the types!
 
+    if self:get_type() == "slider" then
+        local function round_num(num, numDecimalPlaces)
+            local mult = 10^(numDecimalPlaces or 0)
+            if num >= 0 then
+                return math.floor(num * mult + 0.5) / mult
+            else
+                return math.ceil(num * mult - 0.5) / mult
+            end
+        end
+    
+        local function round(num, places, is_num)
+            if is_num then
+                return round_num(num, places)
+            end
+    
+            return string.format("%."..(places or 0) .. "f", num)
+        end
+
+        mct:log("ui select val for slider")
+        mct:log("new val is "..val)
+
+        local option_uic = self:get_uics()[1]
+
+        local right_button = find_uicomponent(option_uic, "right_button")
+        local left_button = find_uicomponent(option_uic, "left_button")
+        local text_input = find_uicomponent(option_uic, "text_input")
+
+        mct:log("ui select val for slider 2")
+
+        local values = self:get_values()
+        local max = values.max
+        local min = values.min
+        local precision = values.precision
+
+        mct:log("ui select val for slider 3")
+
+        -- enable both buttons & push new value
+        right_button:SetState("active")
+        left_button:SetState("active")
+
+        if val >= max then
+            right_button:SetState("inactive")
+            left_button:SetState("active")
+
+            val = max
+        elseif val <= min then
+            left_button:SetState("inactive")
+            right_button:SetState("active")
+
+            val = min
+        end
+
+        local new_num = round(val, precision, true)
+        --local new_str = round(val, precision, false)
+
+        self:set_selected_setting(new_num)
+
+        local current = self:get_selected_setting()
+        current = round(current, precision, true)
+
+        mct:log("ui select val for slider 4")
+
+        local current_str = round(current, precision, false)
+
+        text_input:SetStateText(tostring(current_str))
+
+        if current ~= self:get_finalized_setting() then
+            mct.ui.locally_edited = true
+        end
+    end
+
     if self:get_type() == "dropdown" then
         -- grab the current setting, so we can deselect that UIC
         local current_val = self:get_selected_setting()
@@ -568,8 +639,8 @@ function mct_option:ui_change_state()
     
     -- TODO lock the text input!
     if type == "slider" then
-        local left = find_uicomponent(option_uic, "left")
-        local right = find_uicomponent(option_uic, "right")
+        local left_button = find_uicomponent(option_uic, "left_button")
+        local right_button = find_uicomponent(option_uic, "right_button")
         --local text_input = find_uicomponent(option_uic, "text_input")
 
         local state = "active"
@@ -578,8 +649,8 @@ function mct_option:ui_change_state()
         end
 
         --mct.ui:uic_SetInteractive(text_input, not locked)
-        mct.ui:uic_SetState(left, state)
-        mct.ui:uic_SetState(right, state)
+        mct.ui:uic_SetState(left_button, state)
+        mct.ui:uic_SetState(right_button, state)
     end
 
     if type == "checkbox" then

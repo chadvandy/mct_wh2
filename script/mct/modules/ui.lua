@@ -1234,9 +1234,9 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     new_uic:SetVisible(true)
     new_uic:Resize(row_parent:Width() * 0.4, row_parent:Height())
 
-    local left_button = core:get_or_create_component("left", left_button_template, new_uic)
+    local left_button = core:get_or_create_component("left_button", left_button_template, new_uic)
     local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
-    local right_button = core:get_or_create_component("right", right_button_template, new_uic)
+    local right_button = core:get_or_create_component("right_button", right_button_template, new_uic)
 
     text_input:SetCanResizeWidth(true)
     text_input:Resize(text_input:Width() * 0.3, text_input:Height())
@@ -1257,6 +1257,8 @@ function ui_obj.new_slider(self, option_obj, row_parent)
 
     local precision = values.precision or 0
 
+    -- TODO refactor this a lot betterly
+
     local function round_num(num, numDecimalPlaces)
         local mult = 10^(numDecimalPlaces or 0)
         if num >= 0 then
@@ -1266,7 +1268,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
         end
     end
 
-    -- [string "script\mct\modules\ui.lua"]:1218: invalid option to 'format'
     local function round(num, places, is_num)
         if is_num then
             return round_num(num, places)
@@ -1296,49 +1297,11 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     elseif current >= max then
         right_button:SetState("inactive")
     end
-    
-    local function jump_value(i)
-        local new = current + i
-
-        -- enable both buttons & push new value
-        right_button:SetState("active")
-        left_button:SetState("active")
-
-        if new >= max then
-            right_button:SetState("inactive")
-            left_button:SetState("active")
-
-            new = max
-        elseif new <= min then
-            left_button:SetState("inactive")
-            right_button:SetState("active")
-
-            new = min
-        end
-
-        local new_num = round(new, precision, true)
-        local new_str = round(new, precision, false)
-
-
-        option_obj:set_selected_setting(new_num)
-
-        current = option_obj:get_selected_setting()
-        current = round(current, precision, true)
-
-        local current_str = round(current, precision, false)
-
-        text_input:SetStateText(tostring(current_str))
-
-        if current ~= option_obj:get_finalized_setting() then
-            self.locally_edited = true
-        end
-    end
 
     -- TODO text input!
     local function set_value(new)
 
     end
-
 
     -- TODO outsource this to ui_select_value
     core:add_listener(
@@ -1351,18 +1314,15 @@ function ui_obj.new_slider(self, option_obj, row_parent)
         function(context)
             local step = context.string
 
-            if step == "right" then
-                jump_value(step_size)
-            elseif step == "left" then
-                jump_value(step_size * -1)
+            if step == "right_button" then
+                mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
+                option_obj:ui_select_value(option_obj:get_selected_setting() + step_size)
+            elseif step == "left_button" then
+                option_obj:ui_select_value(option_obj:get_selected_setting() - step_size)
             end
         end,
         true
     )
-
-    --[[core:add_listener(
-        "enter_pressed_on_text_input",
-    )]]
 
     return new_uic
 end
