@@ -288,7 +288,8 @@ function mod_configuration_tool:log_init()
         ModLog("NO MCT_LOG1 EXISTS")
     end]]
 
-    local first_load = not core:svr_load_persistent_bool("mct_init")
+    ModLog("mct:log_init() started")
+    local first_load = core:svr_load_persistent_bool("mct_init") ~= true
 
     if first_load then
         core:svr_save_persistent_bool("mct_init", true)
