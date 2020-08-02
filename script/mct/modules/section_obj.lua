@@ -365,7 +365,7 @@ function mct_section:assign_option(option_obj)
     -- remove this option from any previous section it was assigned to
     local old_assignment = option_obj:get_assigned_section()
     if old_assignment then
-        local old_section = current_mod:get_sections()[old_assignment]
+        local old_section = current_mod:get_section_by_key(old_assignment)
         if old_section then
             old_section._options[option_key] = nil
         end
