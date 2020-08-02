@@ -73,6 +73,14 @@
 	<td class="summary">For internal use, called by the MCT Manager.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_mod:save_mct_settings">mct_mod:save_mct_settings ()</a></td>
+	<td class="summary">INTERNAL USE ONLY.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:get_section_by_key">mct_mod:get_section_by_key (section_key)</a></td>
+	<td class="summary">Getter for any <a href="../classes/mct_section.html#">mct_section</a>s linked to this mct_mod.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_mod:add_new_section">mct_mod:add_new_section (section_key, localised_name, is_localised)</a></td>
 	<td class="summary">Add a new section to the mod's settings view, to separate them into several categories.</td>
 	</tr>
@@ -99,6 +107,37 @@
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:get_key">mct_mod:get_key ()</a></td>
 	<td class="summary">Getter for the mct_mod's key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key ()</a></td>
+	<td class="summary">One of the default sort-section function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index ()</a></td>
+	<td class="summary">One of the default sort-section functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:set_section_sort_function">mct_mod:set_section_sort_function (sort_func)</a></td>
+	<td class="summary">Set the section-sort-function for this mod's sections
+ You can pass "key_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key</a>
+ You can pass "index_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index</a>
+ You can also pass a full function, for example:
+ mct<em>mod:set</em>sections<em>sort</em>function(</p>
+<pre><code>  function()
+      local ordered_sections = {}
+      local sections = mct_mod:get_sections()
+      for section_key, section_obj in pairs(sections) do
+          ordered_sections[#ordered_sections+1] = section_key
+      end
+
+      -- alphabetically sort the sections
+      table.sort(ordered_sections)
+
+      -- reverse the order
+      table.sort(ordered_sections, function(a,b) return a &gt; b end)
+  end
+</code></pre>
+<p> )</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:set_option_sort_function_for_all_sections">mct_mod:set_option_sort_function_for_all_sections (sort_func)</a></td>
@@ -184,6 +223,58 @@
     <ul>
          <a href="../classes/mct.html#mct:register_mod">mct:register_mod</a>
     </ul>
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:save_mct_settings"></a>
+    <strong>mct_mod:save_mct_settings ()</strong>
+    </dt>
+    <dd>
+    INTERNAL USE ONLY.
+ This constructs the string used in mct<em>settings.lua, for this mod.
+ Done as a method of mct</em>mod so we can read mct<em>mod/mct</em>option where necessary.
+ For instance, used to enact precision on slider floats.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The mct_settings.lua string for this mod, ie. <code>[&quot;mod_key&quot;] = {[&quot;option_key&quot;] = &quot;setting&quot;, ...}</code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:get_section_by_key"></a>
+    <strong>mct_mod:get_section_by_key (section_key)</strong>
+    </dt>
+    <dd>
+    Getter for any <a href="../classes/mct_section.html#">mct_section</a>s linked to this mct_mod.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">section_key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The identifier for the section searched for.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/mct.html#">mct_section</a></span>
+
+
+
+    </ol>
+
+
 
 
 </dd>
@@ -353,6 +444,76 @@
            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
         key The key for this mct_mod
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:sort_sections_by_key"></a>
+    <strong>mct_mod:sort_sections_by_key ()</strong>
+    </dt>
+    <dd>
+    One of the default sort-section function.
+ Sort the sections by their section key - from "!my<em>section" to "zzz</em>my_section"
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:sort_sections_by_index"></a>
+    <strong>mct_mod:sort_sections_by_index ()</strong>
+    </dt>
+    <dd>
+    One of the default sort-section functions.
+ Sort the sections by the order in which they were added in the <code>mct/settings/?.lua</code> file.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:set_section_sort_function"></a>
+    <strong>mct_mod:set_section_sort_function (sort_func)</strong>
+    </dt>
+    <dd>
+    Set the section-sort-function for this mod's sections
+ You can pass "key_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key</a>
+ You can pass "index_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index</a>
+ You can also pass a full function, for example:
+ mct<em>mod:set</em>sections<em>sort</em>function(</p>
+<pre><code>  function()
+      local ordered_sections = {}
+      local sections = mct_mod:get_sections()
+      for section_key, section_obj in pairs(sections) do
+          ordered_sections[#ordered_sections+1] = section_key
+      end
+
+      -- alphabetically sort the sections
+      table.sort(ordered_sections)
+
+      -- reverse the order
+      table.sort(ordered_sections, function(a,b) return a &gt; b end)
+  end
+</code></pre>
+<p> )
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sort_func</span>
+            <span class="types"><span class="type">function</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The sort function provided. Either use one of the two strings above, or a custom function like the above example.
+        </li>
+    </ul>
+
 
 
 
@@ -646,7 +807,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-01 16:36:02 </i>
+<i style="float:right;">Last updated 2020-08-02 06:15:45 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
