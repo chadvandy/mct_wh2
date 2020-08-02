@@ -167,10 +167,9 @@ end
 function mct_option:set_assigned_section(section_key)
     local mod = self:get_mod()
     local section = mod:get_section_by_key(section_key)
-    if mct:is_mct_section(section) then
+    if not mct:is_mct_section(section) then
         mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
-        
     end
     
     section:assign_option(self)
