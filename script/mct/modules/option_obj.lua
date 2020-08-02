@@ -109,7 +109,7 @@ function mct_option:set_local_only(enabled)
     end
 
     if not is_boolean(enabled) then
-        -- errmsg
+        mct:error("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
         return false
     end
 
@@ -131,7 +131,7 @@ function mct_option:set_mp_disabled(enabled)
     end
 
     if not is_boolean(enabled) then
-        -- errmsg
+        mct:error("set_mp_disabled() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
         return false
     end
 
@@ -171,7 +171,7 @@ function mct_option:set_assigned_section(section_key)
         mct:log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
     end
-    
+
     section:assign_option(self)
 
     self._assigned_section = section_key
@@ -631,8 +631,14 @@ end
 -- This will result in `mct_option:ui_change_state()` being called later on.
 -- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
 function mct_option:set_uic_locked(should_lock)
-    if is_nil(should_lock) then should_lock = true end
-    if not is_boolean(should_lock) then --[[errmsg]] return false end
+    if is_nil(should_lock) then 
+        should_lock = true 
+    end
+
+    if not is_boolean(should_lock) then 
+        mct:error("set_uic_locked() called for mct_option with key ["..self:get_key().."], but the should_lock argument passed is not a boolean or nil!")
+        return false 
+    end
 
     self._uic_locked = should_lock
 

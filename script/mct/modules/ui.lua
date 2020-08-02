@@ -59,24 +59,20 @@ function ui_obj:delete_component(uic)
 end
 
 function ui_obj:ui_created()
-    mct:log("ui created")
     self.game_ui_created = true
 
-    mct:log("loopin'")
     for i = 1, #self.ui_created_callbacks do
-        mct:log("doing callback")
+
         local f = self.ui_created_callbacks[i]
         f()
     end
 
-    mct:log("done")
 end
 
 function ui_obj:add_ui_created_callback(callback)
-    mct:log("adding ui created callback")
+
     if not is_function(callback) then
-        -- errmsg
-        mct:log("not a function")
+        mct:error("add_ui_created_callback() called, but the callback argument passed is not a function!")
         return false
     end
 
@@ -84,29 +80,26 @@ function ui_obj:add_ui_created_callback(callback)
 end
 
 function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
-    mct:log("Creating new popup!")
     local function func()
-        mct:log("starting popup stuff")
 
         -- verify shit is alright
         if not is_string(key) then
-            -- errmsg
+            mct:error("create_popup() called, but the key passed is not a string!")
             return false
         end
 
         if not is_string(text) then
-            -- errmsg
+            mct:error("create_popup() called, but the text passed is not a string!")
             return false
         end
 
         if not is_boolean(two_buttons) then
-            -- errmsg
+            mct:error("create_popup() called, but the two_buttons arg passed is not a boolean!")
             return false
         end
 
         if not two_buttons then button_two_callback = nil end
 
-        mct:log("Creating UIC")
 
         -- build the popup panel itself
         local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
@@ -146,10 +139,8 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     end
     -- if the game UI hasn't been created, set this as a callback
     if not self.game_ui_created then
-        mct:log("Adding popup as ui created thing")
         self:add_ui_created_callback(func)
     else
-        mct:log("Triggering now!")
         func()
     end
 end

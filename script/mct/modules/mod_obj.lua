@@ -208,7 +208,7 @@ end
 -- @tparam string path The path to the log file. Include the file extension!
 function mct_mod:set_log_file_path(path)
     if not is_string(path) then
-        -- errmsg
+        mct:error("set_log_file_path() called for mct_mod with key ["..self:get_key().."], but the path provided is not a string!")
         return false
     end
 
@@ -235,14 +235,14 @@ end
 -- @tparam boolean visible Set the rows visible (true) or invisible (false)
 function mct_mod:set_section_visibility(section_key, visible)
     if not is_string(section_key) then
-        -- errmsg
+        mct:error("set_section_visibility() called for mct_mod with key ["..self:get_key().."], but the section_key provided is not a string!")
         return false
     end
 
     if is_nil(visible) then visible = true end
     
     if not is_boolean(visible) then
-        -- errmsg
+        mct:error("set_section_visibility() called for mct_mod with key ["..self:get_key().."], but the visible arg provided is not a boolean or nil!")
         return false
     end
 
