@@ -137,7 +137,7 @@ end
 -- mct_section:set_option_sort_function(
 --      function()
 --          local ordered_options = {}
---          local options = mct_section:get_sections()
+--          local options = mct_section:get_options()
 --          for option_key, option_obj in pairs(options) do
 --              ordered_options[#ordered_options+1] = option_key
 --          end
@@ -347,17 +347,33 @@ end
 -- Automatically called through @{mct_option:set_assigned_section}.
 -- @tparam mct_option option_obj The option object to assign into this section.
 function mct_section:assign_option(option_obj)
+    
+    local current_mod = self:get_mod()
+    
     if is_string(option_obj) then
         -- try to get an option obj with this key
-        option_obj = self:get_mod():get_option_by_key(option_obj)
+        option_obj = current_mod:get_option_by_key(option_obj)
     end
 
     if not mct:is_mct_option(option_obj) then
         mct:error("assign_option() called for section ["..self:get_key().."], but the option_obj provided ["..tostring(option_obj).."] is not an mct_option!  Cancelling")
         return false
     end
+    
+    local option_key = option_obj:get_key()
+    
+    -- remove this option from any previous section it was assigned to
+    local old_assignment = option_obj:get_assigned_section()
+    if old_assignment then
+        local old_section = current_mod:get_sections()[old_assignment]
+        if old_section then
+            old_section._options[option_key] = nil
+        end
+    end
 
-    self._options[option_obj:get_key()] = option_obj
+    self._options[option_key] = option_obj
+
+    option_obj._assigned_section = self:get_key() -- we can't call option_obj:set_assigned_section here without creating an infinite loop
 end
 
 --- Return all the options assigned to the mct_section.
