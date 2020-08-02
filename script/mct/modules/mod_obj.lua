@@ -53,15 +53,11 @@ function mct_mod.new(key)
         -- etc
     } -- read from the mct_settings.lua file
 
-    -- start with the default section, if none are specified this is what's used
-    local default_section = mct._MCT_SECTION.new("default", self)
-    default_section:set_localised_text("mct_mct_mod_default_section_text", true)
-
-    self._sections = {
-        ["default"] = default_section,
-    }
-
-    self._last_section = self._sections.default
+    self._sections = {} --create the default section below using add_new_section so it handles bookkeeping for us
+                        --(like updating _sections_by_index_order, _last_section, and anything added in the future)
+    
+    self._section_sort_order_function = self.sort_sections_by_key
+    self._sections_by_index_order = {}
 
     -- used for the Logging functionality
     self._log_file_path = nil
@@ -71,6 +67,8 @@ function mct_mod.new(key)
     self._description = "No Description Assigned"
     --self._workshop_link = ""
 
+    -- start with the default section, if none are specified this is what's used
+    self:add_new_section("default", "mct_mct_mod_default_section_text", true)
 
     return self
 end
@@ -160,7 +158,8 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     local new_section = mct._MCT_SECTION.new(section_key, self)
     new_section:set_localised_text(localised_name, is_localised)
 
-    self._sections[new_section:get_key()] = new_section
+    self._sections[section_key] = new_section
+    self._sections_by_index_order[#self._sections_by_index_order+1] = section_key
     self._last_section = new_section
 
     return new_section
@@ -269,6 +268,86 @@ end
 -- @treturn string key The key for this mct_mod
 function mct_mod:get_key()
     return self._key
+end
+
+--- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
+-- @local
+function mct_mod:sort_sections()
+    -- perform the wrapped sort order function
+
+    -- TODO protect it?
+    -- protect it with a pcall to catch any issues with a custom sort order func
+    return self:_section_sort_order_function()
+end
+
+--- One of the default sort-section function.
+-- Sort the sections by their section key - from "!my_section" to "zzz_my_section"
+function mct_mod:sort_sections_by_key()
+    local ret = {}
+    local sections = self:get_sections()
+
+    for section_key, _ in pairs(sections) do
+        table.insert(ret, section_key)
+    end
+
+    table.sort(ret)
+
+    return ret
+end
+
+--- One of the default sort-section functions.
+-- Sort the sections by the order in which they were added in the `mct/settings/?.lua` file.
+function mct_mod:sort_sections_by_index()
+    local ret = {}
+
+    -- table that has all mct_mod sections listed in the order they were created via mct_mod:add_new_section
+    -- array of section_keys!
+    local order_by_section_added = self._sections_by_index_order
+
+    -- copy the table
+    for i = 1, #order_by_section_added do
+        ret[#ret+1] = order_by_section_added[i]
+    end
+
+    return ret
+end
+
+---Set the section-sort-function for this mod's sections
+-- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}
+-- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}
+-- You can also pass a full function, for example:
+-- mct_mod:set_sections_sort_function(
+--      function()
+--          local ordered_sections = {}
+--          local sections = mct_mod:get_sections()
+--          for section_key, section_obj in pairs(sections) do
+--              ordered_sections[#ordered_sections+1] = section_key
+--          end
+-- 
+--          -- alphabetically sort the sections
+--          table.sort(ordered_sections)
+-- 
+--          -- reverse the order
+--          table.sort(ordered_sections, function(a,b) return a > b end)
+--      end
+-- )
+-- @tparam function|string sort_func The sort function provided. Either use one of the two strings above, or a custom function like the above example.
+function mct_mod:set_section_sort_function(sort_func)
+    if is_string(sort_func) then
+        if sort_func == "key_sort" then
+            self._section_sort_order_function = self.sort_sections_by_key
+        elseif sort_func == "index_sort" then
+            self._section_sort_order_function = self.sort_sections_by_index
+        else
+            mct:error("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
+            return false
+        end
+    elseif is_function(sort_func) then
+        self._section_sort_order_function = sort_func
+    else
+        mct:error("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided isn't a string or a function!")
+        return false
+    end
 end
 
 --- Set the option-sort-function for every section

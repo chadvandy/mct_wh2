@@ -172,9 +172,7 @@ function mct_option:set_assigned_section(section_key)
         return false
     end
 
-    section:assign_option(self)
-
-    self._assigned_section = section_key
+    section:assign_option(self) -- this sets the option's self._assigned_section
 end
 
 --- Reads the assigned_section for this option.

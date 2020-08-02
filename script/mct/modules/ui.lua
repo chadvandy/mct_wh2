@@ -760,11 +760,15 @@ function ui_obj:create_sections_and_contents(mod_obj)
     --self._sections_to_rows = {}
 
     core:remove_listener("MCT_SectionHeaderPressed")
+    
+    local ordered_section_keys = mod_obj:sort_sections()
 
-    for section_key, section_obj in pairs(sections) do
+    for i, section_key in ipairs(ordered_section_keys) do
         --local section_table = sections[i]
         --local section_key = section_table.key
         --self._sections_to_rows[section_key] = {}
+        
+        local section_obj = mod_obj:get_section_by_key(section_key);
 
         -- make sure the dummy rows table is clear before doing anything
         section_obj._dummy_rows = {}
