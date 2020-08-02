@@ -73,6 +73,11 @@ function mct_mod.new(key)
     return self
 end
 
+--- INTERNAL USE ONLY.
+-- This constructs the string used in mct_settings.lua, for this mod.
+-- Done as a method of mct_mod so we can read mct_mod/mct_option where necessary.
+-- For instance, used to enact precision on slider floats.
+-- @treturn string The mct_settings.lua string for this mod, ie. `["mod_key"] = {["option_key"] = "setting", ...}`
 function mct_mod:save_mct_settings()
     local retstr = ""
 
@@ -114,6 +119,9 @@ function mct_mod:save_mct_settings()
     return retstr
 end
 
+--- Getter for any @{mct_section}s linked to this mct_mod.
+-- @tparam string section_key The identifier for the section searched for.
+-- @treturn mct_section
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
         mct:error("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning nil.")
@@ -312,7 +320,7 @@ function mct_mod:sort_sections_by_index()
     return ret
 end
 
----Set the section-sort-function for this mod's sections
+--- Set the section-sort-function for this mod's sections
 -- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}
 -- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}
 -- You can also pass a full function, for example:
