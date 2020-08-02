@@ -41,7 +41,6 @@ end
 --- Get the ordered keys of all options in this section, based on the sort-order-function determined by @{mct_section:set_option_sort_function}.
 -- @treturn {string,...} ordered_options An array of the ordered option keys, [1] is the first key, [2] is the second, so on.
 -- @treturn number num_total The total number of options in this section, for UI creation.
--- @local
 function mct_section:get_ordered_options()
     local ordered_options = self._ordered_options
     local num_total = 0
@@ -57,7 +56,6 @@ end
 -- @tparam string option_key The option key being placed at the index.
 -- @tparam number x The x-value for the option. Somewhere between 1(left) and 3(right)
 -- @tparam number y The y-value for the option. 1 is the top row, etc.
--- @local
 function mct_section:set_option_at_index(option_key, x, y)
     if not is_string(option_key) then
         mct:error("set_option_at_index() called for section ["..self:get_key().."] in mct mod ["..self:get_mod():get_key().."], but the option_key provided was not a string! Returning false.")
