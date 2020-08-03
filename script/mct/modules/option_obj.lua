@@ -18,17 +18,8 @@ local mct_option = {
         slider = {"ui/templates/cycle_button_arrow_previous", "ui/common ui/text_box", "ui/templates/cycle_button_arrow_next"}
     },
 
-    ui = mct.ui
-
-    --_wrapped = nil
-    --_callback = nil,
-    --_selected_setting = nil,
-    --_finalized_setting = nil
 }
 
---local mct_checkbox_template = "ui/templates/checkbox_toggle"
---local mct_dropdown_template = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"}
---local mct_slider_template = "ui/templates/panel_slider_horizontal"
 
 --- For internal use only. Called by @{mct_mod:add_new_option}.
 function mct_option.new(mod, option_key, type)
@@ -64,7 +55,10 @@ function mct_option.new(mod, option_key, type)
     -- a callback triggered whenever the setting is changed within the UI
     self._option_set_callback = nil
 
-    -- selected setting is the UI state and the default value; finalized setting is the saved setting in the file/etc
+    -- default setting is the mct_mod default and the one to reset to;
+    -- selected setting is the current UI state, defaults to default_setting if no finalized_setting;
+    -- finalized setting is the saved setting in the file/etc;
+    self._default_setting = nil
     self._selected_setting = nil
     self._finalized_setting = nil
 
@@ -370,6 +364,7 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
+-- TODO put these in wrapped types
 --- Internal checker to see if the values passed through mct_option methods are valid.
 -- @tparam any val Value being tested for type.
 function mct_option:is_val_valid_for_type(val)
@@ -397,22 +392,22 @@ function mct_option:is_val_valid_for_type(val)
 end
 
 --- Getter for the "finalized_setting" for this `mct_option`.
--- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set, or the latest saved value if in a campaign, or the latest settings-value if in a new campaign or in frontend.
+-- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 -- @within API
 function mct_option:get_finalized_setting()
     local test = self._finalized_setting
+
     if is_nil(test) then
-        local further_test = self._selected_setting
-        if is_nil(further_test) then
-            mct:log("get_finalized_setting() called, but there is no finalized or selected setting picked for this option ["..self:get_key().."]. This should never happen!")
-            return
+        local default_val = self:get_default_value()
+        if default_val ~= nil then
+            self._finalized_setting = default_val
+        else
+            mct:error("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
+            return nil
         end
-        --mct:log("returning as finalized default value ["..tostring(further_test).."] for option ["..self:get_key().."]")
-        self._finalized_setting = further_test
-        return further_test
     end
-    --mct:log("returning finalized value ["..tostring(test).."] for option ["..self:get_key().."]")
-    return test
+
+    return self._finalized_setting
 end
 
 --- Internal use only.
@@ -429,7 +424,7 @@ function mct_option:set_finalized_setting_event_free(val)
         end]]
 
         self._finalized_setting = val
-        self._selected_setting = val
+        --self._selected_setting = val
     end
 end
 
@@ -451,13 +446,47 @@ function mct_option:set_finalized_setting(val)
     end
 end
 
---- Set the default selected setting when the mct_mod is first created and loaded.
+--- Set the default setting when the mct_mod is first created and loaded. Also used for the "Revert to Defaults" option.
 -- @tparam any val Set the default setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 -- @within API
 function mct_option:set_default_value(val)
     if self:is_val_valid_for_type(val) then
-        self._selected_setting = val
+        self._default_setting = val
+        --self._selected_setting = val
     end
+end
+
+--- Getter for the default setting for this mct_option.
+-- @treturn any The modder-set default value.
+function mct_option:get_default_value()
+    -- if no default value was set, pick one automatically.
+    local default_val = self._default_setting
+
+    if is_nil(default_val) then
+        -- pick the default value for the modder:
+            -- false for checkbox
+            -- between min/max for sliders
+            -- first added option for dropdowns
+
+        local type = self:get_type()
+        local values = self:get_values()
+
+        if type == "checkbox" then
+            -- default value as false for checkboxes, because why not
+            self._default_setting = false
+        elseif type == "slider" then
+            local min = values.min
+            local max = values.max
+
+            -- get the "average" of the two numbers, (min+max)/2
+            self._default_setting = (min+max)/2
+        elseif type == "dropdown" then
+            -- set the default value as the first added dropdown option
+            self._default_setting = values[1]
+        end
+    end
+
+    return self._default_setting
 end
 
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the callback set through @{mct_option:add_option_set_callback}.
@@ -705,19 +734,24 @@ function mct_option:ui_change_state()
     end
 end
 
---- Getter for the current selected setting. This is the default_value if nothing has been selected yet in the UI.
+--- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
 -- Used when finalizing settings.
 -- @treturn any val The value set as the selected_setting for this mct_option.
 -- @within API
 function mct_option:get_selected_setting()
+    -- no selected setting found - UI was just created!
     if self._selected_setting == nil then
-        -- this should default to the default value, or the finalized setting if there is one
-        self._selected_setting = self._finalized_setting
+
+        -- default to the current finalized setting
+        if self:get_finalized_setting() ~= nil then
+            self._selected_setting = self:get_finalized_setting()
+
+        -- if no finalized setting, set to the default setting
+        elseif self:get_default_value() ~= nil then
+            self._selected_setting = self:get_default_value()
+        end
     end
 
-    --mct:log("["..self._key.."], selected setting iiiiis: "..tostring(self._selected_setting))
-
-    --mct:log(tostring(self._selected_setting))
     return self._selected_setting
 end
 
@@ -793,6 +827,8 @@ function mct_option:slider_set_min_max(min, max)
 
     self._values.min = min
     self._values.max = max
+
+    -- test the default value; 
 
     --self:set_default_value(current)
 end
