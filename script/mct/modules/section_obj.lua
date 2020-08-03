@@ -48,6 +48,7 @@ function mct_section:get_ordered_options()
     for _,_ in pairs(ordered_options) do
         num_total = num_total + 1
     end
+    
     return ordered_options, num_total
 end
 
