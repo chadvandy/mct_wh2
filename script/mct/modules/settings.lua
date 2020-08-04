@@ -8,6 +8,11 @@ local settings = {
     tab = 0,
 
     new_settings = {},
+    
+    -- this is a table of mod keys to tables of options keys to their options
+    -- cached on reading mct_settings.lua. When reading *extant* mct_mods, the cache is cleared for that mod key
+    -- This lets a user/modder disable a mod, finalize settings, and load up that old mod again without losing settings
+    cached_settings = {},
 }
 
 local tab = 0
@@ -25,6 +30,41 @@ function settings:save_mct_settings()
 
         str = str .. addendum
     end
+
+    local t = ""
+
+    -- append a loop for the cached mods
+    for mod_key, mod_data in pairs(self.cached_settings) do
+        t = "\t[\""..mod_key.."\"] = {\n"
+
+        -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
+        for option_key, option_data in pairs(mod_data) do
+            t = t .. "\t\t[\""..option_key.."\"] = {\n"
+
+            for _,saved_setting in pairs(option_data) do
+                t = t .. "\t\t\t[\"_setting\"] = "
+                if is_string(saved_setting) then
+                    t = t .. "\"" .. saved_setting .. "\",\n"
+                elseif is_number(saved_setting) then
+                    t = t .. tostring(saved_setting) .. ",\n"
+                elseif is_boolean(saved_setting) then
+                    t = t .. tostring(saved_setting) .. ",\n"
+                else
+                    mct:log("not a string number or boolean?")
+                    mct:log(tostring(saved_setting))
+                    t = t .. "nil" .. ",\n"
+                end
+            end
+
+
+            t = t .. "\t\t},"
+
+        end
+
+        t = t .. "\t},"
+    end
+
+    str = str .. t
 
     --mct:log("starting run through table")
     --str = run_through_table(data, str)
@@ -89,15 +129,6 @@ function settings:finalize(force)
         mct:log("Finalized mod ["..key.."]")
         mod:finalize_settings()
 
-        --local data = {}
-
-        --local options = mod:get_options()
-        --for option_key, option_obj in pairs(options) do
-            --data[option_key] = {}
-            --data[option_key]._setting = option_obj:get_finalized_setting()
-        --end
-
-        --ret[key] = data
     end
 
     if __game_mode ~= __lib_type_campaign or (__game_mode == __lib_type_campaign and force) then
@@ -174,6 +205,9 @@ function settings:mp_load()
     end
 end
 
+--- This is the function that reads the mct_settings.lua file and loads up all the necessary components from it.
+-- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
+-- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
 function settings:load()
     local file = io.open(self.settings_file, "r")
     if not file then
@@ -209,68 +243,67 @@ function settings:load()
             -- check if there's any saved data for this mod obj
             local data = content[mod_key]
 
-            --if not mct:is_mct_mod(mod_obj) then
-                --mct:error("Running settings:load(), but a mct_mod in the mct_data with key ["..mod_key.."] is not a valid mct_mod! Skipping!")
-            --else
-            --mod_obj._finalized_setings = data
+            -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
+            local all_options = mod_obj:get_options()
 
-                -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
-                local all_options = mod_obj:get_options()
+            for option_key, option_obj in pairs(all_options) do
+                local setting = nil
 
-                for option_key, option_obj in pairs(all_options) do
-                    local setting = nil
+                -- grab data attached to this option key in the .lua settings file
+                if not is_nil(data) then
+                    local saved_data = data[option_key]
 
-                    -- grab data attached to this option key in the .lua settings file
-                    if not is_nil(data) then
-                        local saved_data = data[option_key]
-
-                        -- grab the saved data in the .lua file for this option!
-                        if not is_nil(saved_data) then
-                            setting = saved_data._setting
-                        else -- this is a new setting!
-                            mct:log("New setting found! ["..option_key.."]")
-                            if is_nil(self.new_settings[mod_key]) then
-                                mct:log("?")
-                                self.new_settings[mod_key] = {}
-                                --mct:log("??")
-                            end
-
-                            --mct:log("???")
-
-                            -- save the option key in the new_settings table, so we can look back later and see that it's new!
-                            self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
-
-                            --mct:log("????")
-
-                            any_added = true
-
-                            --mct:log("?????")
+                    -- grab the saved data in the .lua file for this option!
+                    if not is_nil(saved_data) then
+                        setting = saved_data._setting
+                    else -- this is a new setting!
+                        mct:log("New setting found! ["..option_key.."]")
+                        if is_nil(self.new_settings[mod_key]) then
+                            mct:log("?")
+                            self.new_settings[mod_key] = {}
+                            --mct:log("??")
                         end
+
+                        --mct:log("???")
+
+                        -- save the option key in the new_settings table, so we can look back later and see that it's new!
+                        self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
+
+                        --mct:log("????")
+
+                        any_added = true
+
+                        --mct:log("?????")
                     end
-
-                    -- if no setting was found, default to whatever the default_value is
-                    if is_nil(setting) then
-                        -- this returns the default value
-                        setting = option_obj:get_finalized_setting()
-                    end
-
-                    -- set the finalized setting and read only stuffs
-                    option_obj:set_finalized_setting_event_free(setting)
-
-                    mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
                 end
-                
-                mod_obj:load_finalized_settings()
-            --end
+
+                -- if no setting was found, default to whatever the default_value is
+                if is_nil(setting) then
+                    -- this returns the default value
+                    setting = option_obj:get_finalized_setting()
+                end
+
+                -- set the finalized setting and read only stuffs
+                option_obj:set_finalized_setting_event_free(setting)
+
+                mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
+            end
+            
+            mod_obj:load_finalized_settings()
+
+            -- clear out this bit of the mct_settings.lua file in local memory, so when we loop below it only checks unfound mct_mods
+            content[mod_key] = nil
         end
 
-        --mct:log("!")
+        -- loop through the rest of "content", which is either empty entirely or has
+        -- any bits of information that need to be cached due to a disabled mct_mod
+        for mod_key, mod_data in pairs(content) do
+            mct:log("Caching settings for mct_mod with key ["..mod_key.."]")
+            self.cached_settings[mod_key] = mod_data
+        end
 
         self:finalize()
 
-        --mct:log("!!")
-
-        --mct:log("Any added:")
         mct:log(tostring(any_added))
         if any_added then
             --mct:log("does this exist")
