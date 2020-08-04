@@ -42,7 +42,7 @@ function settings:save_mct_settings()
             t = t .. "\t\t[\""..option_key.."\"] = {\n"
 
             for _,saved_setting in pairs(option_data) do
-                t = t .. "\t\t\t[\"_setting\"] = "
+                t = t .. "\t\t\t[\"_setting\"] = {\n"
                 if is_string(saved_setting) then
                     t = t .. "\"" .. saved_setting .. "\",\n"
                 elseif is_number(saved_setting) then
@@ -54,6 +54,8 @@ function settings:save_mct_settings()
                     mct:log(tostring(saved_setting))
                     t = t .. "nil" .. ",\n"
                 end
+
+                t = t .. "\t\t\t},\n"
             end
 
 
