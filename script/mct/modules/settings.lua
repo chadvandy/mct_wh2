@@ -95,6 +95,7 @@ function settings:local_only_finalize(sent_by_host)
 
                 -- only trigger the option-changed event if it's actually changing setting
                 local selected = option_obj:get_selected_setting()
+
                 if option_obj:get_finalized_setting() ~= selected then
                     option_obj:set_finalized_setting(selected)
                     fin[option_key] = selected

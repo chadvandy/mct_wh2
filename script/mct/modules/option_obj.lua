@@ -479,6 +479,7 @@ function mct_option:get_default_value()
             local max = values.max
 
             -- get the "average" of the two numbers, (min+max)/2
+            -- TODO set this with respect for the step sizes, precision, etc
             self._default_setting = (min+max)/2
         elseif type == "dropdown" then
             -- set the default value as the first added dropdown option
