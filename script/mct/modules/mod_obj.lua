@@ -401,7 +401,6 @@ function mct_mod:set_positions_for_options()
     for section_key, section_obj in pairs(sections) do
         mct:log("in section ["..section_key.."].")
 
-
         local ordered_option_keys = section_obj:sort_options()
 
         local total = #ordered_option_keys
@@ -435,6 +434,8 @@ function mct_mod:set_positions_for_options()
             return true
         end
 
+        --mct:log("down here now")
+
         local function iterate(added)
             if x == 3 then
                 x = 1
@@ -454,15 +455,23 @@ function mct_mod:set_positions_for_options()
             if added then j = j + 1 end
         end
 
+        --mct:log("about to loop!")
+
         while valid do
             if j > total then
                 break
             end
 
+            --mct:log("in the loop")
+            --mct:log("iteration #"..tostring(j))
+
             local option_key = ordered_option_keys[j]
             local option_obj = self:get_option_by_key(option_key)
 
-            if mct:is_mct_option(option_obj) then                
+            --mct:log("at key "..option_key)
+
+            if mct:is_mct_option(option_obj) then        
+                --mct:log("it's valid")        
                 -- check if it's a valid position for that option's type (sliders only on 2)
                 if valid_for_type(option_obj:get_type(), x, y) then
                     if option_obj:get_type() == "slider" then slider_added_on_current_row = true end
@@ -480,6 +489,10 @@ function mct_mod:set_positions_for_options()
 
                     iterate(done)
                 end
+            else
+                -- not a valid MCT option
+                -- could be MP disabled, could've been deleted - just skip it and call it a day!
+                iterate(true)
             end
         end
     end
