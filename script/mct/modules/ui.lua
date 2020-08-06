@@ -328,7 +328,7 @@ function ui_obj:create_panels()
     left_panel_bg:SetDockingPoint(4)
     left_panel_bg:SetDockOffset(20, 0)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.20, panel:Height() - 175)
+    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() - 175)
 
     local w,h = left_panel_bg:Dimensions()
 
@@ -497,6 +497,9 @@ function ui_obj:create_panels()
 
     -- default to no logging list view (this probably won't work :) )
     logging_list_view:SetVisible(false)
+
+
+    local w = w * 0.75
 
     local mod_settings_list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", mod_settings_panel)
     mod_settings_list_view:MoveTo(mod_settings_panel:Position())
@@ -926,7 +929,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
     local section_obj = option_obj:get_mod():get_section_by_key(section_key)
 
-    local w,h = mod_settings_panel:Dimensions()
+    local w,h = mod_settings_box:Dimensions()
     w = w * 0.95
     h = h * 0.20
 
@@ -1329,27 +1332,36 @@ function ui_obj:new_mod_row(mod_obj)
     local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
     row:SetVisible(true)
     row:SetCanResizeHeight(true) row:SetCanResizeWidth(true)
-    row:Resize(self.mod_row_list_view:Width() * 0.95, row:Height() * 1.5)
+    row:Resize(self.mod_row_list_view:Width() * 0.95, row:Height() * 1.8)
 
     local txt = find_uicomponent(row, "name")
+
+    txt:Resize(row:Width() * 0.9, row:Height() * 0.9)
+    txt:SetDockingPoint(2)
+    txt:SetDockOffset(10,0)
+
     local txt_txt = mod_obj:get_title()
+    local author_txt = mod_obj:get_author()
 
     if not is_string(txt_txt) then
         txt_txt = "No title assigned"
     end
 
+    txt_txt = txt_txt .. "\n" .. author_txt
+
     self:uic_SetStateText(txt, txt_txt)
 
 
     local date = find_uicomponent(row, "date")
-    local author_txt = mod_obj:get_author()
+    date:SetVisible(false)
+    --local author_txt = mod_obj:get_author()
 
     --[[if not is_string(author_txt) then
         author_txt = "No author assigned"
     end]]
 
-    date:SetDockingPoint(6)
-    self:uic_SetStateText(date, author_txt)
+    --date:SetDockingPoint(6)
+    --self:uic_SetStateText(date, author_txt)
 
     core:add_listener(
         "MctRowClicked",
