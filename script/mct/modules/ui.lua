@@ -409,6 +409,7 @@ function ui_obj:create_panels()
     local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
     local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
+    
 
     mod_title:SetDockingPoint(2)
     mod_title:SetCanResizeHeight(true) mod_title:SetCanResizeWidth(true)
@@ -458,7 +459,6 @@ function ui_obj:create_panels()
     settings_tab:SetDockOffset(0, settings_tab:Height() * -1)
     local img_path = effect.get_skinned_image_path("icon_options_tab.png")
     settings_tab:SetImagePath(img_path)
-
 
     logging_tab:SetDockingPoint(1)
     logging_tab:SetDockOffset(logging_tab:Width() * 1.2, logging_tab:Height() * -1)
@@ -534,6 +534,14 @@ function ui_obj:create_panels()
 
     local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
     finalize_button_txt:SetStateText("Finalize changes")
+
+    -- create "Revert to Default"
+    local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", mod_settings_panel)
+    revert_to_default:SetDockingPoint(8)
+    revert_to_default:SetDockOffset(revert_to_default:Width() * 1.6, revert_to_default:Height() * 1.5)
+
+    -- TODO localise this shit
+    find_uicomponent(revert_to_default, "button_txt"):SetStateText("Revert to Defaults")
 
     self.mod_settings_panel = mod_settings_panel
 end
@@ -1501,20 +1509,15 @@ core:add_listener(
 
         if not mct:is_mct_option(option_obj) then
             mct:error("mct_checkbox_toggle_option_selected listener trigger, but the checkbox pressed ["..parent_id.."] doesn't have a valid mct_option attached. Returning false.")
+            return false
         end
 
-        -- this will return true/false for checked/unchecked
-        local current_state = option_obj:get_selected_setting()
-        --mct:log("Option obj found. Current setting is ["..tostring(current_state).."], new is ["..tostring(not current_state).."]")
-        option_obj:set_selected_setting(not current_state)
-
-        -- TODO put this entire listener into an `option_obj:ui_select_value()` call
-        ui_obj.locally_edited = true
+        option_obj:ui_select_value(not option_obj:get_selected_setting())
     end,
     true
 )
 
--- Finalize settings/print to json
+-- Finalize settings/print to settings file
 core:add_listener(
     "mct_finalize_button_pressed",
     "ComponentLClickUp",
@@ -1523,6 +1526,27 @@ core:add_listener(
     end,
     function(context)
         mct:finalize()
+    end,
+    true
+)
+
+-- Revert to defaults for the currently selected mod
+core:add_listener(
+    "mct_revert_to_defaults_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_revert_to_default"
+    end,
+    function(context)
+        local selected_mod = mct:get_selected_mod()
+        mct:log("Reverting to defaults")
+
+        if mct:is_mct_mod(selected_mod) then
+            
+            selected_mod:revert_to_defaults()
+        else
+            mct:log("revert_to_defaults button pressed, but there is no selected mod? Shouldn't ever happen, huh.")
+        end
     end,
     true
 )

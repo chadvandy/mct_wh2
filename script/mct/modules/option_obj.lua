@@ -529,6 +529,27 @@ function mct_option:ui_select_value(val)
 
     -- trigger separate functions for the types!
 
+    if self:get_type() == "checkbox" then
+        -- grab the checkbox UI
+        local option_uic = self:get_uics()[1]
+
+        -- this will return true/false for checked/unchecked
+        --local current_state = self:get_selected_setting()
+        --local new_state = not current_state
+
+        self:set_selected_setting(val)
+
+        mct.ui.locally_edited = true
+
+        local state = "selected"
+
+        if val == false then
+            state = "active"
+        end
+
+        mct.ui:uic_SetState(option_uic, state)
+    end
+
     if self:get_type() == "slider" then
         local function round_num(num, numDecimalPlaces)
             local mult = 10^(numDecimalPlaces or 0)
