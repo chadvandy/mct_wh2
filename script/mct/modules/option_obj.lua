@@ -313,8 +313,9 @@ end
 ---    end
 ---)
 --- @tparam function callback The callback triggered whenever this option is changed. Callback will be passed one argument - the `context` object for the listener. `context:mct()`, `context:option()`, `context:setting()`, and `context:is_creation()` (for if this was triggered on the UI being created) are the valid methods on context.
+--- @tparam boolean is_context Set this to true if you want to treat this function with the new method of passing a context. If this is false or nil, it will pass the mct_option like before. For backwards compatibility - I'll probably take this out eventually.
 --- @within API
-function mct_option:add_option_set_callback(callback)
+function mct_option:add_option_set_callback(callback, is_context)
     if not is_function(callback) then
         mct:error("Trying `add_option_set_callback()` on option ["..self._key.."], but the supplied callback is not a function. Returning false.")
         return false
@@ -327,7 +328,11 @@ function mct_option:add_option_set_callback(callback)
             return context:option():get_key() == self:get_key()
         end,
         function(context)
-            callback(context)
+            if is_context == true then
+                callback(context)
+            else
+                callback(self)
+            end
         end,
         true
     )
@@ -520,20 +525,15 @@ function mct_option:ui_select_value(val)
         return false
     end
 
-    --[[
-        local uic = UIComponent(context.component)
-        local popup_list = UIComponent(uic:Parent())
-        local popup_menu = UIComponent(popup_list:Parent())
-        local dropdown_box = UIComponent(popup_menu:Parent())
+    local uic_test = self:get_uics()[1]
 
-        -- will tell us the name of the option
-        local parent_id = UIComponent(dropdown_box:Parent()):Id()
-        local mod_obj = mct:get_selected_mod()
-        local option_obj = mod_obj:get_option_by_key(parent_id)
-    ]]
+    if not is_uicomponent(uic_test) then
+        mct:error("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
+        return false
+    end
 
+    -- TODO put these in wrapped option objects
     -- trigger separate functions for the types!
-
     if self:get_type() == "checkbox" then
         -- grab the checkbox UI
         local option_uic = self:get_uics()[1]
