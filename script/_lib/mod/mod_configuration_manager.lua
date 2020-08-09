@@ -373,11 +373,15 @@ function mod_configuration_tool:load_mod(filename, filename_for_out)
     local loaded_file, load_error = loadfile(filename)
 
     if loaded_file then
-        local env = core:get_env()
-        env.mct = self
-        env.core = core
+        local global_env = core:get_env()
 
-        setfenv(loaded_file, env)
+        local attach_env = {}
+        setmetatable(attach_env, {__index = global_env})
+        
+        attach_env.mct = self
+        attach_env.core = core
+
+        setfenv(loaded_file, attach_env)
 
         package.loaded[filename] = true
 
