@@ -513,7 +513,6 @@ function mct_option:set_selected_setting(val, is_creation)
 end
 
 --- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
---- @todo This function only works for dropdowns and sliders so far - has to be set up for each type!
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 function mct_option:ui_select_value(val)
     if not self:is_val_valid_for_type(val) then
