@@ -142,7 +142,43 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     if not self.game_ui_created then
         self:add_ui_created_callback(func)
     else
-        func()
+
+        -- make sure no cutscenes are currently playing
+        if __game_mode == __lib_type_campaign then
+            -- if one is, listen for the cutscene ending then trigger popup. else, popup immediately.
+            if cm:is_any_cutscene_running() then
+                core:add_listener(
+                    "cutscene_ended",
+                    "ScriptEventCampaignCutsceneCompleted",
+                    true,
+                    function(context)
+                        -- trigger 1s after the cutscene ends
+                        cm:callback(function() func() end, 1)
+                    end,
+                    false
+                )
+            else
+                func()
+            end
+        elseif __game_mode == __lib_type_battle then
+            -- ditto re: above
+            if bm:is_any_cutscene_running() then
+                core:add_listener(
+                    "cutscene_end",
+                    "ScriptEventBattleCutsceneEnded",
+                    true,
+                    function(context)
+                        -- trigger 1s after the cutscene ends
+                        bm:callback(function() func() end, 1000)
+                    end,
+                    false
+                )
+            else
+                func()
+            end
+        else
+            func()
+        end
     end
 end
 
