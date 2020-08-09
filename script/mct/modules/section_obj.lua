@@ -1,5 +1,5 @@
---- Section Object
--- @classmod mct_section
+---- Section Object
+--- @class mct_section
 
 local mct = mct
 
@@ -271,7 +271,6 @@ function mct_section:get_localised_text()
     if text ~= "" then
         --return text
     else
-
         -- nothing found, check for anything supplied by `set_localised_text()`, or send the default "No text assigned"
         text = self._text
         if is_table(text) then
@@ -284,7 +283,6 @@ function mct_section:get_localised_text()
                 text = text[1]
             end
         end
-
     end
 
     if not is_string(text) then

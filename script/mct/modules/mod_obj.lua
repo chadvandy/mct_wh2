@@ -1,28 +1,24 @@
---- MCT Mod Object
--- @classmod mct_mod
-
-local mct = mct
+--- The mct_mod object.
+--- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
+--- @class mct_mod
+--- @usage testing here
+--- @field _valid_option_types table<"'slider'" | "'dropdown'" | "'checkbox'">
 
 -- TODO make "Finalize settings" validate all MCT options; if some are invalid, give some UX notifs that they're not valid. esp. for the textboxes.
 
--- TODO this can be done cleaner. Read all option obj types?
-mct._valid_option_types = {
-    slider = true,
-    dropdown = true,
-    checkbox = true,
-    textbox = false,
-}
-
+--- the table.
 local mct_mod = {
-    --_name = "",
-    --_options = {},
-
-    _valid_option_types = mct._valid_option_types
 }
+
+-- TODO how get rid of this error????
+
+local mct = mct
+
+mct_mod._valid_option_types = mct._valid_option_types
 
 --- For internal use, called by the MCT Manager.
--- @tparam string key The identifying key for this mod object.
--- @see mct:register_mod
+--- @tparam string key The identifying key for this mod object.
+--- @see mct:register_mod
 function mct_mod.new(key)
     local self = {}
     setmetatable(self, {
@@ -164,7 +160,10 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     end
 
     local new_section = mct._MCT_SECTION.new(section_key, self)
-    new_section:set_localised_text(localised_name, is_localised)
+
+    if localised_name ~= "" then
+        new_section:set_localised_text(localised_name, is_localised)
+    end
 
     self._sections[section_key] = new_section
     self._sections_by_index_order[#self._sections_by_index_order+1] = section_key
@@ -320,26 +319,26 @@ function mct_mod:sort_sections_by_index()
     return ret
 end
 
---- Set the section-sort-function for this mod's sections
--- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}
--- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}
--- You can also pass a full function, for example:
--- mct_mod:set_sections_sort_function(
---      function()
---          local ordered_sections = {}
---          local sections = mct_mod:get_sections()
---          for section_key, section_obj in pairs(sections) do
---              ordered_sections[#ordered_sections+1] = section_key
---          end
--- 
---          -- alphabetically sort the sections
---          table.sort(ordered_sections)
--- 
---          -- reverse the order
---          table.sort(ordered_sections, function(a,b) return a > b end)
---      end
--- )
--- @tparam function|string sort_func The sort function provided. Either use one of the two strings above, or a custom function like the above example.
+--- Set the section-sort-function for this mod's sections.
+--- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}.
+--- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}.
+--- You can also pass a full function, see usage below.
+--- @usage    mct_mod:set_sections_sort_function(
+---      function()
+---          local ordered_sections = {}
+---          local sections = mct_mod:get_sections()
+---          for section_key, section_obj in pairs(sections) do
+---              ordered_sections[#ordered_sections+1] = section_key
+---          end
+--- 
+---          -- alphabetically sort the sections
+---          table.sort(ordered_sections)
+--- 
+---          -- reverse the order
+---          table.sort(ordered_sections, function(a,b) return a > b end)
+---      end
+---     )
+--- @tparam function|"key_sort"|"index_sort" sort_func The sort function provided. Either use one of the two strings above, or a custom function like the below example.
 function mct_mod:set_section_sort_function(sort_func)
     if is_string(sort_func) then
         if sort_func == "key_sort" then
@@ -359,9 +358,9 @@ function mct_mod:set_section_sort_function(sort_func)
 end
 
 --- Set the option-sort-function for every section
--- Triggers @{mct_section:set_option_sort_function} for every section.
--- If you want to make 6 sections with "key_sort", and a 7th with "index_sort", use this first after making all sections and then use @{mct_section:set_option_sort_function} on the 7th afterwards.
--- @tparam any sort_func See the wrapped function for what this argument needs to be.
+--- Triggers @{mct_section:set_option_sort_function} for every section.
+--- If you want to make 6 sections with "key_sort", and a 7th with "index_sort", use this first after making all sections and then use @{mct_section:set_option_sort_function} on the 7th afterwards.
+--- @tparam any sort_func See the wrapped function for what this argument needs to be.
 function mct_mod:set_option_sort_function_for_all_sections(sort_func)
     local sections = self:get_sections()
 
@@ -372,8 +371,8 @@ function mct_mod:set_option_sort_function_for_all_sections(sort_func)
 end
 
 --- The finalize function is used for all actions needed to be performmed when the `mct_mod` is done being created, like setting positions for all options.
--- Triggered once the file which housed this `mod_obj` is done loading
--- @local
+--- Triggered once the file which housed this `mod_obj` is done loading
+--- @local
 function mct_mod:finalize()
     -- disable mp-disabled options in mp
     if __game_mode == __lib_type_campaign and cm.game_interface:model():is_multiplayer() then
@@ -391,8 +390,8 @@ function mct_mod:finalize()
 end
 
 --- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
--- Order the options by key within each section, giving sliders a full row to their own self
--- @local
+--- Order the options by key within each section, giving sliders a full row to their own self
+--- @local
 function mct_mod:set_positions_for_options()
     local sections = self:get_sections()
 
@@ -504,7 +503,7 @@ function mct_mod:revert_to_defaults()
 end
 
 --- Used when loading the mct_settings.lua file.
--- @local
+--- @local
 function mct_mod:load_finalized_settings()
     local options = self:get_options()
 
@@ -520,7 +519,7 @@ function mct_mod:load_finalized_settings()
 end
 
 --- Used when finalizing the settings in MCT.
--- @local
+--- @local
 function mct_mod:finalize_settings()
     local options = self:get_options()
 
@@ -555,8 +554,8 @@ function mct_mod:get_settings()
 end
 
 --- Enable localisation for this mod's title. Accepts either finalized text, or a localisation key.
--- @tparam string title_text The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui_text_replacements_my_dope_mod". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_title`, and MCT will automatically read that.
--- @tparam boolean is_localised True if the title_text supplied is a loc key.
+--- @tparam string title_text The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui_text_replacements_my_dope_mod". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_title`, and MCT will automatically read that.
+--- @tparam boolean is_localised True if the title_text supplied is a loc key.
 function mct_mod:set_title(title_text, is_localised)
     if is_string(title_text) then
 
@@ -568,7 +567,7 @@ function mct_mod:set_title(title_text, is_localised)
 end
 
 --- Set the Author text for this mod.
--- @tparam string author_text The text supplied for the author. Doesn't accept loc-keys. Please note you can skip this method, and just make a loc key called: `mct_[mct_mod_key]_author`, and MCT will automatically read that.
+--- @tparam string author_text The text supplied for the author. Doesn't accept loc-keys. Please note you can skip this method, and just make a loc key called: `mct_[mct_mod_key]_author`, and MCT will automatically read that.
 function mct_mod:set_author(author_text)
     if is_string(author_text) then
 
@@ -577,8 +576,8 @@ function mct_mod:set_author(author_text)
 end
 
 --- Enable localisation for this mod's description. Accepts either finalized text, or a localisation key.
--- @tparam string desc_text The text supplied for the description. You can supply the text - ie., "My Mod's Description", or a loc-key, ie. "ui_text_replacements_my_dope_mod_description". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_description`, and MCT will automatically read that.
--- @tparam boolean is_localised True if the desc_text supplied is a loc key.
+--- @tparam string desc_text The text supplied for the description. You can supply the text - ie., "My Mod's Description", or a loc-key, ie. "ui_text_replacements_my_dope_mod_description". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_description`, and MCT will automatically read that.
+--- @tparam boolean is_localised True if the desc_text supplied is a loc key.
 function mct_mod:set_description(desc_text, is_localised)
     if is_string(desc_text) then
 
@@ -596,7 +595,7 @@ end
 end]]
 
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
--- @treturn string title_text The returned string for this mct_mod's title.
+--- @treturn string title_text The returned string for this mct_mod's title.
 function mct_mod:get_title()
     -- check if a title exists in the localised texts!
     local title = effect.get_localised_string("mct_"..self:get_key().."_title")
@@ -616,7 +615,7 @@ function mct_mod:get_title()
 end
 
 --- Grabs the author text. First checks for a loc-key `mct_[mct_mod_key]_author`, then checks to see if anything was set using @{mct_mod:set_author}. If not, "No author assigned" is returned.
--- @treturn string author_text The returned string for this mct_mod's author.
+--- @treturn string author_text The returned string for this mct_mod's author.
 function mct_mod:get_author()
     local author = effect.get_localised_string("mct_"..self:get_key().."_author")
     if author ~= "" then
@@ -631,7 +630,7 @@ function mct_mod:get_author()
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
--- @treturn string description_text The returned string for this mct_mod's description.
+--- @treturn string description_text The returned string for this mct_mod's description.
 function mct_mod:get_description()
     local description = effect.get_localised_string("mct_"..self:get_key().."_description")
     if description ~= "" then
@@ -654,9 +653,9 @@ end
 end]]
 
 --- Returns all three localised texts - title, author, description.
--- @treturn string title_text The returned string for this mct_mod's title.
--- @treturn string author_text The returned string for this mct_mod's author.
--- @treturn string description_text The returned string for this mct_mod's description.
+--- @treturn string title_text The returned string for this mct_mod's title.
+--- @treturn string author_text The returned string for this mct_mod's author.
+--- @treturn string description_text The returned string for this mct_mod's description.
 function mct_mod:get_localised_texts()
     return 
         self:get_title(),
@@ -671,7 +670,7 @@ function mct_mod:get_options()
 end
 
 --- Returns every @{mct_option} of a type.
--- @tparam string option_type The option_type to limit the search by.
+--- @tparam string option_type The option_type to limit the search by.
 function mct_mod:get_option_keys_by_type(option_type)
     if not is_string(option_type) then
         mct:error("Trying `get_option_keys_by_type` for mod ["..self:get_key().."], but type provided is not a string! Returning false.")
@@ -688,8 +687,8 @@ function mct_mod:get_option_keys_by_type(option_type)
 end
 
 --- Returns a @{mct_option} with the specific key on the mct_mod.
--- @tparam string option_key The unique identifier for the desired mct_option.
--- @return @{mct_option}
+--- @tparam string option_key The unique identifier for the desired mct_option.
+--- @treturn mct_option
 function mct_mod:get_option_by_key(option_key)
     if not is_string(option_key) then
         mct:error("Trying `get_option_by_key` for mod ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning false.")
@@ -700,9 +699,9 @@ function mct_mod:get_option_by_key(option_key)
 end
 
 --- Creates a new @{mct_option} with the specified key, of the desired type.
--- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
--- @tparam string option_key The unique identifier for the new mct_option.
--- @tparam string option_type The type for the new mct_option.
+--- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
+--- @tparam string option_key The unique identifier for the new mct_option.
+--- @tparam string option_type The type for the new mct_option.
 function mct_mod:add_new_option(option_key, option_type)
     -- check first to see if an option with this key already exists; if it does, return that one!
 
@@ -749,7 +748,8 @@ function mct_mod:add_new_option(option_key, option_type)
 end
 
 --- bloop
--- @local
+--- @local
+--- @function mct_mod:clear_uics
 function mct_mod:clear_uics(kill_selected)
     local opts = self:get_options()
     for _, option in pairs(opts) do

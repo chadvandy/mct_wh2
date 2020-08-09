@@ -1,9 +1,8 @@
---- Mod Configuration Tool Manager
--- @classmod mct
--- @alias mod_configuration_tool
+---- Mod Configuration Tool Manager
+--- @class mct
+--- @alias mod_configuration_tool mct
 
 -- Define the manager that will be used for the majority of all these operations
----@class mct
 local mod_configuration_tool = {
     __tostring = "MOD_CONFIGURATION_TOOL",
 
@@ -20,9 +19,18 @@ local mod_configuration_tool = {
     _selected_mod = nil,
 
     ui_created_callbacks = {},
+    
+    -- TODO this can be done cleaner. Read all option obj types?
+    _valid_option_types = {
+        slider = true,
+        dropdown = true,
+        checkbox = true,
+        textbox = false,
+    }
 }
 
--- startup function
+
+--- startup function
 function mod_configuration_tool:init()
     -- initialize the log
     self:log_init()
@@ -57,7 +65,7 @@ function mod_configuration_tool:init()
     if not ok then self:log(err) end
 end
 
--- triggers the listeners for MP communication events!
+--- triggers the listeners for MP communication events!
 function mod_configuration_tool:mp_prep()
     ClMultiplayerEvents.registerForEvent(
         "MctMpFinalized","MctMpFinalized",
@@ -276,7 +284,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         end,
         true
     )
-end) if not ok then mct:error(err) end
+end) if not ok then self:error(err) end
 end
 
 function mod_configuration_tool:log_init()
@@ -323,7 +331,7 @@ function mod_configuration_tool:log_init()
 end
 
 --- Basic logging function for outputting text into the MCT log file.
--- @tparam string text The string used for output
+--- @tparam string text The string used for output
 function mod_configuration_tool:log(text)
     if not is_string(text) and not is_number(text) then
         return false
@@ -339,7 +347,7 @@ function mod_configuration_tool:log(text)
 end
 
 --- Basic error logging function for outputting text into the MCT log file.
--- @tparam string text The string used for output
+--- @tparam string text The string used for output
 function mod_configuration_tool:error(text)
     if not is_string(text) and not is_number(text) then
         return false
@@ -356,9 +364,9 @@ function mod_configuration_tool:error(text)
 end
 
 --- For internal use, loads specific mod files located in `script/mct/settings/`. 
--- Any .lua file found in here is given the MCT manager as the variable `mct` within the full scope of the file.
--- @tparam string filename The filename being required and loaded.
--- @tparam string filename_for_out The original filename with the full directory path still included; used for outputs.
+--- Any .lua file found in here is given the MCT manager as the variable `mct` within the full scope of the file.
+--- @tparam string filename The filename being required and loaded.
+--- @tparam string filename_for_out The original filename with the full directory path still included; used for outputs.
 function mod_configuration_tool:load_mod(filename, filename_for_out)
     self:log("Loading MCT module with name [" .. filename_for_out .."]")
 
@@ -443,8 +451,8 @@ function mod_configuration_tool:load_mods()
 end
 
 --- Internal loader for scripts located in `script/mct/modules/`.
--- @tparam string module_name The .lua file name. Exclude the ".lua" part of it!
--- @tparam string path The path to find this .lua file. Make sure package.path has been editing before this function is called!
+--- @tparam string module_name The .lua file name. Exclude the ".lua" part of it!
+--- @tparam string path The path to find this .lua file. Make sure package.path has been editing before this function is called!
 function mod_configuration_tool:load_module(module_name, path)
     --[[if package.loaded[module_name] then
         return 
@@ -576,8 +584,8 @@ function mod_configuration_tool:finalize()
 end
 
 --- Getter for the @{mct_mod} with the supplied key.
--- @tparam string mod_name Unique identifier for the desired mct_mod.
--- @return @{mct_mod}
+--- @tparam string mod_name Unique identifier for the desired mct_mod.
+--- @treturn mct_mod
 function mod_configuration_tool:get_mod_by_key(mod_name)
     local test = self._registered_mods[mod_name]
     if type(test) == "nil" then
@@ -606,10 +614,10 @@ function mod_configuration_tool:get_mods_from_file(filepath)
     return retval
 end
 
---- Primary function to begin adding settings to a "mod"
--- Calls the internal function "mct_mod.new()"
--- @tparam string mod_name The identifier for this mod.
--- @see mct_mod.new
+--- Primary function to begin adding settings to a "mod".
+--- Calls the internal function @{mct_mod.new}.
+--- @tparam string mod_name The identifier for this mod.
+--- @see mct_mod.new
 function mod_configuration_tool:register_mod(mod_name)
     -- get info about where this function was called from, to save that Lua file as a part of the mod obj
     local info = debug.getinfo(2, "S")
@@ -627,28 +635,35 @@ function mod_configuration_tool:register_mod(mod_name)
 end
 
 --- Type-checker for @{mct_mod}s
--- @tparam any obj Tested value.
--- @treturn boolean Whether it passes.
+--- @tparam any obj Tested value.
+--- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_mod(obj)
     return tostring(obj) == "MCT_MOD"
 end
 
 --- Type-checker for @{mct_option}s
--- @tparam any obj Tested value.
--- @treturn boolean Whether it passes.
+--- @tparam any obj Tested value.
+--- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_option(obj)
     return tostring(obj) == "MCT_OPTION"
 end
 
 --- Type-checker for @{mct_section}s
--- @tparam any obj Tested value.
--- @treturn boolean Whether it passes.
+--- @tparam any obj Tested value.
+--- @treturn boolean Whether it passes.
 function mod_configuration_tool:is_mct_section(obj)
     return tostring(obj) == "MCT_SECTION"
 end
 
+
+--- Global functions
+--- @section globals
+
+--- This is just `get_mct()`, the documentation program is being stupid.
 --- Global getter for the mct object.
--- @treturn mct
+--- @static
+--- @function get_mct
+--- @treturn mct
 function get_mct()
     return core:get_static_object("mod_configuration_tool")
     --return mod_configuration_tool

@@ -1,5 +1,5 @@
---- Settings Object. INTERNAL USE ONLY.
--- @classmod mct_settings
+---- Settings Object. INTERNAL USE ONLY.
+--- @class mct_settings
 
 local mct = mct
 

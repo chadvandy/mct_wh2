@@ -1,7 +1,6 @@
---- MCT UI Object. INTERNAL USE ONLY.
--- @classmod mct_ui
-
-local mct = mct
+---- MCT UI Object. INTERNAL USE ONLY.
+--- @class mct_ui
+--- @field dummy uicomponent
 
 local ui_obj = {
     -- UICs
@@ -32,6 +31,8 @@ local ui_obj = {
 
     ui_created_callbacks = {},
 }
+
+local mct = mct
 
 mct:mixin(ui_obj)
 

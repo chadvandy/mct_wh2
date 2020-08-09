@@ -1,5 +1,5 @@
---- MCT UIC Mixins. INTERNAL USE ONLY.
--- @script mct_uic_mixins
+---- MCT UIC Mixins. INTERNAL USE ONLY.
+--- @script mct_uic_mixins
 
 local mct = mct
 

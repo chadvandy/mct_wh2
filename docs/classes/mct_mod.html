@@ -60,10 +60,13 @@
 <div id="content">
 
 <h1>Class <code>mct_mod</code></h1>
-<p>MCT Mod Object</p>
-<p>
-
-</p>
+<p>The mct_mod object.</p>
+<p> This holds all of the details for one mod - name, author, available options, UI appearances, etc.</p>
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">testing here
+</pre>
+    </ul>
 
 
 <h2><a href="#Methods">Methods</a></h2>
@@ -105,8 +108,18 @@
 	<td class="summary">Set the rows of a section visible or invisible.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_mod:get_last_section">mct_mod:get_last_section ()</a></td>
+	<td class="summary">Internal use only, no real need for use anywhere else.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_mod:get_key">mct_mod:get_key ()</a></td>
-	<td class="summary">Getter for the mct_mod's key</td>
+	<td class="summary">Getter for the mct<em>mod's key
+-- @treturn string key The key for this mct</em>mod</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:sort_sections">mct_mod:sort_sections ()</a></td>
+	<td class="summary">Call the internal .<em>section</em>sort<em>order</em>function, determined by <a href="../classes/mct_mod.html#mct_mod:set_section_sort_function">mct_mod:set_section_sort_function</a>
+-- @local</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key ()</a></td>
@@ -118,31 +131,16 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:set_section_sort_function">mct_mod:set_section_sort_function (sort_func)</a></td>
-	<td class="summary">Set the section-sort-function for this mod's sections
- You can pass "key_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key</a>
- You can pass "index_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index</a>
- You can also pass a full function, for example:
- mct<em>mod:set</em>sections<em>sort</em>function(</p>
-<pre><code>  function()
-      local ordered_sections = {}
-      local sections = mct_mod:get_sections()
-      for section_key, section_obj in pairs(sections) do
-          ordered_sections[#ordered_sections+1] = section_key
-      end
-
-      -- alphabetically sort the sections
-      table.sort(ordered_sections)
-
-      -- reverse the order
-      table.sort(ordered_sections, function(a,b) return a &gt; b end)
-  end
-</code></pre>
-<p> )</td>
+	<td class="summary">Set the section-sort-function for this mod's sections.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:set_option_sort_function_for_all_sections">mct_mod:set_option_sort_function_for_all_sections (sort_func)</a></td>
 	<td class="summary">Set the option-sort-function for every section
  Triggers <a href="../classes/mct_section.html#mct_section:set_option_sort_function">mct_section:set_option_sort_function</a> for every section.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_mod:revert_to_defaults">mct_mod:revert_to_defaults ()</a></td>
+	<td class="summary">Set all options to their default value in the UI</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_mod:get_settings">mct_mod:get_settings ()</a></td>
@@ -208,11 +206,12 @@
     <dd>
     For internal use, called by the MCT Manager.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The identifying key for this mod object.
         </li>
     </ul>
@@ -232,18 +231,14 @@
     </dt>
     <dd>
     INTERNAL USE ONLY.
- This constructs the string used in mct<em>settings.lua, for this mod.
- Done as a method of mct</em>mod so we can read mct<em>mod/mct</em>option where necessary.
- For instance, used to enact precision on slider floats.
+-- This constructs the string used in mct<em>settings.lua, for this mod.
+-- Done as a method of mct</em>mod so we can read mct<em>mod/mct</em>option where necessary.
+-- For instance, used to enact precision on slider floats.
+-- @treturn string The mct_settings.lua string for this mod, ie. <code>[&quot;mod_key&quot;] = {[&quot;option_key&quot;] = &quot;setting&quot;, ...}</code>
+
+    </ul>
 
 
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-        The mct_settings.lua string for this mod, ie. <code>[&quot;mod_key&quot;] = {[&quot;option_key&quot;] = &quot;setting&quot;, ...}</code>
-    </ol>
 
 
 
@@ -254,25 +249,21 @@
     <strong>mct_mod:get_section_by_key (section_key)</strong>
     </dt>
     <dd>
-    Getter for any <a href="../classes/mct_section.html#">mct_section</a>s linked to this mct_mod.
+    Getter for any <a href="../classes/mct_section.html#">mct_section</a>s linked to this mct<em>mod.
+-- @tparam string section</em>key The identifier for the section searched for.
+-- @treturn mct_section
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">section_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The identifier for the section searched for.
+
+
+
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="../classes/mct.html#">mct_section</a></span>
-
-
-
-    </ol>
 
 
 
@@ -284,32 +275,34 @@
     </dt>
     <dd>
     Add a new section to the mod's settings view, to separate them into several categories.
- When this function is called, it assumes all following options being defined are being assigned to this section, unless further specified with
- mct_option.
+-- When this function is called, it assumes all following options being defined are being assigned to this section, unless further specified with
+-- mct<em>option.
+-- @tparam string section</em>key The unique identifier for this section.
+-- @tparam ?string localised_name The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "<code>loc_key_example_my_section_name</code>". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use <a href="../classes/mct_section.html#mct_section:set_localised_text">mct_section:set_localised_text</a> instead.
+-- @tparam ?boolean is<em>localised If a loc key is provided in localised</em>name, set this to true, please.
+-- @treturn mct<em>section Returns the mct</em>section object created from this call.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">section_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The unique identifier for this section.
+
+
+
         </li>
         <li><span class="parameter">localised_name</span>
-            <span class="types">optional <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "<code>loc_key_example_my_section_name</code>". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use <a href="../classes/mct_section.html#mct_section:set_localised_text">mct_section:set_localised_text</a> instead.
+
+
+
         </li>
         <li><span class="parameter">is_localised</span>
-            <span class="types">optional <span class="type">boolean</span></span>
-         If a loc key is provided in localised_name, set this to true, please.
+
+
+
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="../classes/mct.html#">mct_section</a></span>
-        Returns the mct_section object created from this call.
-    </ol>
 
 
 
@@ -321,25 +314,21 @@
     </dt>
     <dd>
     Returns a k/v table of <code>{option_key=option_obj}</code> for options that are linked to this section.
- Shouldn't need to be used externally.
+-- Shouldn't need to be used externally.
+-- @tparam string section<em>key The unique identifier for this section.
+-- @treturn {[string]=mct</em>option}
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">section_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The unique identifier for this section.
+
+
+
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">{[string]=mct_option}</a></span>
-
-
-
-    </ol>
 
 
 
@@ -351,8 +340,9 @@
     </dt>
     <dd>
     Returns a table of all "sections" within the mct_mod.
- These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
+-- These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
 
+    </ul>
 
 
 
@@ -366,14 +356,17 @@
     </dt>
     <dd>
     Set the log file path, relative to the Warhammer2.exe folder.
- Used for the logging tab. If nothing is set, the logging tab will be locked.
+-- Used for the logging tab. If nothing is set, the logging tab will be locked.
+-- @tparam string path The path to the log file. Include the file extension!
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">path</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The path to the log file. Include the file extension!
+
+
+
         </li>
     </ul>
 
@@ -388,17 +381,11 @@
     </dt>
     <dd>
     Getter for the log file path.
+-- @treturn string
+
+    </ul>
 
 
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-
-
-
-    </ol>
 
 
 
@@ -410,19 +397,41 @@
     </dt>
     <dd>
     Set the rows of a section visible or invisible.
+-- @tparam string section_key The unique identifier for the desired section.
+-- @tparam boolean visible Set the rows visible (true) or invisible (false)
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">section_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The unique identifier for the desired section.
+
+
+
         </li>
         <li><span class="parameter">visible</span>
-            <span class="types"><span class="type">boolean</span></span>
-         Set the rows visible (true) or invisible (false)
+
+
+
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:get_last_section"></a>
+    <strong>mct_mod:get_last_section ()</strong>
+    </dt>
+    <dd>
+    Internal use only, no real need for use anywhere else.
+-- Specifically used when creating new options, to find the last-made section.
+-- @local
+
+    </ul>
+
 
 
 
@@ -434,16 +443,28 @@
     <strong>mct_mod:get_key ()</strong>
     </dt>
     <dd>
-    Getter for the mct_mod's key
+    Getter for the mct<em>mod's key
+-- @treturn string key The key for this mct</em>mod
+
+    </ul>
 
 
 
-    <h3>Returns:</h3>
-    <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-        key The key for this mct_mod
-    </ol>
+
+
+</dd>
+    <dt>
+    <a name = "mct_mod:sort_sections"></a>
+    <strong>mct_mod:sort_sections ()</strong>
+    </dt>
+    <dd>
+    Call the internal .<em>section</em>sort<em>order</em>function, determined by <a href="../classes/mct_mod.html#mct_mod:set_section_sort_function">mct_mod:set_section_sort_function</a>
+-- @local
+
+    </ul>
+
+
 
 
 
@@ -455,8 +476,9 @@
     </dt>
     <dd>
     One of the default sort-section function.
- Sort the sections by their section key - from "!my<em>section" to "zzz</em>my_section"
+-- Sort the sections by their section key - from "!my<em>section" to "zzz</em>my_section"
 
+    </ul>
 
 
 
@@ -470,8 +492,9 @@
     </dt>
     <dd>
     One of the default sort-section functions.
- Sort the sections by the order in which they were added in the <code>mct/settings/?.lua</code> file.
+-- Sort the sections by the order in which they were added in the <code>mct/settings/?.lua</code> file.
 
+    </ul>
 
 
 
@@ -484,39 +507,42 @@
     <strong>mct_mod:set_section_sort_function (sort_func)</strong>
     </dt>
     <dd>
-    Set the section-sort-function for this mod's sections
- You can pass "key_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key</a>
- You can pass "index_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index</a>
- You can also pass a full function, for example:
- mct<em>mod:set</em>sections<em>sort</em>function(</p>
-<pre><code>  function()
-      local ordered_sections = {}
-      local sections = mct_mod:get_sections()
-      for section_key, section_obj in pairs(sections) do
-          ordered_sections[#ordered_sections+1] = section_key
-      end
+    Set the section-sort-function for this mod's sections.
+ You can pass "key_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_key">mct_mod:sort_sections_by_key</a>.
+ You can pass "index_sort" for <a href="../classes/mct_mod.html#mct_mod:sort_sections_by_index">mct_mod:sort_sections_by_index</a>.
+ You can also pass a full function, see usage below.
 
-      -- alphabetically sort the sections
-      table.sort(ordered_sections)
-
-      -- reverse the order
-      table.sort(ordered_sections, function(a,b) return a &gt; b end)
-  end
-</code></pre>
-<p> )
-
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">sort_func</span>
-            <span class="types"><span class="type">function</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         The sort function provided. Either use one of the two strings above, or a custom function like the above example.
+            <span class="types"><span class="type">function</span>, <span class="type">"key_sort"</span> or <span class="type">"index_sort"</span></span>
+         The sort function provided. Either use one of the two strings above, or a custom function like the below example.
         </li>
     </ul>
 
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">mct_mod:set_sections_sort_function(
+  <span class="keyword">function</span>()
+      <span class="keyword">local</span> ordered_sections = {}
+      <span class="keyword">local</span> sections = mct_mod:get_sections()
+      <span class="keyword">for</span> section_key, section_obj <span class="keyword">in</span> <span class="global">pairs</span>(sections) <span class="keyword">do</span>
+          ordered_sections[#ordered_sections+<span class="number">1</span>] = section_key
+      <span class="keyword">end</span>
+
+      <span class="comment">-- alphabetically sort the sections
+</span>      <span class="global">table</span>.sort(ordered_sections)
+
+      <span class="comment">-- reverse the order
+</span>      <span class="global">table</span>.sort(ordered_sections, <span class="keyword">function</span>(a,b) <span class="keyword">return</span> a &gt; b <span class="keyword">end</span>)
+  <span class="keyword">end</span>
+ )</pre>
+    </ul>
 
 </dd>
     <dt>
@@ -528,6 +554,7 @@
  Triggers <a href="../classes/mct_section.html#mct_section:set_option_sort_function">mct_section:set_option_sort_function</a> for every section.
  If you want to make 6 sections with "key<em>sort", and a 7th with "index</em>sort", use this first after making all sections and then use <a href="../classes/mct_section.html#mct_section:set_option_sort_function">mct_section:set_option_sort_function</a> on the 7th afterwards.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
@@ -543,12 +570,28 @@
 
 </dd>
     <dt>
+    <a name = "mct_mod:revert_to_defaults"></a>
+    <strong>mct_mod:revert_to_defaults ()</strong>
+    </dt>
+    <dd>
+    Set all options to their default value in the UI
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "mct_mod:get_settings"></a>
     <strong>mct_mod:get_settings ()</strong>
     </dt>
     <dd>
     Returns the <code>finalized_settings</code> field of this <a href="../classes/mct_mod.html#">mct_mod</a>.
 
+    </ul>
 
 
 
@@ -563,11 +606,12 @@
     <dd>
     Enable localisation for this mod's title.  Accepts either finalized text, or a localisation key.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">title_text</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui<em>text</em>replacements<em>my</em>dope_mod". Please note you can also skip this method, and just make a loc key called: <code>mct_[mct_mod_key]_title</code>, and MCT will automatically read that.
         </li>
         <li><span class="parameter">is_localised</span>
@@ -588,11 +632,12 @@
     <dd>
     Set the Author text for this mod.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">author_text</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The text supplied for the author. Doesn't accept loc-keys. Please note you can skip this method, and just make a loc key called: <code>mct_[mct_mod_key]_author</code>, and MCT will automatically read that.
         </li>
     </ul>
@@ -609,11 +654,12 @@
     <dd>
     Enable localisation for this mod's description.  Accepts either finalized text, or a localisation key.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">desc_text</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The text supplied for the description. You can supply the text - ie., "My Mod's Description", or a loc-key, ie. "ui<em>text</em>replacements<em>my</em>dope<em>mod</em>description". Please note you can also skip this method, and just make a loc key called: <code>mct_[mct_mod_key]_description</code>, and MCT will automatically read that.
         </li>
         <li><span class="parameter">is_localised</span>
@@ -634,12 +680,13 @@
     <dd>
     Grabs the title text.  First checks for a loc-key <code>mct_[mct_mod_key]_title</code>, then checks to see if anything was set using <a href="../classes/mct_mod.html#mct_mod:set_title">mct_mod:set_title</a>. If not, "No title assigned" is returned.
 
+    </ul>
 
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         title<em>text The returned string for this mct</em>mod's title.
     </ol>
 
@@ -654,12 +701,13 @@
     <dd>
     Grabs the author text.  First checks for a loc-key <code>mct_[mct_mod_key]_author</code>, then checks to see if anything was set using <a href="../classes/mct_mod.html#mct_mod:set_author">mct_mod:set_author</a>. If not, "No author assigned" is returned.
 
+    </ul>
 
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         author<em>text The returned string for this mct</em>mod's author.
     </ol>
 
@@ -674,12 +722,13 @@
     <dd>
     Grabs the description text.  First checks for a loc-key <code>mct_[mct_mod_key]_description</code>, then checks to see if anything was set using <a href="../classes/mct_mod.html#mct_mod:set_description">mct_mod:set_description</a>. If not, "No description assigned" is returned.
 
+    </ul>
 
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         description<em>text The returned string for this mct</em>mod's description.
     </ol>
 
@@ -694,18 +743,19 @@
     <dd>
     Returns all three localised texts - title, author, description.
 
+    </ul>
 
 
     <h3>Returns:</h3>
     <ol>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         title<em>text The returned string for this mct</em>mod's title.</li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         author<em>text The returned string for this mct</em>mod's author.</li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><span class="type">string</span></span>
         description<em>text The returned string for this mct</em>mod's description.</li>
     </ol>
 
@@ -720,6 +770,7 @@
     <dd>
     Returns every <a href="../classes/mct_option.html#">mct_option</a> attached to this mct_mod.
 
+    </ul>
 
 
 
@@ -734,11 +785,12 @@
     <dd>
     Returns every <a href="../classes/mct_option.html#">mct_option</a> of a type.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">option_type</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The option_type to limit the search by.
         </li>
     </ul>
@@ -755,11 +807,12 @@
     <dd>
     Returns a <a href="../classes/mct_option.html#">mct_option</a> with the specific key on the mct_mod.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">option_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The unique identifier for the desired mct_option.
         </li>
     </ul>
@@ -767,7 +820,10 @@
     <h3>Returns:</h3>
     <ol>
 
-        <a href="../classes/mct_option.html#">mct_option</a>
+           <span class="types"><a class="type" href="../classes/mct.html#">mct_option</a></span>
+
+
+
     </ol>
 
 
@@ -782,15 +838,16 @@
     Creates a new <a href="../classes/mct_option.html#">mct_option</a> with the specified key, of the desired type.
  Use this! It calls an internal function, <a href="../classes/mct_option.html#mct_option:new">mct_option.new</a>, but wraps it with error checking and the like.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">option_key</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The unique identifier for the new mct_option.
         </li>
         <li><span class="parameter">option_type</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><span class="type">string</span></span>
          The type for the new mct_option.
         </li>
     </ul>
@@ -807,7 +864,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-02 06:21:11 </i>
+<i style="float:right;">Last updated 2020-08-08 17:50:58 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

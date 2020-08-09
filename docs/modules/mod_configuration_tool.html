@@ -32,95 +32,98 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Methods">Methods</a></li>
-<li><a href="#Global_functions">Global functions </a></li>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 </ul>
 
 
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>mod_configuration_tool</strong></li>
+</ul>
+<h2>Scripts</h2>
+<ul class="nowrap">
+  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
+</ul>
 <h2>Classes</h2>
 <ul class="nowrap">
-  <li><strong>mct</strong></li>
   <li><a href="../classes/mct_mod.html">mct_mod</a></li>
   <li><a href="../classes/mct_option.html">mct_option</a></li>
   <li><a href="../classes/mct_section.html">mct_section</a></li>
   <li><a href="../classes/mct_settings.html">mct_settings</a></li>
   <li><a href="../classes/mct_ui.html">mct_ui</a></li>
 </ul>
-<h2>Scripts</h2>
-<ul class="nowrap">
-  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
-</ul>
-<h2>Topics</h2>
-<ul class="">
-  <li><a href="../topics/manual.md.html">manual</a></li>
-  <li><a href="../topics/changenotes.md.html">changenotes</a></li>
-</ul>
 
 </div>
 
 <div id="content">
 
-<h1>Class <code>mct</code></h1>
+<h1>Module <code>mod_configuration_tool</code></h1>
 <p>Mod Configuration Tool Manager</p>
-<p> mct</p>
+<p> mod<em>configuration</em>tool</p>
 
 
-<h2><a href="#Methods">Methods</a></h2>
+<h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#mct:init">mct:init ()</a></td>
+	<td class="name" nowrap><a href="#init">init ()</a></td>
 	<td class="summary">startup function</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:mp_prep">mct:mp_prep ()</a></td>
+	<td class="name" nowrap><a href="#mp_prep">mp_prep ()</a></td>
 	<td class="summary">triggers the listeners for MP communication events!</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:log">mct:log (text)</a></td>
+	<td class="name" nowrap><a href="#log">log (text)</a></td>
 	<td class="summary">Basic logging function for outputting text into the MCT log file.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:error">mct:error (text)</a></td>
+	<td class="name" nowrap><a href="#error">error (text)</a></td>
 	<td class="summary">Basic error logging function for outputting text into the MCT log file.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:load_mod">mct:load_mod (filename, filename_for_out)</a></td>
+	<td class="name" nowrap><a href="#load_mod">load_mod (filename, filename_for_out)</a></td>
 	<td class="summary">For internal use, loads specific mod files located in <code>script/mct/settings/</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:load_module">mct:load_module (module_name, path)</a></td>
+	<td class="name" nowrap><a href="#load_module">load_module (module_name, path)</a></td>
 	<td class="summary">Internal loader for scripts located in <code>script/mct/modules/</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:finalize">mct:finalize ()</a></td>
+	<td class="name" nowrap><a href="#finalize">finalize ()</a></td>
 	<td class="summary">Internal use only.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:get_mod_by_key">mct:get_mod_by_key (mod_name)</a></td>
+	<td class="name" nowrap><a href="#get_mod_by_key">get_mod_by_key (mod_name)</a></td>
 	<td class="summary">Getter for the <a href="../classes/mct_mod.html#">mct_mod</a> with the supplied key.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:register_mod">mct:register_mod (mod_name)</a></td>
-	<td class="summary">Primary function to begin adding settings to a "mod".</td>
+	<td class="name" nowrap><a href="#register_mod">register_mod (mod_name)</a></td>
+	<td class="summary">Primary function to begin adding settings to a "mod"
+ Calls the internal function "mct_mod.new()"</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:is_mct_mod">mct:is_mct_mod (obj)</a></td>
+	<td class="name" nowrap><a href="#is_mct_mod">is_mct_mod (obj)</a></td>
 	<td class="summary">Type-checker for <a href="../classes/mct_mod.html#">mct_mod</a>s</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:is_mct_option">mct:is_mct_option (obj)</a></td>
+	<td class="name" nowrap><a href="#is_mct_option">is_mct_option (obj)</a></td>
 	<td class="summary">Type-checker for <a href="../classes/mct_option.html#">mct_option</a>s</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct:is_mct_section">mct:is_mct_section (obj)</a></td>
+	<td class="name" nowrap><a href="#is_mct_section">is_mct_section (obj)</a></td>
 	<td class="summary">Type-checker for <a href="../classes/mct_section.html#">mct_section</a>s</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_mct">get_mct ()</a></td>
+	<td class="summary">Global getter for the mct object.</td>
+	</tr>
 </table>
-<h2><a href="#Global_functions">Global functions </a></h2>
+<h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#mct.get_mct">mct.get_mct ()</a></td>
-	<td class="summary">This is just <code>get_mct()</code>, the documentation program is being stupid.</td>
+	<td class="name" nowrap><a href="#mod_configuration_tool">mod_configuration_tool</a></td>
+	<td class="summary">Define the manager that will be used for the majority of all these operations</td>
 	</tr>
 </table>
 
@@ -128,12 +131,12 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
-
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
     <dl class="function">
     <dt>
-    <a name = "mct:init"></a>
-    <strong>mct:init ()</strong>
+    <a name = "init"></a>
+    <strong>init ()</strong>
     </dt>
     <dd>
     startup function
@@ -147,8 +150,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:mp_prep"></a>
-    <strong>mct:mp_prep ()</strong>
+    <a name = "mp_prep"></a>
+    <strong>mp_prep ()</strong>
     </dt>
     <dd>
     triggers the listeners for MP communication events!
@@ -162,8 +165,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:log"></a>
-    <strong>mct:log (text)</strong>
+    <a name = "log"></a>
+    <strong>log (text)</strong>
     </dt>
     <dd>
     Basic logging function for outputting text into the MCT log file.
@@ -184,8 +187,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:error"></a>
-    <strong>mct:error (text)</strong>
+    <a name = "error"></a>
+    <strong>error (text)</strong>
     </dt>
     <dd>
     Basic error logging function for outputting text into the MCT log file.
@@ -206,12 +209,12 @@
 
 </dd>
     <dt>
-    <a name = "mct:load_mod"></a>
-    <strong>mct:load_mod (filename, filename_for_out)</strong>
+    <a name = "load_mod"></a>
+    <strong>load_mod (filename, filename_for_out)</strong>
     </dt>
     <dd>
     For internal use, loads specific mod files located in <code>script/mct/settings/</code>. <br/>
- Any .lua file found in here is given the MCT manager as the variable <a href="../classes/mct.html#">mct</a> within the full scope of the file.
+ Any .lua file found in here is given the MCT manager as the variable <code>mct</code> within the full scope of the file.
 
     </ul>
 
@@ -233,8 +236,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:load_module"></a>
-    <strong>mct:load_module (module_name, path)</strong>
+    <a name = "load_module"></a>
+    <strong>load_module (module_name, path)</strong>
     </dt>
     <dd>
     Internal loader for scripts located in <code>script/mct/modules/</code>.
@@ -259,8 +262,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:finalize"></a>
-    <strong>mct:finalize ()</strong>
+    <a name = "finalize"></a>
+    <strong>finalize ()</strong>
     </dt>
     <dd>
     Internal use only.  Triggers all the functionality for "Finalize Settings!"
@@ -274,8 +277,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:get_mod_by_key"></a>
-    <strong>mct:get_mod_by_key (mod_name)</strong>
+    <a name = "get_mod_by_key"></a>
+    <strong>get_mod_by_key (mod_name)</strong>
     </dt>
     <dd>
     Getter for the <a href="../classes/mct_mod.html#">mct_mod</a> with the supplied key.
@@ -293,7 +296,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="../classes/mct.html#">mct_mod</a></span>
+           <span class="types"><span class="type">mct_mod</span></span>
 
 
 
@@ -304,12 +307,12 @@
 
 </dd>
     <dt>
-    <a name = "mct:register_mod"></a>
-    <strong>mct:register_mod (mod_name)</strong>
+    <a name = "register_mod"></a>
+    <strong>register_mod (mod_name)</strong>
     </dt>
     <dd>
-    Primary function to begin adding settings to a "mod".
- Calls the internal function <a href="../classes/mct_mod.html#mct_mod:new">mct_mod.new</a>.
+    Primary function to begin adding settings to a "mod"
+ Calls the internal function "mct_mod.new()"
 
     </ul>
 
@@ -331,8 +334,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:is_mct_mod"></a>
-    <strong>mct:is_mct_mod (obj)</strong>
+    <a name = "is_mct_mod"></a>
+    <strong>is_mct_mod (obj)</strong>
     </dt>
     <dd>
     Type-checker for <a href="../classes/mct_mod.html#">mct_mod</a>s
@@ -359,8 +362,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:is_mct_option"></a>
-    <strong>mct:is_mct_option (obj)</strong>
+    <a name = "is_mct_option"></a>
+    <strong>is_mct_option (obj)</strong>
     </dt>
     <dd>
     Type-checker for <a href="../classes/mct_option.html#">mct_option</a>s
@@ -387,8 +390,8 @@
 
 </dd>
     <dt>
-    <a name = "mct:is_mct_section"></a>
-    <strong>mct:is_mct_section (obj)</strong>
+    <a name = "is_mct_section"></a>
+    <strong>is_mct_section (obj)</strong>
     </dt>
     <dd>
     Type-checker for <a href="../classes/mct_section.html#">mct_section</a>s
@@ -414,17 +417,12 @@
 
 
 </dd>
-</dl>
-    <h2 class="section-header "><a name="Global_functions"></a>Global functions </h2>
-
-    <dl class="function">
     <dt>
-    <a name = "mct.get_mct"></a>
-    <strong>mct.get_mct ()</strong>
+    <a name = "get_mct"></a>
+    <strong>get_mct ()</strong>
     </dt>
     <dd>
-    This is just <code>get_mct()</code>, the documentation program is being stupid.
- Global getter for the mct object.
+    Global getter for the mct object.
 
     </ul>
 
@@ -432,11 +430,66 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="../classes/mct.html#">mct</a></span>
+           <span class="types"><span class="type">mct</span></span>
 
 
 
     </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "mod_configuration_tool"></a>
+    <strong>mod_configuration_tool</strong>
+    </dt>
+    <dd>
+    Define the manager that will be used for the majority of all these operations
+
+    </ul>
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">__tostring</span>
+
+
+
+        </li>
+        <li><span class="parameter">_filepath</span>
+
+
+
+        </li>
+        <li><span class="parameter">_logpath</span>
+        default to false
+        </li>
+        <li><span class="parameter">_finalized</span>
+
+
+
+        </li>
+        <li><span class="parameter">_initialized</span>
+
+
+
+        </li>
+        <li><span class="parameter">write_to_log</span>
+
+
+
+        </li>
+        <li><span class="parameter">_registered_mods</span>
+
+
+
+        </li>
+    </ul>
+
 
 
 
@@ -449,7 +502,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-08 17:50:58 </i>
+<i style="float:right;">Last updated 2020-08-08 16:48:57 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
