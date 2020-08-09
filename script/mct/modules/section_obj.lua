@@ -90,6 +90,65 @@ function mct_section:sort_options()
     return self:_sort_order_function()
 end
 
+---- One of the default sort-option functions.
+--- Sort the options by their localised text - from "A Cool Option" to "Zoidberg Goes Woop Woop Woop"
+function mct_section:sort_options_by_localised_text()
+    -- return table, which will be the sorted option keys from top-left to bottom-right
+    local ret = {}
+
+    -- texts is the sorted list of option texts
+    local texts = {}
+
+    -- table linking localised text to a table of option keys. If multiple options have the same localised text, it will be `["Localised Text"] = {"option_key_a", "option_key_b"}`
+    -- else, it's just `["Localised Text"] = {"option_key"}`
+    local text_to_option_key = {}
+
+    -- all options
+    local options = self:get_options()
+
+    for option_key, option_obj in pairs(options) do
+        -- grab this option's localised text
+        local localised_text = option_obj:get_localised_text()
+        
+        -- toss it into the texts table, and link it to the option key
+        texts[#texts+1] = localised_text
+
+        -- check if this localised text was already linked to something
+        local test = text_to_option_key[localised_text]
+
+        if is_nil(text_to_option_key[localised_text]) then
+            -- if not, set it equal to the key
+            text_to_option_key[localised_text] = {option_key}
+        else
+            if is_table(test) then
+                -- this is ugly, I'm sorry.
+                text_to_option_key[localised_text][#text_to_option_key[localised_text]+1] = option_key
+            end
+        end
+    end
+
+    -- sort the texts alphanumerically.
+    table.sort(texts)
+
+    -- loop through texts, grab the relevant option key, and then add that option key to ret
+    -- if multiple option keys are linked to this text, add them in order added, whatever
+    for i = 1, #texts do
+        -- grab the localised text at this index
+        local text = texts[i]
+
+        -- grab attached options
+        local attached_options = text_to_option_key[text]
+
+        -- loop through attached option keys (will only be 1 usually) and then add them to the ret table
+        for j = 1, #attached_options do
+            local option_key = attached_options[j]
+            ret[#ret+1] = option_key
+        end
+    end
+
+    return ret
+end
+
 --- One of the default sort-option function.
 -- Sort the options by their option key - from "!my_option" to "zzz_my_option"
 function mct_section:sort_options_by_key()
@@ -132,6 +191,7 @@ end
 --- Set the option-sort-function for this section's options.
 -- You can pass "key_sort" for @{mct_section:sort_options_by_key}
 -- You can pass "index_sort" for @{mct_section:sort_options_by_index}
+-- You can pass "text_sort" for @{mct_section:sort_options_by_localised_text}
 -- You can also pass a full function, for example:
 -- mct_section:set_option_sort_function(
 --      function()
@@ -155,6 +215,8 @@ function mct_section:set_option_sort_function(sort_func)
             self._sort_order_function = self.sort_options_by_key
         elseif sort_func == "index_sort" then
             self._sort_order_function = self.sort_options_by_index
+        elseif sort_func == "text_sort" then
+            self._sort_order_function = self.sort_options_by_localised_text
         else
             mct:error("set_option_sort_function() called for section ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
             return false
