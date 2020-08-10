@@ -210,7 +210,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
                 end
 
                 local key = context.string
-                local text = "[[col:red]]MCT - New Options Created![[/col]]\n\nThe following mods have new options created since loading up this session (either due to a lord choice, or something happening in the game, etc): "
+                local text = effect.get_localised_string("mct_new_settings_created_start")
 
                 for i = 1, #mod_keys do
                     local mod_obj = self:get_mod_by_key(mod_keys[i])
@@ -229,7 +229,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
                 end
 
-                text = text .. "\nPress the check mark to open up the MCT panel. Press the x to set to the default values for the new options."
+                text = text .. effect.get_localised_string("mct_new_settings_created_end")
 
                 self.ui:create_popup(
                     key,
