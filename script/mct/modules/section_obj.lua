@@ -83,11 +83,26 @@ end
 --- Call the internal ._sort_order_function, determined by @{mct_section:set_option_sort_function}
 -- @local
 function mct_section:sort_options()
-    -- perform the wrapped sort order function
+    local retval = {}
 
-    -- TODO protect it?
-    -- protect it with a pcall to catch any issues with a custom sort order func
-    return self:_sort_order_function()
+    -- grab the return value from the internal sort order function
+    local ordered_options = self:_sort_order_function()
+    local mct_mod = self:get_mod()
+
+    -- loop through ordered options, and get rid of any options that are set as invisible for UI sake
+    for i = 1, #ordered_options do
+        local option_key = ordered_options[i]
+        local option_obj = mct_mod:get_option_by_key(option_key)
+
+        -- if it's set as visible, pass it forward
+        -- TODO make sure this works for dummy options
+        if option_obj:get_uic_visibility() == true then
+            retval[#retval+1] = option_key
+        end
+    end
+
+    -- return the filtered options
+    return retval
 end
 
 ---- One of the default sort-option functions.
