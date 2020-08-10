@@ -75,6 +75,7 @@ function mct_option.new(mod, option_key, type)
     -- UIC options for construction
     self._uic_visible = true
     self._uic_locked = false
+    self._uic_lock_reason = {}
     self._uic_in_ui = true
 
     self._pos = {
@@ -699,7 +700,7 @@ end
 --- Set this option as disabled in the UI, so the user can't interact with it.
 -- This will result in `mct_option:ui_change_state()` being called later on.
 -- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
-function mct_option:set_uic_locked(should_lock)
+function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     if is_nil(should_lock) then 
         should_lock = true 
     end
@@ -707,6 +708,31 @@ function mct_option:set_uic_locked(should_lock)
     if not is_boolean(should_lock) then 
         mct:error("set_uic_locked() called for mct_option with key ["..self:get_key().."], but the should_lock argument passed is not a boolean or nil!")
         return false 
+    end
+
+    -- only care about localisation if it's being locked!
+    if should_lock then
+        if is_nil(lock_reason) then
+            -- default lock_reason
+        end
+
+        if not is_string(lock_reason) then
+            -- errmsg
+            return false
+        end
+
+        if is_nil(is_localised) then
+            is_localised = false
+        end
+
+        if not is_boolean(is_localised) then
+            -- errmsg
+            return false
+        end
+
+        self._uic_lock_reason = {text = lock_reason, is_localised = is_localised}
+    else
+        self._uic_lock_reason = {}
     end
 
     self._uic_locked = should_lock
@@ -723,8 +749,22 @@ end
 function mct_option:ui_change_state()
     local type = self:get_type()
     local option_uic = self:get_uics()[1]
+    local text_uic = self:get_uic_with_key("text")
 
     local locked = self:get_uic_locked()
+    local lock_reason = ""
+    if locked then
+        local lock_reason_tab = self._uic_lock_reason 
+        if lock_reason_tab.is_localised then
+            lock_reason = effect.get_localised_string(lock_reason_tab.text)
+        else
+            lock_reason = lock_reason_tab.text
+        end
+
+        if lock_reason == "" then
+            -- revert to default? TODO
+        end
+    end
     
     -- TODO lock the text input!
     if type == "slider" then
@@ -733,19 +773,23 @@ function mct_option:ui_change_state()
         --local text_input = find_uicomponent(option_uic, "text_input")
 
         local state = "active"
+        local tt = self:get_tooltip_text()
         if locked then
             state = "inactive"
+            tt = lock_reason .. "\n" .. tt
         end
 
         --mct.ui:uic_SetInteractive(text_input, not locked)
         mct.ui:uic_SetState(left_button, state)
         mct.ui:uic_SetState(right_button, state)
+        mct.ui:uic_SetTooltipText(text_uic, lock_reason.."\n"..tt, true)
     end
 
     if type == "checkbox" then
         local value = self:get_selected_setting()
 
         local state = "active"
+        local tt = self:get_tooltip_text()
 
         if locked then
             -- disable the checkbox, set it as checked if the finalized setting is true
@@ -754,6 +798,7 @@ function mct_option:ui_change_state()
             else
                 state = "inactive"
             end
+            tt = lock_reason .. "\n" .. tt
         else
             if value == true then
                 state = "selected"
@@ -763,16 +808,21 @@ function mct_option:ui_change_state()
         end
 
         mct.ui:uic_SetState(option_uic, state)
+        mct.ui:uic_SetTooltipText(text_uic, tt, true)
     end
 
     if type == "dropdown" then
         -- disable the dropdown box
         local state = "active"
+        local tt = self:get_tooltip_text()
+        
         if locked then
             state = "inactive"
+            tt = lock_reason .. "\n" .. tt
         end
 
         mct.ui:uic_SetState(option_uic, state)
+        mct.ui:uic_SetTooltipText(text_uic, tt, true)
     end
 end
 

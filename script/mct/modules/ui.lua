@@ -1112,18 +1112,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- read if the option is read-only in campaign (and that we're in campaign)
             if __game_mode == __lib_type_campaign then
                 if option_obj:get_read_only() then
-                    option_obj:set_uic_locked(true)
-                    --option_obj:ui_change_state()
-                    --[[local state = new_option:CurrentState()
-
-                    --mct:log("UIc state is ["..state.."]")
-
-                    -- selected_inactive for checkbox buttons
-                    if state == "selected" then
-                        new_option:SetState("selected_inactive")
-                    else
-                        new_option:SetState("inactive")
-                    end]]
+                    option_obj:set_uic_locked(true, "mct_lock_reason_read_only", true)
                 end
 
                 -- if game is MP, and the local faction isn't the host, lock any non-local settings
@@ -1134,7 +1123,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                     mct:log("mp and client")
                     if not option_obj:get_local_only() then
                         mct:log("option ["..option_obj:get_key().."] is not local only, locking!")
-                        option_obj:set_uic_locked(true)
+                        option_obj:set_uic_locked(true, "mct_lock_reason_mp_client", true)
                         --[[local state = new_option:CurrentState()f
 
                         --mct:log("UIc state is ["..state.."]")
@@ -1151,9 +1140,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 
             -- read-only in battle (do this elsewhere? (TODO))
             if __game_mode == __lib_type_battle then
-                option_obj:set_uic_locked(true)
+                option_obj:set_uic_locked(true, "mct_lock_reason_battle", true)
             end
 
+            -- TODO why the fuck do I do this?
             if option_obj:get_uic_locked() then
                 option_obj:set_uic_locked(true)
             end
