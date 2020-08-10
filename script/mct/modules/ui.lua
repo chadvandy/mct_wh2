@@ -19,7 +19,7 @@ local ui_obj = {
     mod_details_panel = nil,
 
     -- right bottom UICs
-    mod_settings_box = nil,
+    mod_settings_panel = nil,
 
     -- currently selected mod UIC
     selected_mod_row = nil,
@@ -328,7 +328,7 @@ function ui_obj:close_frame()
     self.mod_row_list_view = nil
     self.mod_row_list_box = nil
     self.mod_details_panel = nil
-    self.mod_settings_box = nil
+    self.mod_settings_panel = nil
     self.selected_mod_row = nil
     self.locally_edited = false
 
@@ -502,28 +502,26 @@ function ui_obj:create_panels()
     local img_path = effect.get_skinned_image_path("icon_records_tab.png")
     logging_tab:SetImagePath(img_path)
 
+    -- set the left side (logging list view/mod settings) as 3/4th of the width
+    local w = w * 0.75
 
     local logging_list_view = core:get_or_create_component("logging_list_view", "ui/vandy_lib/vlist", mod_settings_panel)
-    logging_list_view:MoveTo(mod_settings_panel:Position())
+    --logging_list_view:MoveTo(mod_settings_panel:Position())
     logging_list_view:SetDockingPoint(1)
     logging_list_view:SetDockOffset(0, 10)
     logging_list_view:SetCanResizeWidth(true) logging_list_view:SetCanResizeHeight(true)
     logging_list_view:Resize(w,h-20)
 
-    --local x, y = mod_settings_list_view:Position()
-
     local logging_list_clip = find_uicomponent(logging_list_view, "list_clip")
     logging_list_clip:SetCanResizeWidth(true) logging_list_clip:SetCanResizeHeight(true)
-    --mod_settings_clip:MoveTo(x,y)
     logging_list_clip:SetDockingPoint(1)
-    logging_list_clip:SetDockOffset(0, 10)
+    logging_list_clip:SetDockOffset(0, 0)
     logging_list_clip:Resize(w,h-20)
 
     local logging_list_box = find_uicomponent(logging_list_clip, "list_box")
     logging_list_box:SetCanResizeWidth(true) logging_list_box:SetCanResizeHeight(true)
-    --mod_settings_box:MoveTo(x,y)
     logging_list_box:SetDockingPoint(1)
-    logging_list_box:SetDockOffset(0, 10)
+    logging_list_box:SetDockOffset(0, 0)
     logging_list_box:Resize(w,h-20)
 
     logging_list_box:Layout()
@@ -532,34 +530,31 @@ function ui_obj:create_panels()
     l_handle:SetDockingPoint(6)
     l_handle:SetDockOffset(-20, 0)
 
-    -- default to no logging list view (this probably won't work :) )
+    -- default to no logging list view :)
     logging_list_view:SetVisible(false)
 
-
-    local w = w * 0.75
-
     local mod_settings_list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", mod_settings_panel)
-    mod_settings_list_view:MoveTo(mod_settings_panel:Position())
-    mod_settings_list_view:SetDockingPoint(1)
-    mod_settings_list_view:SetDockOffset(0, 10)
+    --mod_settings_list_view:MoveTo(mod_settings_panel:Position())
     mod_settings_list_view:SetCanResizeWidth(true) mod_settings_list_view:SetCanResizeHeight(true)
     mod_settings_list_view:Resize(w,h-20)
+    mod_settings_list_view:SetDockingPoint(1)
+    mod_settings_list_view:SetDockOffset(0, 10)
 
     --local x, y = mod_settings_list_view:Position()
 
     local mod_settings_clip = find_uicomponent(mod_settings_list_view, "list_clip")
     mod_settings_clip:SetCanResizeWidth(true) mod_settings_clip:SetCanResizeHeight(true)
+    mod_settings_clip:Resize(w,h-20)
     --mod_settings_clip:MoveTo(x,y)
     mod_settings_clip:SetDockingPoint(1)
-    mod_settings_clip:SetDockOffset(0, 10)
-    mod_settings_clip:Resize(w,h-20)
+    mod_settings_clip:SetDockOffset(0, 0)
 
     local mod_settings_box = find_uicomponent(mod_settings_clip, "list_box")
     mod_settings_box:SetCanResizeWidth(true) mod_settings_box:SetCanResizeHeight(true)
+    mod_settings_box:Resize(w,h-20)
     --mod_settings_box:MoveTo(x,y)
     mod_settings_box:SetDockingPoint(1)
-    mod_settings_box:SetDockOffset(0, 10)
-    mod_settings_box:Resize(w,h-20)
+    mod_settings_box:SetDockOffset(0, 0)
 
     mod_settings_box:Layout()
 
@@ -575,10 +570,46 @@ function ui_obj:create_panels()
     local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
     finalize_button_txt:SetStateText("Finalize changes")
 
+    local w, h = mod_settings_panel:Dimensions()
+    w = w * 0.24
+
+    local actions_panel = core:get_or_create_component("actions_panel", "ui/vandy_lib/custom_image_tiled", mod_settings_panel)
+    actions_panel:SetState("custom_state_2")
+    actions_panel:SetImagePath("ui/skins/default/panel_stack.png",1)
+    actions_panel:SetDockingPoint(6)
+    actions_panel:SetDockOffset(0,0)
+
+    actions_panel:SetCanResizeWidth(true) actions_panel:SetCanResizeHeight(true)
+    actions_panel:Resize(w,h)
+
+    local actions_list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", actions_panel)
+    actions_list_view:SetDockingPoint(1)
+    actions_list_view:SetDockOffset(0, 10)
+    actions_list_view:SetCanResizeWidth(true) actions_list_view:SetCanResizeHeight(true)
+    actions_list_view:Resize(w,h-20)
+
+    local actions_list_clip = find_uicomponent(actions_list_view, "list_clip")
+    actions_list_clip:SetCanResizeWidth(true) actions_list_clip:SetCanResizeHeight(true)
+    actions_list_clip:SetDockingPoint(1)
+    actions_list_clip:SetDockOffset(0, 0)
+    actions_list_clip:Resize(w,h-20)
+
+    local actions_list_box = find_uicomponent(actions_list_clip, "list_box")
+    actions_list_box:SetCanResizeWidth(true) actions_list_box:SetCanResizeHeight(true)
+    actions_list_box:SetDockingPoint(1)
+    actions_list_box:SetDockOffset(0, 0)
+    actions_list_box:Resize(w,h-20)
+
+    actions_list_box:Layout()
+
+    local actions_handle = find_uicomponent(actions_list_view, "vslider")
+    actions_handle:SetDockingPoint(6)
+    actions_handle:SetDockOffset(-20, 0)
+
     -- create "Revert to Default"
-    local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", mod_settings_panel)
+    local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", actions_panel)
     revert_to_default:SetDockingPoint(8)
-    revert_to_default:SetDockOffset(revert_to_default:Width() * 1.6, revert_to_default:Height() * 1.5)
+    revert_to_default:SetDockOffset(0,0)
 
     -- TODO localise this shit
     find_uicomponent(revert_to_default, "button_txt"):SetStateText("Revert to Defaults")
@@ -1289,11 +1320,16 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     new_uic:Resize(row_parent:Width() * 0.4, row_parent:Height())
 
     local left_button = core:get_or_create_component("left_button", left_button_template, new_uic)
-    local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
     local right_button = core:get_or_create_component("right_button", right_button_template, new_uic)
+    local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
+
+    -- set text input on top of the buttons
+    --[[text_input:PropagatePriority(new_uic:Priority() + 5)
+    left_button:PropagatePriority(new_uic:Priority() - 1)
+    right_button:PropagatePriority(new_uic:Priority() - 1)]]
 
     text_input:SetCanResizeWidth(true)
-    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
+    text_input:Resize(text_input:Width() * 0.25, text_input:Height())
     text_input:SetCanResizeWidth(false)
 
     left_button:SetDockingPoint(4)
@@ -1359,8 +1395,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     end
 
 end) if not ok then mct:error(err) end
-
-    -- TODO outsource this to ui_select_value
 
     return new_uic
 end
