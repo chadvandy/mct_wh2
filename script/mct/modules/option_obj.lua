@@ -75,6 +75,7 @@ function mct_option.new(mod, option_key, type)
     -- UIC options for construction
     self._uic_visible = true
     self._uic_locked = false
+    self._uic_in_ui = true
 
     self._pos = {
         x = 0,
@@ -258,20 +259,32 @@ function mct_option:get_uics()
 end
 
 ---- Set a UIC as visible or invisible, dynamically. If the UIC isn't created yet, it will get the applied setting when it is created.
---- @tparam boolean enable True for visible, false for invisible.
+--- @tparam boolean visibility True for visible, false for invisible.
+--- @tparam boolean keep_in_ui This boolean determines whether this mct_option will exist at all in the UI. Tick this to true to make the option invisible but still have a "gap" in the UI where it would be placed. Set this to false to make that spot be taken by the next otion. ONLY AFFECTS INITIAL UI CREATION.
 --- @within API
-function mct_option:set_uic_visibility(enable)
+function mct_option:set_uic_visibility(visibility, keep_in_ui)
     -- default to true if a param isn't provided
-    if is_nil(enable) then
-        enable = true
+    if is_nil(visibility) then
+        visibility = true
     end
 
-    if not is_boolean(enable) then
-        mct:log("set_uic_visibility() called for option ["..self._key.."], but the argument provided is not a boolean. Returning false!")
+    -- ditto
+    if is_nil(keep_in_ui) then
+        keep_in_ui = true
+    end
+
+    if not is_boolean(visibility) then
+        mct:log("set_uic_visibility() called for option ["..self._key.."], but the visibility argument provided is not a boolean. Returning false!")
+        return false
+    end    
+    
+    if not is_boolean(keep_in_ui) then
+        mct:log("set_uic_visibility() called for option ["..self._key.."], but the keep_in_ui argument provided is not a boolean. Returning false!")
         return false
     end
 
-    self._uic_visible = enable
+    self._uic_in_ui = keep_in_ui
+    self._uic_visible = visibility
 
     -- if the UIC exists, set it to the new visibility!
     local uic_table = self:get_uics()

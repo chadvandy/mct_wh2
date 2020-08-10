@@ -95,8 +95,9 @@ function mct_section:sort_options()
         local option_obj = mct_mod:get_option_by_key(option_key)
 
         -- if it's set as visible, pass it forward
-        -- TODO make sure this works for dummy options
-        if option_obj:get_uic_visibility() == true then
+        -- if it's invisible but still set to exist in the UI, pass it forward
+        -- if it's invisible and not, remove it
+        if option_obj:get_uic_visibility() == true or (option_obj:get_uic_visibility() == false and option_obj._uic_in_ui == true) then
             retval[#retval+1] = option_key
         end
     end
