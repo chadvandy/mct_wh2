@@ -185,9 +185,9 @@ local function init()
                 local is_is_host_host = core:svr_load_bool("local_is_host")
 
                 if is_is_host_host then
-                    str = "[[col:red]]MCT: Loading Your Settings[[/col]]\n\nLoading your settings from MCT. Make sure the other player is cool with the settings you've chosen, if you care!\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF THE OTHER PLAYER IS ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN.[[/col]]"
+                    str = effect.get_localised_string("mct_mp_is_host") --"[[col:red]]MCT: Loading Your Settings[[/col]]\n\nLoading your settings from MCT. Make sure the other player is cool with the settings you've chosen, if you care!\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF THE OTHER PLAYER IS ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN.[[/col]]"
                 else
-                    str = "[[col:red]]MCT: Loading "..player_name.."'s Settings[[/col]]\n\nLoading the Host's settings from MCT. Make sure you're cool with the settings they've picked. Do note - you can't see the host's settings until you load into the campaign, so you'll have to discuss it elsewhere.\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF YOU ARE ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN. ALSO REPORT THIS TO VANDY.[[/col]]"
+                    str = effect.get_localised_string("mct_mp_not_host_start") .. player_name .. effect.get_localised_string("mct_mp_not_host_end") --"[[col:red]]MCT: Loading "..player_name.."'s Settings[[/col]]\n\nLoading the Host's settings from MCT. Make sure you're cool with the settings they've picked. Do note - you can't see the host's settings until you load into the campaign, so you'll have to discuss it elsewhere.\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF YOU ARE ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN. ALSO REPORT THIS TO VANDY.[[/col]]"
                 end
 
                 local tx = find_uicomponent(popup_uic, "DY_text")
