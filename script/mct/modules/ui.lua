@@ -568,7 +568,7 @@ function ui_obj:create_panels()
     finalize_button:SetDockOffset(0, finalize_button:Height()*1.5)
 
     local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
-    finalize_button_txt:SetStateText("Finalize changes")
+    finalize_button_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings"))
 
     local w, h = mod_settings_panel:Dimensions()
     w = w * 0.24
@@ -611,8 +611,7 @@ function ui_obj:create_panels()
     revert_to_default:SetDockingPoint(8)
     revert_to_default:SetDockOffset(0,0)
 
-    -- TODO localise this shit
-    find_uicomponent(revert_to_default, "button_txt"):SetStateText("Revert to Defaults")
+    find_uicomponent(revert_to_default, "button_txt"):SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
 
     self.mod_settings_panel = mod_settings_panel
 end
@@ -1313,11 +1312,6 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     local right_button = core:get_or_create_component("right_button", right_button_template, new_uic)
     local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
 
-    -- set text input on top of the buttons
-    --[[text_input:PropagatePriority(new_uic:Priority() + 5)
-    left_button:PropagatePriority(new_uic:Priority() - 1)
-    right_button:PropagatePriority(new_uic:Priority() - 1)]]
-
     text_input:SetCanResizeWidth(true)
     text_input:Resize(text_input:Width() * 0.25, text_input:Height())
     text_input:SetCanResizeWidth(false)
@@ -1329,12 +1323,12 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
-    local min = values.min or 0 
-    local max = values.max or 100
-    local step_size = values.step_size or 1
-    local step_size_precision = values.step_size_precision or 0
+    local min = values.min
+    local max = values.max
+    local step_size = values.step_size
+    local step_size_precision = values.step_size_precision
 
-    local precision = values.precision or 0
+    local precision = values.precision
 
     -- TODO refactor this a lot betterly
 

@@ -316,7 +316,7 @@ function settings:load()
                 end
 
                 local key = "mct_new_settings"
-                local text = "[[col:red]]MCT - New Settings Found![[/col]]\n\nNew settings have been added since the last time you've played, in mods "
+                local text = effect.get_localised_string("mct_new_settings_start")
 
                 for i = 1, #mod_keys do
                     local mod_obj = mct:get_mod_by_key(mod_keys[i])
@@ -334,8 +334,7 @@ function settings:load()
                     end
                 end
 
-                -- TODO Localise this text entirely
-                text = text .. "\nPress the check to open MCT. Or, press the x to accept all default values for the new settings."
+                text = text .. effect.get_localised_string("mct_new_settings_end")
 
                 mct.ui:create_popup(
                     key,

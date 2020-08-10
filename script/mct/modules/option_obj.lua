@@ -350,12 +350,6 @@ function mct_option:add_option_set_callback(callback, is_context)
         end,
         true
     )
-
-    -- TODO redo this so it acts like a listener callback
-
-    --mct:log("TESTING saving callback on option ["..self._key.."].")
-
-    self._option_set_callback = callback
 end
 
 ---- Manually set the x/y position for this option, within its section.
