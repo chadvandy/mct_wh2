@@ -41,7 +41,7 @@ function mct_option.new(mod, option_key, type)
     self._values = {}
 
     if type == "slider" then
-        values = {
+        self._values = {
             min = 0,
             max = 100,
             step_size = 1,
