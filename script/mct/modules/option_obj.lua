@@ -700,6 +700,8 @@ end
 --- Set this option as disabled in the UI, so the user can't interact with it.
 -- This will result in `mct_option:ui_change_state()` being called later on.
 -- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
+-- @tparam string lock_reason The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
+-- @tparam boolean is_localised Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
 function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     if is_nil(should_lock) then 
         should_lock = true 
@@ -815,7 +817,7 @@ function mct_option:ui_change_state()
         -- disable the dropdown box
         local state = "active"
         local tt = self:get_tooltip_text()
-        
+
         if locked then
             state = "inactive"
             tt = lock_reason .. "\n" .. tt
