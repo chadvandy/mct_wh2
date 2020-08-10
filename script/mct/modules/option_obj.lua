@@ -730,7 +730,7 @@ function mct_option:ui_change_state()
     end
 
     if type == "checkbox" then
-        local value = self:get_finalized_setting()
+        local value = self:get_selected_setting()
 
         local state = "active"
 
