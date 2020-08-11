@@ -140,42 +140,85 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     end
     -- if the game UI hasn't been created, set this as a callback
     if not self.game_ui_created then
-        self:add_ui_created_callback(func)
+        self:add_ui_created_callback(function()
+            local manager = nil
+            local listener = ""
+            local delay = 0
+            if __game_mode == __lib_type_battle then
+                manager = bm
+                listener = "ScriptEventBattleCutsceneEnded"
+                delay = 1000
+            elseif __game_mode == __lib_type_campaign then
+                manager = cm
+                listener = "ScriptEventCampaignCutsceneCompleted"
+                delay = 1
+            end
+
+            core:progress_on_loading_screen_dismissed(function()
+                if manager then
+                    manager:callback(function()
+                        if manager:is_any_cutscene_running() then
+                            core:add_listener(
+                                "cutscene_ended",
+                                listener,
+                                true,
+                                function(context)
+                                    manager:callback(function() func() end, delay)
+                                end,
+                                false
+                            )
+                        else
+                            func()
+                        end
+                    end, delay)
+                else 
+                    func()
+                end
+            end)    
+        end)
     else
 
         -- make sure no cutscenes are currently playing
         if __game_mode == __lib_type_campaign then
             -- if one is, listen for the cutscene ending then trigger popup. else, popup immediately.
-            if cm:is_any_cutscene_running() then
-                core:add_listener(
-                    "cutscene_ended",
-                    "ScriptEventCampaignCutsceneCompleted",
-                    true,
-                    function(context)
-                        -- trigger 1s after the cutscene ends
-                        cm:callback(function() func() end, 1)
-                    end,
-                    false
-                )
-            else
-                func()
-            end
+            core:progress_on_loading_screen_dismissed(function()
+                cm:callback(function() 
+                    if cm:is_any_cutscene_running() then
+                        core:add_listener(
+                            "cutscene_ended",
+                            "ScriptEventCampaignCutsceneCompleted",
+                            true,
+                            function(context)
+                                -- trigger 1s after the cutscene ends
+                                cm:callback(function() func() end, 1)
+                            end,
+                            false
+                        )
+                    else
+                        func()
+                    end
+                end, 1)
+            end)
         elseif __game_mode == __lib_type_battle then
-            -- ditto re: above
-            if bm:is_any_cutscene_running() then
-                core:add_listener(
-                    "cutscene_end",
-                    "ScriptEventBattleCutsceneEnded",
-                    true,
-                    function(context)
-                        -- trigger 1s after the cutscene ends
-                        bm:callback(function() func() end, 1000)
-                    end,
-                    false
-                )
-            else
-                func()
-            end
+           core:progress_on_loading_screen_dismissed(function()
+                -- ditto re: above
+                bm:callback(function()
+                    if bm:is_any_cutscene_running() then
+                        core:add_listener(
+                            "cutscene_end",
+                            "ScriptEventBattleCutsceneEnded",
+                            true,
+                            function(context)
+                                -- trigger 1s after the cutscene ends
+                                bm:callback(function() func() end, 1000)
+                            end,
+                            false
+                        )
+                    else
+                        func()
+                    end
+                end, 1000)
+            end)
         else
             func()
         end
