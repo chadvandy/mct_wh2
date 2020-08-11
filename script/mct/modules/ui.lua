@@ -645,7 +645,19 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     logging_list_view:SetVisible(false)
     settings_list_view:SetVisible(true)
 
-    if selected_mod:get_log_file_path() == nil then
+    local path = selected_mog:get_log_file_path()
+    local valid = false
+    if path == nil then
+        valid = false
+    else
+        if not io.open(path) then
+            valid = false
+        else
+            valid = true
+        end
+    end
+
+    if valid == false then
         logging_tab:SetState("inactive")
         logging_tab:SetTooltipText("There is no log file set for this mod. Use `mct_mod:set_log_file_path()` to set one, if you're the modder. If not, oh well.", true)
         can_log = false
