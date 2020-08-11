@@ -381,7 +381,7 @@ function mct_mod:finalize()
         for key, option_obj in pairs(options) do
             if option_obj:get_mp_disabled() == true then
                 -- literally just remove it
-                self._options[key] = nil
+                self:delete_option(key)
             end
         end
     end
@@ -758,6 +758,26 @@ function mct_mod:add_new_option(option_key, option_type)
 
 
     return new_option
+end
+
+--- This function removes an @{mct_option} from this mct_mod. Be very sure you want to call this - it can have potential unwanted repercussions.
+--- This means the mct_option is gone entirely - it won't be in the UI, it won't be tracked in settings (but it will be cached), it won't be obtainable using `get_option_by_key()`.
+--- @tparam string option_key The option that's being disgustingly destroyed, how dare you?
+function mct_mod:delete_option(option_key)
+    if not is_string(option_key) then
+        -- errmsg
+        return false
+    end
+
+    local option = self:get_option_by_key(option_key)
+    if not mct:is_mct_option(option) then
+        -- errmsg
+        return false
+    end
+
+    -- remove it from this mct_mod!
+    -- this doesn't remove the mct_option from memory entirely - just from the mct_mod's list of options - but Lua will kill it eventually.
+    self._options[option_key] = nil
 end
 
 --- bloop
