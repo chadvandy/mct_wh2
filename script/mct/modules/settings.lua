@@ -54,6 +54,8 @@ function settings:save_mct_settings()
                     mct:log(tostring(saved_setting))
                     t = t .. "nil" .. ",\n"
                 end
+
+                --t = t .. "\t\t\t},\n"
             end
 
 
