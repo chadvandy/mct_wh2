@@ -645,12 +645,12 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     logging_list_view:SetVisible(false)
     settings_list_view:SetVisible(true)
 
-    local path = selected_mog:get_log_file_path()
+    local path = selected_mod:get_log_file_path()
     local valid = false
     if path == nil then
         valid = false
     else
-        if not io.open(path) then
+        if not io.open(path, "r+") then
             valid = false
         else
             valid = true
