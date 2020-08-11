@@ -386,6 +386,7 @@ function mct_mod:finalize()
         end
     end
 
+    core:trigger_custom_event("MctModCreated", {mct = mct, mod = self})
     --self:set_positions_for_options()
 end
 
