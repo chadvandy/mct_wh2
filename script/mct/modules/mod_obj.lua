@@ -223,10 +223,10 @@ function mct_mod:set_log_file_path(path)
     -- should this return or just do a warning?
     if not file then
         mct:error("WARNING: set_log_file_path() called for mct_mod with key ["..self:get_key().."], but no file with the name ["..path.."] exists on disk!")
+    else
+        -- don't hold it hostage anymore
+        file:close()
     end
-
-    -- don't hold it hostage anymore
-    file:close()
 
     self._log_file_path = path
 end
