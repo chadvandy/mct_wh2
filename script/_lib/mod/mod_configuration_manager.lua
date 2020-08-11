@@ -12,6 +12,7 @@ local mod_configuration_tool = {
     -- default to false
     _finalized = false,
     _initialized = false,
+    _first_load = false,
 
     write_to_log = true,
 

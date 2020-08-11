@@ -57,11 +57,11 @@ function settings:save_mct_settings()
             end
 
 
-            t = t .. "\t\t},"
+            t = t .. "\t\t},\n"
 
         end
 
-        t = t .. "\t},"
+        t = t .. "\t},\n"
     end
 
     str = str .. t
@@ -214,10 +214,12 @@ function settings:load()
     if not file then
         -- create a file with all the defaults!
         mct:log("First time load - creating settings file! Using defaults for every option.")
+        mct._first_load = true
         self:finalize(true)
         mct:log("Settings file created, all defaults applied!")
     else
         mct:log("Loading settings file!")
+        mct._first_load = false
         local content = loadfile(self.settings_file)
 
         if not pcall(function() content() end) then

@@ -4,10 +4,9 @@ local function check_highlight()
     local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
 
     -- if the mct_settings.lua file doesn't exist, do da highlight
-    local finalized = not not io.read("mct_settings.lua")
+    local first_load = mct._first_load
 
-    if finalized then
-
+    if first_load then
         uic:Highlight(true, false)
         uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069").."||"..effect.get_localised_string("mct_button_unfinalized"), true)
     end
