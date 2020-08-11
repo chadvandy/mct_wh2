@@ -295,7 +295,9 @@ function settings:load()
                 mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
 
                 -- remove this from `data`, so non-existent settings will be cached
-                data[option_key] = nil
+                if is_table(data) then
+                    data[option_key] = nil
+                end
             end
             
             mod_obj:load_finalized_settings()
