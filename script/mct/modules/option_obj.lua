@@ -22,7 +22,7 @@ local mct_option = {
 }
 
 
---- For internal use only. Called by @{mct_mod:add_new_option}.
+---- For internal use only. Called by @{mct_mod:add_new_option}.
 --- @param mod mct_mod
 --- @param option_key string
 --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
@@ -525,7 +525,7 @@ function mct_option:set_selected_setting(val, is_creation)
     end
 end
 
---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
+---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 function mct_option:ui_select_value(val)
     if not self:is_val_valid_for_type(val) then
@@ -691,11 +691,11 @@ function mct_option:get_uic_locked()
     return self._uic_locked
 end
 
---- Set this option as disabled in the UI, so the user can't interact with it.
--- This will result in `mct_option:ui_change_state()` being called later on.
--- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
--- @tparam string lock_reason The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
--- @tparam boolean is_localised Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
+---- Set this option as disabled in the UI, so the user can't interact with it.
+--- This will result in `mct_option:ui_change_state()` being called later on.
+--- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
+--- @tparam string lock_reason The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
+--- @tparam boolean is_localised Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
 function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     if is_nil(should_lock) then 
         should_lock = true 
@@ -739,9 +739,9 @@ function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     end
 end
 
---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
--- Use `mct_option:set_uic_locked()` for the external version of this.
--- @see mct_option:set_uic_locked
+---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
+--- Use `mct_option:set_uic_locked()` for the external version of this.
+--- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
     local type = self:get_type()
     local option_uic = self:get_uics()[1]
@@ -822,10 +822,10 @@ function mct_option:ui_change_state()
     end
 end
 
---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
--- Used when finalizing settings.
--- @treturn any val The value set as the selected_setting for this mct_option.
--- @within API
+---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
+--- Used when finalizing settings.
+--- @treturn any val The value set as the selected_setting for this mct_option.
+--- @within API
 function mct_option:get_selected_setting()
     -- no selected setting found - UI was just created!
     if self._selected_setting == nil then
@@ -843,10 +843,10 @@ function mct_option:get_selected_setting()
     return self._selected_setting
 end
 
---- Set function to set the step size for moving left/right through the slider.
--- Works with floats and other numbers. Use the optional second argument if using floats/decimals
--- @tparam number step_size The number to jump when using the left/right button.
--- @tparam number step_size_precision The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
+---- Set function to set the step size for moving left/right through the slider.
+--- Works with floats and other numbers. Use the optional second argument if using floats/decimals
+--- @tparam number step_size The number to jump when using the left/right button.
+--- @tparam number step_size_precision The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
 function mct_option:slider_set_step_size(step_size, step_size_precision)
     if not self:get_type() == "slider" then
         mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
@@ -871,9 +871,9 @@ function mct_option:slider_set_step_size(step_size, step_size_precision)
     self._values.step_size_precision = step_size_precision
 end
 
---- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
--- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
--- @tparam number precision The precision used for floats.
+---- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
+--- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
+--- @tparam number precision The precision used for floats.
 function mct_option:slider_set_precision(precision)
     if not self:get_type() == "slider" then
         mct:error("slider_set_precision() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
@@ -888,10 +888,10 @@ function mct_option:slider_set_precision(precision)
     self._values.precision = precision
 end
 
---- Setter for the minimum and maximum values for the slider.
--- @tparam number min The minimum number the slider value can reach.
--- @tparam number max The maximum number the slider value can reach.
--- @within API
+---- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
+--- @tparam number min The minimum number the slider value can reach.
+--- @tparam number max The maximum number the slider value can reach.
+--- @within API
 function mct_option:slider_set_min_max(min, max)
     if not self:get_type() == "slider" then
         mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
@@ -916,18 +916,28 @@ function mct_option:slider_set_min_max(min, max)
     self._values.min = min
     self._values.max = max
 
-    -- test the default value; 
+    -- if the UI exists, change the buttons and set the value if it's above the max/below the min
+    local uic = self:get_uics()[1]
+    if is_uicomponent(uic) then
+        local current_val = self:get_selected_setting()
 
-    --self:set_default_value(current)
+        if current_val > max then
+            self:ui_select_value(max)
+        elseif current_val < min then
+            self:ui_select_value(min)
+        else
+            self:ui_select_value(current_val)
+        end
+    end
 end
 
---- Method to set the `dropdown_values`. This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.
--- ex:
---      mct_option:add_dropdown_values({
---          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
---          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
---      })
--- @within API
+---- Method to set the `dropdown_values`. This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.
+--- ex:
+---      mct_option:add_dropdown_values({
+---          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
+---          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
+---      })
+--- @within API
 function mct_option:add_dropdown_values(dropdown_table)
     if not self:get_type() == "dropdown" then
         mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
@@ -955,11 +965,11 @@ function mct_option:add_dropdown_values(dropdown_table)
     end
 end
 
---- Used to create a single dropdown_value; also called within @{mct_option:add_dropdown_values}
--- @tparam string key The unique identifier for this dropdown value.
--- @tparam string text The localised text for this dropdown value.
--- @tparam string tt The localised tooltip for this dropdown value.
--- @tparam boolean is_default Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
+---- Used to create a single dropdown_value; also called within @{mct_option:add_dropdown_values}
+--- @tparam string key The unique identifier for this dropdown value.
+--- @tparam string text The localised text for this dropdown value.
+--- @tparam string tt The localised tooltip for this dropdown value.
+--- @tparam boolean is_default Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
 function mct_option:add_dropdown_value(key, text, tt, is_default)
     if not self:get_type() == "dropdown" then
         mct:error("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
@@ -992,35 +1002,35 @@ function mct_option:add_dropdown_value(key, text, tt, is_default)
     end
 end
 
---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
--- @local
+---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
+--- @local
 function mct_option:get_values()
     return self._values
 end
 
---- Getter for this mct_option's type; slider, dropdown, checkbox
--- @local
+---- Getter for this mct_option's type; slider, dropdown, checkbox
+--- @local
 function mct_option:get_type()
     return self._type
 end
 
---- Getter for this option's UIC template for quick reference.
--- @local
+---- Getter for this option's UIC template for quick reference.
+--- @local
 function mct_option:get_uic_template()
     return self._template
 end
 
---- Getter for this option's key.
--- @within API
--- @treturn string key mct_option's unique identifier
+---- Getter for this option's key.
+--- @within API
+--- @treturn string key mct_option's unique identifier
 function mct_option:get_key()
     return self._key
 end
 
---- Setter for this option's text, which displays next to the dropdown box/checkbox.
--- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_text`.
--- @tparam string text The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "`ui_text_replacements_my_cool_option`".
--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
+---- Setter for this option's text, which displays next to the dropdown box/checkbox.
+--- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_text`.
+--- @tparam string text The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "`ui_text_replacements_my_cool_option`".
+--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
 function mct_option:set_text(text, is_localised)
     if not is_string(text) then
         mct:error("set_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the text supplied is not a string! Returning false.")
@@ -1032,10 +1042,10 @@ function mct_option:set_text(text, is_localised)
     self._text = {text, is_localised}
 end
 
---- Setter for this option's tooltip, which displays when hovering over the option or the text.
--- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_tooltip`.
--- @tparam string text The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "`ui_text_replacements_my_cool_option_tt`".
--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
+---- Setter for this option's tooltip, which displays when hovering over the option or the text.
+--- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_tooltip`.
+--- @tparam string text The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "`ui_text_replacements_my_cool_option_tt`".
+--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
 function mct_option:set_tooltip_text(text, is_localised)
     if not is_string(text) then
         mct:error("set_tooltip_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the tooltip_text supplied is not a string! Returning false.")
@@ -1047,7 +1057,7 @@ function mct_option:set_tooltip_text(text, is_localised)
     self._tooltip_text = {text, is_localised}
 end
 
---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_text`, before seeing if any was supplied through @{mct_option:set_text}.
+---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_text`, before seeing if any was supplied through @{mct_option:set_text}.
 function mct_option:get_text()
     -- default to checking the loc files
     local text = effect.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_text")
@@ -1070,7 +1080,7 @@ function mct_option:get_text()
     return text
 end
 
---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_tooltip`, before seeing if any was supplied through @{mct_option:set_tooltip_text}.
+---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_tooltip`, before seeing if any was supplied through @{mct_option:set_tooltip_text}.
 function mct_option:get_tooltip_text()
     local text = effect.get_localised_string("mct_"..self._mod:get_key().."_"..self:get_key().."_tooltip")
     if text ~= "" then

@@ -243,6 +243,7 @@ function settings:load()
 
             -- check if there's any saved data for this mod obj
             local data = content[mod_key]
+            
 
             -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
             local all_options = mod_obj:get_options()
@@ -288,12 +289,19 @@ function settings:load()
                 option_obj:set_finalized_setting_event_free(setting)
 
                 mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
+
+                -- remove this from `data`, so non-existent settings will be cached
+                data[option_key] = nil
             end
             
             mod_obj:load_finalized_settings()
 
-            -- clear out this bit of the mct_settings.lua file in local memory, so when we loop below it only checks unfound mct_mods
-            content[mod_key] = nil
+            local next = next
+
+            -- only clear out this mod from content (from an empty table {} to nil) if it's completely empty from the previous operation
+            if next(content[mod_key]) == nil then
+                content[mod_key] = nil
+            end
         end
 
         -- loop through the rest of "content", which is either empty entirely or has

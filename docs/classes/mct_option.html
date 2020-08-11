@@ -109,7 +109,7 @@
 	<td class="summary">Get the <a href="../classes/mct_mod.html#">mct_mod</a> object housing this option.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:set_uic_visibility">mct_option:set_uic_visibility (enable)</a></td>
+	<td class="name" nowrap><a href="#mct_option:set_uic_visibility">mct_option:set_uic_visibility (visibility, keep_in_ui)</a></td>
 	<td class="summary">Set a UIC as visible or invisible, dynamically.</td>
 	</tr>
 	<tr>
@@ -117,7 +117,7 @@
 	<td class="summary">Get the current visibility for this mct_option.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:add_option_set_callback">mct_option:add_option_set_callback (callback)</a></td>
+	<td class="name" nowrap><a href="#mct_option:add_option_set_callback">mct_option:add_option_set_callback (callback, is_context)</a></td>
 	<td class="summary">Create a callback triggered whenever this option's setting changes within the MCT UI.</td>
 	</tr>
 	<tr>
@@ -149,7 +149,7 @@
 	<td class="summary">Getter for whether this UIC is currently locked.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:set_uic_locked">mct_option:set_uic_locked (should_lock)</a></td>
+	<td class="name" nowrap><a href="#mct_option:set_uic_locked">mct_option:set_uic_locked (should_lock, lock_reason, is_localised)</a></td>
 	<td class="summary">Set this option as disabled in the UI, so the user can't interact with it.</td>
 	</tr>
 	<tr>
@@ -178,21 +178,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:add_dropdown_value">mct_option:add_dropdown_value (key, text, tt, is_default)</a></td>
-	<td class="summary">Used to create a single dropdown_value; also called within <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a>
--- @tparam string key The unique identifier for this dropdown value.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:get_values">mct_option:get_values ()</a></td>
-	<td class="summary">Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:get_type">mct_option:get_type ()</a></td>
-	<td class="summary">Getter for this mct_option's type; slider, dropdown, checkbox
--- @local</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:get_uic_template">mct_option:get_uic_template ()</a></td>
-	<td class="summary">Getter for this option's UIC template for quick reference.</td>
+	<td class="summary">Used to create a single dropdown_value; also called within <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_key">mct_option:get_key ()</a></td>
@@ -442,7 +428,7 @@
 </dd>
     <dt>
     <a name = "mct_option:set_uic_visibility"></a>
-    <strong>mct_option:set_uic_visibility (enable)</strong>
+    <strong>mct_option:set_uic_visibility (visibility, keep_in_ui)</strong>
     </dt>
     <dd>
     Set a UIC as visible or invisible, dynamically.  If the UIC isn't created yet, it will get the applied setting when it is created.
@@ -451,9 +437,13 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">enable</span>
+        <li><span class="parameter">visibility</span>
             <span class="types"><span class="type">boolean</span></span>
          True for visible, false for invisible.
+        </li>
+        <li><span class="parameter">keep_in_ui</span>
+            <span class="types"><span class="type">boolean</span></span>
+         This boolean determines whether this mct_option will exist at all in the UI. Tick this to true to make the option invisible but still have a "gap" in the UI where it would be placed. Set this to false to make that spot be taken by the next otion. ONLY AFFECTS INITIAL UI CREATION.
         </li>
     </ul>
 
@@ -485,21 +475,25 @@
 </dd>
     <dt>
     <a name = "mct_option:add_option_set_callback"></a>
-    <strong>mct_option:add_option_set_callback (callback)</strong>
+    <strong>mct_option:add_option_set_callback (callback, is_context)</strong>
     </dt>
     <dd>
     Create a callback triggered whenever this option's setting changes within the MCT UI.
- The function will automatically be passed the mct<em>option, so you can read the new setting and apply whatever changes are needed.
+ You can alternatively do this through core:add<em>listener(), using the "MctOptionSelectedSettingSet" event. The reason this callback is here, is for backwards compatibility.
+ The function will automatically be passed a context object (methods listed below) so you can read state of everything and go from there.
  ex:
  when the "enable" button is checked on or off, all other options are set visible or invisible
  enable:add</em>option<em>set</em>callback(</p>
-<pre><code>function(option)
-    local val = option:get_selected_setting()
+<pre><code>function(context)
+    local option = context:option()
+    local mct_mod = option:get_mod()
+
+    local val = context:setting()
     local options = options_list
 
     for i = 1, #options do
         local i_option_key = options[i]
-        local i_option = option:get_mod():get_option_by_key(i_option_key)
+        local i_option = mct_mod:get_option_by_key(i_option_key)
         i_option:set_uic_visibility(val)
     end
 end
@@ -512,7 +506,11 @@ end
     <ul>
         <li><span class="parameter">callback</span>
             <span class="types"><span class="type">function</span></span>
-         The callback triggered whenever this option is changed. Callback will be passed one argument - the mct_option.
+         The callback triggered whenever this option is changed. Callback will be passed one argument - the <code>context</code> object for the listener. <code>context:mct()</code>, <code>context:option()</code>, <code>context:setting()</code>, and <code>context:is_creation()</code> (for if this was triggered on the UI being created) are the valid methods on context.
+        </li>
+        <li><span class="parameter">is_context</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Set this to true if you want to treat this function with the new method of passing a context. If this is false or nil, it will pass the mct_option like before. For backwards compatibility - I'll probably take this out eventually.
         </li>
     </ul>
 
@@ -676,21 +674,27 @@ end
 </dd>
     <dt>
     <a name = "mct_option:set_uic_locked"></a>
-    <strong>mct_option:set_uic_locked (should_lock)</strong>
+    <strong>mct_option:set_uic_locked (should_lock, lock_reason, is_localised)</strong>
     </dt>
     <dd>
     Set this option as disabled in the UI, so the user can't interact with it.
--- This will result in <code>mct_option:ui_change_state()</code> being called later on.
--- @tparam boolean should_lock Lock this UI option, preventing it from being interacted with.
+ This will result in <code>mct_option:ui_change_state()</code> being called later on.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">should_lock</span>
-
-
-
+            <span class="types"><span class="type">boolean</span></span>
+         Lock this UI option, preventing it from being interacted with.
+        </li>
+        <li><span class="parameter">lock_reason</span>
+            <span class="types"><span class="type">string</span></span>
+         The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
+        </li>
+        <li><span class="parameter">is_localised</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
         </li>
     </ul>
 
@@ -705,14 +709,17 @@ end
     </dt>
     <dd>
     Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
--- Use <code>mct_option:set_uic_locked()</code> for the external version of this.
--- @see mct<em>option:set</em>uic_locked
+ Use <code>mct_option:set_uic_locked()</code> for the external version of this.
 
     </ul>
 
 
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/mct_option.html#mct_option:set_uic_locked">mct_option:set_uic_locked</a>
+    </ul>
 
 
 </dd>
@@ -722,13 +729,17 @@ end
     </dt>
     <dd>
     Getter for the current selected setting.  This is the value set in <a href="../classes/mct_option.html#mct_option:set_default_value">mct_option:set_default_value</a> if nothing has been selected yet in the UI.
--- Used when finalizing settings.
--- @treturn any val The value set as the selected<em>setting for this mct</em>option.
--- @within API
+ Used when finalizing settings.
 
     </ul>
 
 
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">any</span></span>
+        val The value set as the selected<em>setting for this mct</em>option.
+    </ol>
 
 
 
@@ -740,23 +751,19 @@ end
     </dt>
     <dd>
     Set function to set the step size for moving left/right through the slider.
--- Works with floats and other numbers. Use the optional second argument if using floats/decimals
--- @tparam number step<em>size The number to jump when using the left/right button.
--- @tparam number step</em>size_precision The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
+ Works with floats and other numbers. Use the optional second argument if using floats/decimals
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">step_size</span>
-
-
-
+            <span class="types"><span class="type">number</span></span>
+         The number to jump when using the left/right button.
         </li>
         <li><span class="parameter">step_size_precision</span>
-
-
-
+            <span class="types"><span class="type">number</span></span>
+         The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
         </li>
     </ul>
 
@@ -771,17 +778,15 @@ end
     </dt>
     <dd>
     Setter for the precision on the slider's displayed value.  Necessary when working with decimal numbers.
--- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
--- @tparam number precision The precision used for floats.
+ The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">precision</span>
-
-
-
+            <span class="types"><span class="type">number</span></span>
+         The precision used for floats.
         </li>
     </ul>
 
@@ -795,24 +800,19 @@ end
     <strong>mct_option:slider_set_min_max (min, max)</strong>
     </dt>
     <dd>
-    Setter for the minimum and maximum values for the slider.
--- @tparam number min The minimum number the slider value can reach.
--- @tparam number max The maximum number the slider value can reach.
--- @within API
+    Setter for the minimum and maximum values for the slider.  If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">min</span>
-
-
-
+            <span class="types"><span class="type">number</span></span>
+         The minimum number the slider value can reach.
         </li>
         <li><span class="parameter">max</span>
-
-
-
+            <span class="types"><span class="type">number</span></span>
+         The maximum number the slider value can reach.
         </li>
     </ul>
 
@@ -826,13 +826,15 @@ end
     <strong>mct_option:add_dropdown_values (dropdown_table)</strong>
     </dt>
     <dd>
-    Method to set the <code>dropdown_values</code>.  This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is<em>default"]. The latter three are optional.
--- ex:
---      mct</em>option:add<em>dropdown</em>values({
---          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is<em>default = true},
---          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is</em>default = false},
---      })
--- @within API
+
+<p>Method to set the <code>dropdown_values</code>.  This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.
+ ex:</p>
+<pre><code>  mct_option:add_dropdown_values({
+      {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
+      {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
+  })
+</code></pre>
+
 
     </ul>
 
@@ -856,84 +858,28 @@ end
     </dt>
     <dd>
     Used to create a single dropdown_value; also called within <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a>
--- @tparam string key The unique identifier for this dropdown value.
--- @tparam string text The localised text for this dropdown value.
--- @tparam string tt The localised tooltip for this dropdown value.
--- @tparam boolean is<em>default Whether or not to set this dropdown</em>value as the default one, when the dropdown box is created.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">key</span>
-
-
-
+            <span class="types"><span class="type">string</span></span>
+         The unique identifier for this dropdown value.
         </li>
         <li><span class="parameter">text</span>
-
-
-
+            <span class="types"><span class="type">string</span></span>
+         The localised text for this dropdown value.
         </li>
         <li><span class="parameter">tt</span>
-
-
-
+            <span class="types"><span class="type">string</span></span>
+         The localised tooltip for this dropdown value.
         </li>
         <li><span class="parameter">is_default</span>
-
-
-
+            <span class="types"><span class="type">boolean</span></span>
+         Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
         </li>
     </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:get_values"></a>
-    <strong>mct_option:get_values ()</strong>
-    </dt>
-    <dd>
-    Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
--- @local
-
-    </ul>
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:get_type"></a>
-    <strong>mct_option:get_type ()</strong>
-    </dt>
-    <dd>
-    Getter for this mct_option's type; slider, dropdown, checkbox
--- @local
-
-    </ul>
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:get_uic_template"></a>
-    <strong>mct_option:get_uic_template ()</strong>
-    </dt>
-    <dd>
-    Getter for this option's UIC template for quick reference.
--- @local
-
-    </ul>
-
 
 
 
@@ -946,12 +892,16 @@ end
     </dt>
     <dd>
     Getter for this option's key.
--- @within API
--- @treturn string key mct_option's unique identifier
 
     </ul>
 
 
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">string</span></span>
+        key mct_option's unique identifier
+    </ol>
 
 
 
@@ -963,23 +913,19 @@ end
     </dt>
     <dd>
     Setter for this option's text, which displays next to the dropdown box/checkbox.
--- MCT will automatically read for text if there's a loc key with the format <code>mct_[mct_mod_key]_[mct_option_key]_text</code>.
--- @tparam string text The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "<code>ui_text_replacements_my_cool_option</code>".
--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
+ MCT will automatically read for text if there's a loc key with the format <code>mct_[mct_mod_key]_[mct_option_key]_text</code>.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">text</span>
-
-
-
+            <span class="types"><span class="type">string</span></span>
+         The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "<code>ui_text_replacements_my_cool_option</code>".
         </li>
         <li><span class="parameter">is_localised</span>
-
-
-
+            <span class="types"><span class="type">boolean</span></span>
+         True if a loc key was supplied for the text parameter.
         </li>
     </ul>
 
@@ -994,23 +940,19 @@ end
     </dt>
     <dd>
     Setter for this option's tooltip, which displays when hovering over the option or the text.
--- MCT will automatically read for text if there's a loc key with the format <code>mct_[mct_mod_key]_[mct_option_key]_tooltip</code>.
--- @tparam string text The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "<code>ui_text_replacements_my_cool_option_tt</code>".
--- @tparam boolean is_localised True if a loc key was supplied for the text parameter.
+ MCT will automatically read for text if there's a loc key with the format <code>mct_[mct_mod_key]_[mct_option_key]_tooltip</code>.
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">text</span>
-
-
-
+            <span class="types"><span class="type">string</span></span>
+         The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "<code>ui_text_replacements_my_cool_option_tt</code>".
         </li>
         <li><span class="parameter">is_localised</span>
-
-
-
+            <span class="types"><span class="type">boolean</span></span>
+         True if a loc key was supplied for the text parameter.
         </li>
     </ul>
 
@@ -1056,7 +998,7 @@ end
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-08 17:50:58 </i>
+<i style="float:right;">Last updated 2020-08-10 19:57:07 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
