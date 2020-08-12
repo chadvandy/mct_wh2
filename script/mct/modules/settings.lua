@@ -13,6 +13,9 @@ local settings = {
     -- cached on reading mct_settings.lua. When reading *extant* mct_mods, the cache is cleared for that mod key
     -- This lets a user/modder disable a mod, finalize settings, and load up that old mod again without losing settings
     cached_settings = {},
+
+    profiles_file = "mct_profiles.lua",
+    profiles = {},
 }
 
 local tab = 0
@@ -115,7 +118,7 @@ function settings:local_only_finalize(sent_by_host)
     core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = sent_by_host})
 end
 
-function settings:finalize(force)
+function settings:finalize(force, specific_mod)
     --mct:log("Finalizing Settings!")
     --local ret = {}
     local mods = mct:get_mods()
@@ -128,10 +131,19 @@ function settings:finalize(force)
         _template = true,
     }]]
 
-    for key, mod in pairs(mods) do
-        mct:log("Finalized mod ["..key.."]")
-        mod:finalize_settings()
+    if specific_mod then
+        local mod_obj = mct:get_mod_by_key(specific_mod)
 
+        if mct:is_mct_mod(mod_obj) then
+            mod_obj:finalize_settings()
+        else
+            mct:error("Finalize called for specific mod ["..specific_mod.."], but no mct_mod was found with that key!")
+        end
+    else
+        for key, mod in pairs(mods) do
+            mct:log("Finalized mod ["..key.."]")
+            mod:finalize_settings()
+        end
     end
 
     if __game_mode ~= __lib_type_campaign or (__game_mode == __lib_type_campaign and force) then

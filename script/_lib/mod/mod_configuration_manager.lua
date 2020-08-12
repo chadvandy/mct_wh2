@@ -526,14 +526,14 @@ function mod_configuration_tool:get_mod_with_name(mod_name)
 end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
-function mod_configuration_tool:finalize()
+function mod_configuration_tool:finalize(specific_mod)
     if __game_mode == __lib_type_campaign then
         -- check if it's MP!
         if cm.game_interface:model():is_multiplayer() then
             -- check if it's the host
             if cm:get_local_faction(true) == cm:get_saved_value("mct_host") then
                 self:log("Finalizing settings mid-campaign for MP.")
-                self.settings:finalize(false)
+                self.settings:finalize(false, specific_mod)
 
                 self._finalized = true
                 self.ui.locally_edited = false
@@ -567,7 +567,7 @@ function mod_configuration_tool:finalize()
             end
         else
             -- it's SP, do regular stuff
-            self.settings:finalize()
+            self.settings:finalize(false, specific_mod)
 
             self._finalized = true
     
@@ -577,7 +577,7 @@ function mod_configuration_tool:finalize()
             core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
         end
     else
-        self.settings:finalize()
+        self.settings:finalize(false, specific_mod)
 
         self._finalized = true
 

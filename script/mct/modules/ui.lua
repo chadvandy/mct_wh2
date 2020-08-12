@@ -546,7 +546,7 @@ function ui_obj:create_panels()
     logging_tab:SetImagePath(img_path)
 
     -- set the left side (logging list view/mod settings) as 3/4th of the width
-    local w = w * 0.75
+    local w = w * 0.8
 
     local logging_list_view = core:get_or_create_component("logging_list_view", "ui/vandy_lib/vlist", mod_settings_panel)
     --logging_list_view:MoveTo(mod_settings_panel:Position())
@@ -605,13 +605,14 @@ function ui_obj:create_panels()
     handle:SetDockingPoint(6)
     handle:SetDockOffset(-20, 0)
 
-    -- create the "finalize" button on the panel
+    -- create the "finalize" button on the main panel (for all mods)
     local finalize_button = core:get_or_create_component("button_mct_finalize_settings", "ui/templates/square_large_text_button", mod_settings_panel)
     finalize_button:SetDockingPoint(8)
-    finalize_button:SetDockOffset(0, finalize_button:Height()*1.5)
+    finalize_button:SetDockOffset(0, finalize_button:Height() * 1.5)
 
     local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
     finalize_button_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings"))
+    finalize_button:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_tt"), true)
 
     local w, h = mod_settings_panel:Dimensions()
     w = w * 0.24
@@ -649,11 +650,159 @@ function ui_obj:create_panels()
     actions_handle:SetDockingPoint(6)
     actions_handle:SetDockOffset(-20, 0)
 
+    -- create "Profiles" text
+    local profiles_title = core:get_or_create_component("mct_profiles_title", "ui/templates/panel_subtitle", actions_panel)
+    profiles_title:Resize(actions_panel:Width() * 0.9, profiles_title:Height())
+    profiles_title:SetDockingPoint(2)
+    profiles_title:SetDockOffset(0, profiles_title:Height() * 0.1)
+
+    local profiles_text = core:get_or_create_component("mct_profiles_title_text", "ui/vandy_lib/text/la_gioconda", profiles_title)
+    profiles_text:SetVisible(true)
+
+    profiles_text:SetDockingPoint(5)
+    profiles_text:SetDockOffset(0, 0)
+    profiles_text:Resize(profiles_title:Width() * 0.9, profiles_title:Height() * 0.9)
+
+    local w,h = profiles_text:TextDimensionsForText("[[col:fe_white]]Profiles[[/col]]")
+
+    profiles_text:ResizeTextResizingComponentToInitialSize(w, h)
+    profiles_text:SetStateText("[[col:fe_white]]Profiles[[/col]]")
+
+    -- create "Profiles" dropdown
+    local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/vandy_lib/dropdown_button_no_event", actions_panel)
+    local profiles_dropdown_text = find_uicomponent(profiles_dropdown, "dy_selected_txt")
+    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
+
+    profiles_dropdown:SetVisible(true)
+
+    local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
+    popup_menu:PropagatePriority(1000)
+    popup_menu:SetVisible(false)
+
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+
+    self:delete_component(find_uicomponent(popup_list, "row_example"))
+
+    
+
+    --[[    local templates = option_obj:get_uic_template()
+    local box = "ui/vandy_lib/dropdown_button_no_event"
+    local dropdown_option = templates[2]
+
+    local new_uic = core:get_or_create_component("mct_dropdown_box", box, row_parent)
+    new_uic:SetVisible(true)
+
+    local popup_menu = find_uicomponent(new_uic, "popup_menu")
+    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
+    popup_menu:SetVisible(false)
+    --popup_menu:SetInteractive(true)
+
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+    popup_list:PropagatePriority(popup_menu:Priority()+1)
+    --popup_list:SetInteractive(true)
+
+    local selected_tx = find_uicomponent(new_uic, "dy_selected_txt")
+
+    local dummy = find_uicomponent(popup_list, "row_example")
+
+    local w = 0
+    local h = 0
+
+    local default_value = option_obj:get_selected_setting()
+
+    local values = option_obj:get_values()
+    for i = 1, #values do
+        local value = values[i]
+        local key = value.key
+        local tt = value.tt
+        local text = value.text
+
+        local new_entry = core:get_or_create_component(key, dropdown_option, popup_list)
+
+        -- if they're localised text strings, localise them!
+        do
+            local test_tt = effect.get_localised_string(tt)
+            if test_tt ~= "" then
+                tt = test_tt
+            end
+
+            local test_text = effect.get_localised_string(text)
+            if test_text ~= "" then
+                text = test_text
+            end
+        end
+
+        new_entry:SetTooltipText(tt, true)
+
+        local off_y = 5 + (new_entry:Height() * (i-1))
+
+        new_entry:SetDockingPoint(2)
+        new_entry:SetDockOffset(0, off_y)
+
+        w,h = new_entry:Dimensions()
+
+        local txt = find_uicomponent(new_entry, "row_tx")
+
+        txt:SetStateText(text)
+
+        -- check if this is the default value
+        if default_value == key then
+            new_entry:SetState("selected")
+            option_obj:set_selected_setting(default_value, true)
+
+            -- add the value's tt to the actual dropdown box
+            selected_tx:SetStateText(text)
+            new_uic:SetTooltipText(tt, true)
+        end
+
+        new_entry:SetCanResizeHeight(false)
+        new_entry:SetCanResizeWidth(false)
+    end
+
+    self:delete_component(dummy)
+
+    local border_top = find_uicomponent(popup_menu, "border_top")
+    local border_bottom = find_uicomponent(popup_menu, "border_bottom")
+    
+    border_top:SetCanResizeHeight(true)
+    border_top:SetCanResizeWidth(true)
+    border_bottom:SetCanResizeHeight(true)
+    border_bottom:SetCanResizeWidth(true)
+
+    popup_list:SetCanResizeHeight(true)
+    popup_list:SetCanResizeWidth(true)
+    popup_list:Resize(w * 1.1, h * (#values) + 10)
+    --popup_list:MoveTo(popup_menu:Position())
+    popup_list:SetDockingPoint(2)
+    --popup_list:SetDocKOffset()
+
+    popup_menu:SetCanResizeHeight(true)
+    popup_menu:SetCanResizeWidth(true)
+    popup_list:SetCanResizeHeight(false)
+    popup_list:SetCanResizeWidth(false)
+    
+    local w, h = popup_list:Bounds()
+    popup_menu:Resize(w,h)
+
+    return new_uic]]
+
+    -- create the "finalize for mod" button on the actions menu
+    local finalize_button_for_mod = core:get_or_create_component("mct_finalize_settings_on_mod", "ui/templates/square_large_text_button", actions_panel)
+    finalize_button_for_mod:Resize(finalize_button_for_mod:Width() * 0.9, finalize_button_for_mod:Height())
+    finalize_button_for_mod:SetDockingPoint(8)
+    finalize_button_for_mod:SetDockOffset(0, finalize_button_for_mod:Height() * -0.1)
+
+    finalize_button_for_mod:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_for_mod_tt"), true)
+    local finalize_button_for_mod_txt = find_uicomponent(finalize_button_for_mod, "button_txt")
+    finalize_button_for_mod_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings_for_mod"))
+
     -- create "Revert to Default"
     local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", actions_panel)
+    revert_to_default:Resize(revert_to_default:Width() * 0.9, revert_to_default:Height())
     revert_to_default:SetDockingPoint(8)
-    revert_to_default:SetDockOffset(0,0)
+    revert_to_default:SetDockOffset(0, revert_to_default:Height() * -1.1)
 
+    revert_to_default:SetTooltipText(effect.get_localised_string("mct_button_revert_to_default_tt"), true)
     find_uicomponent(revert_to_default, "button_txt"):SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
 
     self.mod_settings_panel = mod_settings_panel
@@ -1648,6 +1797,18 @@ core:add_listener(
     end,
     function(context)
         mct:finalize()
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_finalize_button_on_mod_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_finalize_settings_on_mod"
+    end,
+    function(context)
+        mct:finalize(mct:get_selected_mod_name())
     end,
     true
 )
