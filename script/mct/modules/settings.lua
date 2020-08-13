@@ -15,10 +15,258 @@ local settings = {
     cached_settings = {},
 
     profiles_file = "mct_profiles.lua",
+
+    -- k/v table of profile keys to the standard settings memory - mod-key to option-key to option-setting.
     profiles = {},
+    selected_profile = "",
 }
 
-local tab = 0
+function settings:get_profiles()
+    return self.profiles
+end
+
+function settings:get_selected_profile()
+    return self.selected_profile
+end
+
+function settings:delete_profile_with_key(key)
+    if not is_string(key) then
+        -- errmsg
+        return false
+    end
+
+    if not self.profiles[key] then
+        -- errmsg
+        return false
+    end
+
+    self.profiles[key] = nil
+    self.selected_profile = ""
+
+    -- refresh the dropdown UI
+    mct.ui:populate_profiles_dropdown_box()
+end
+
+function settings:set_selected_profile(key)
+    if not is_string(key) then
+        -- errmsg
+        return false
+    end
+
+    if not self.profiles[key] then
+        -- errmsg, doesn't exist
+        return false
+    end
+
+    -- get the former selected profile, and un-save it as saved
+    local former = self.profiles[self.selected_profile]
+    if is_table(former) then
+        former.selected = false
+    end
+
+    -- save the new one as saved
+    self.selected_profile = key
+    self.profiles[key].selected = true
+
+    mct.ui:populate_profiles_dropdown_box()
+end
+
+function settings:get_all_profile_keys()
+    local ret = {}
+    for k,_ in pairs(self.profiles) do
+        ret[#ret+1] = k
+    end
+
+    return ret
+end
+
+function settings:read_profiles_file()
+    local ok, err = pcall(function()
+    local file = io.open(self.profiles_file, "r")
+    
+    -- if no file exists, skip operation
+    if not file then
+        return false
+    end
+
+    file:close()
+
+    local content = loadfile(self.profiles_file)
+    
+    if not content then
+        -- errmsg
+        return false
+    end
+
+    -- clear out old profiles data
+    self.profiles = {}
+    self.selected_profile = ""
+
+    content = content()
+
+    for profile_key, profile_data in pairs(content) do
+        -- profile_data has ["selected"], a bool
+        -- profile_data has ["settings"], the k/v table of mod-key to option-key to option-setting
+
+        self.profiles[profile_key] = profile_data
+
+        if profile_data.selected then
+            self:set_selected_profile(profile_key)
+        end
+    end
+end) if not ok then mct:error(err) end end
+
+function settings:save_profiles_file()
+    local file = io.open(self.profiles_file, "w")
+
+    if not file then
+        -- errmsg
+        return false
+    end
+
+    local str = "return {\n"
+
+    for profile_key, profile_data in pairs(self.profiles) do
+        str = str .. "\t[\""..profile_key.."\"] = {\n"
+
+        local selected = profile_data.selected
+        
+        str = str .. "\t\t[\"selected\"] = " .. tostring(selected) .. ",\n"
+
+        str = str .. "\t\t[\"settings\"] = {\n"
+
+        local settings = profile_data.settings
+
+        for mod_key, mod_data in pairs(settings) do
+            str = str .. "\t\t\t[\""..tostring(mod_key).."\"] = {\n"
+
+            for option_key, selected_setting in pairs(mod_data) do
+                str = str .. "\t\t\t\t[\"" .. tostring(option_key) .. "\"] = "
+
+                if is_string(selected_setting) then
+                    str = str .. "\"" .. selected_setting .. "\"" .. ",\n"
+                elseif is_boolean(selected_setting) then
+                    str = str .. tostring(selected_setting) .. ",\n"
+                elseif is_number(selected_setting) then
+                    -- TODO make this work for precision points!!!!!!
+                    str = str .. tostring(selected_setting) .. ",\n"
+                end
+            end
+            str = str .. "\t\t\t},\n"
+        end
+        str = str .. "\t\t},\n"
+        str = str .. "\t},\n"
+        --str = str .. 
+    end
+    str = str .. "}"
+
+    file:write(str)
+    file:close()
+end
+
+function settings:save_profile_with_key(key)
+    if not is_string(key) then
+        -- errmsg
+        return "bad_key"
+    end
+
+    if not self.profiles[key] then
+        -- errmsg
+        return "none_found"
+    end
+
+    self.profiles[key].settings = {}
+
+    local mods = mct:get_mods()
+
+    for mod_key, mod_obj in pairs(mods) do
+        self.profiles[key]["settings"][mod_key] = {}
+
+        local options = mod_obj:get_options()
+
+        for option_key, option_obj in pairs(options) do
+            local setting = option_obj:get_selected_setting()
+
+            self.profiles[key]["settings"][mod_key][option_key] = setting
+        end
+    end
+
+    self:save_profiles_file()
+end
+
+function settings:apply_profile_with_key(key)
+    if not is_string(key) then
+        -- errmsg
+        return "bad_key"
+    end
+
+    if not self.profiles[key] then
+        -- errmsg
+        return "none_found"
+    end
+
+    local profile_settings = self.profiles[key].settings
+
+    for mod_key, mod_data in pairs(profile_settings) do
+        local mod_obj = mct:get_mod_by_key(mod_key)
+
+        for option_key, selected_setting in pairs(mod_data) do
+            local option_obj = mod_obj:get_option_by_key(option_key)
+
+            option_obj:ui_select_value(selected_setting)
+        end
+    end
+end
+
+
+function settings:add_profile_with_key(key)
+    if not is_string(key) then
+        -- errmsg
+        return "bad_key"
+    end
+
+    if key == "" then
+        -- errmsg
+        return "blank_key"
+    end
+
+    -- make sure the string isn't going to have some bad escape key or something
+    -- TODO this
+
+    -- test if one exists already
+    if self.profiles[key] ~= nil then
+        -- errmsg
+        -- return error to the popup
+        return "exists"
+    end
+
+    self.profiles[key] = {}
+
+    -- loop through all current settings, and save them!
+    local mods = mct:get_mods()
+
+    self.profiles[key]["settings"] = {}
+
+    for mod_key, mod_obj in pairs(mods) do
+        self.profiles[key]["settings"][mod_key] = {}
+
+        local options = mod_obj:get_options()
+
+        for option_key, option_obj in pairs(options) do
+            local setting = option_obj:get_selected_setting()
+
+            self.profiles[key]["settings"][mod_key][option_key] = setting
+        end
+    end
+
+    self.profiles[key]["selected"] = true
+
+    self.selected_profile = key
+
+    mct.ui:populate_profiles_dropdown_box()
+
+    return true
+end
 
 function settings:save_mct_settings()
     local file = io.open(self.settings_file, "w+")
@@ -173,7 +421,7 @@ function settings:mp_load()
 
                     mct:log("Setting: "..tostring(setting))
 
-                    option_obj:set_finalized_setting_event_free(setting)
+                    option_obj:set_finalized_setting(setting, true)
                 end
             end
 
@@ -302,7 +550,7 @@ function settings:load()
                 end
 
                 -- set the finalized setting and read only stuffs
-                option_obj:set_finalized_setting_event_free(setting)
+                option_obj:set_finalized_setting(setting, true)
 
                 mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
 
@@ -400,7 +648,7 @@ function settings:load_game_callback(context)
                 local option_obj = mod_obj:get_option_by_key(option_key)
                 if option_obj then
                     -- save the option details in Lua-state
-                    option_obj:set_finalized_setting_event_free(option_data._setting)
+                    option_obj:set_finalized_setting(option_data._setting, true)
                     option_obj:set_read_only(option_data._read_only)
 
                     mct:log("Setting: "..tostring(option_data._setting))
@@ -412,10 +660,6 @@ function settings:load_game_callback(context)
     end
 end
 
---[[ TODO improve this so it
-        A) triggers immediately on a new game, hard-locks settings right away
-        B) triggers on all other saves, and checks if there have been any *local* edits (not on the settings.lua file, through the mods themselves!) to non-read-only settings
---]]
 
 -- called whenever saving
 function settings:save_game_callback(context)

@@ -299,6 +299,9 @@ function ui_obj:open_frame()
 
     self.locally_edited = false
 
+    -- load up the profiles file
+    mct.settings:read_profiles_file()
+
     -- make a new one!
     if not is_uicomponent(test) then
         -- create the new window and set it visible
@@ -330,6 +333,11 @@ function ui_obj:open_frame()
         -- create the large panels (left, right top/right bottom)
         self:create_panels()
 
+        -- setup the actions panel UI (buttons + profiles)
+        self:create_actions_panel()
+        self:populate_profiles_dropdown_box()
+        self:set_actions_states()
+
         -- create the MCT row first
         self:new_mod_row(mct:get_mod_by_key("mct_mod"))
 
@@ -356,7 +364,531 @@ function ui_obj:open_frame()
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 end
 
+function ui_obj:set_actions_states()
+    local actions_panel = self.actions_panel
+    if not is_uicomponent(actions_panel) then
+        -- errmsg
+        return false
+    end
+
+    local button_parent = find_uicomponent(actions_panel, "mct_profiles_button_parent")
+    local profiles_new = find_uicomponent(button_parent, "mct_profiles_new")
+    local profiles_delete = find_uicomponent(button_parent, "mct_profiles_delete")
+    local profiles_save = find_uicomponent(button_parent, "mct_profiles_save")
+    local profiles_apply = find_uicomponent(button_parent, "mct_profiles_apply")
+
+    local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
+    local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+
+    -- check if there is any selected profile - if not, lock!
+    local test = mct.settings:get_selected_profile()
+    if not test or test == "" then
+        profiles_delete:SetState("inactive")
+        profiles_save:SetState("inactive")
+        profiles_apply:SetState("inactive")
+    else
+        profiles_delete:SetState("active")
+        profiles_save:SetState("active")
+        profiles_apply:SetState("active")
+    end
+
+    -- check if the UI has been edited - if not, lock the finalize buttons
+    if self.locally_edited then
+        button_mct_finalize_settings:SetState("active")
+        mct_finalize_settings_on_mod:SetState("active")
+    else
+        -- TODO change the on-mod bit to properly read if the current mod has been edited
+
+        button_mct_finalize_settings:SetState("inactive")
+        mct_finalize_settings_on_mod:SetState("inactive")
+    end
+end
+
+
+-- called each time the Profiles UI changes
+function ui_obj:populate_profiles_dropdown_box()
+    local actions_panel = self.actions_panel
+    if not is_uicomponent(actions_panel) then
+        -- errmsg
+        return false
+    end
+
+    core:remove_listener("mct_profiles_ui")
+    core:remove_listener("mct_profiles_ui_close")
+
+    self:set_actions_states()
+
+    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
+
+    local profiles_dropdown = find_uicomponent(actions_panel, "mct_profiles_dropdown")
+
+    -- get necessary bits & bobs
+    local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+    local selected_tx = find_uicomponent(profiles_dropdown, "dy_selected_txt")
+
+    local all_profiles = mct.settings:get_all_profile_keys()
+
+    popup_list:DestroyChildren()
+
+    if is_table(all_profiles) and next(all_profiles) ~= nil then
+        local w,h = 0,0
+
+        profiles_dropdown:SetState("active")
+
+        local selected_boi = mct.settings:get_selected_profile()
+
+        for i = 1, #all_profiles do
+            local profile_key = all_profiles[i]
+            if selected_boi == "" or selected_boi == nil and i == 1 then
+                mct.settings:set_selected_profile(profile_key)
+            end
+
+            local new_entry = core:get_or_create_component(profile_key, dropdown_option_template, popup_list)
+            new_entry:SetTooltipText("", true)
+
+            local off_y = 5 + (new_entry:Height() * (i-1))
+            new_entry:SetDockingPoint(2)
+            new_entry:SetDockOffset(0, off_y)
+
+            w,h = new_entry:Dimensions()
+
+            local txt = find_uicomponent(new_entry, "row_tx")
+    
+            txt:SetStateText(profile_key)
+
+            new_entry:SetCanResizeHeight(false)
+            new_entry:SetCanResizeWidth(false)
+
+            if profile_key == selected_boi then
+                new_entry:SetState("selected")
+
+                -- add the value's text to the actual dropdown box
+                selected_tx:SetStateText(profile_key)
+            else
+                new_entry:SetState("unselected")
+            end
+        end
+
+        local border_top = find_uicomponent(popup_menu, "border_top")
+        local border_bottom = find_uicomponent(popup_menu, "border_bottom")
+        
+        border_top:SetCanResizeHeight(true)
+        border_top:SetCanResizeWidth(true)
+        border_bottom:SetCanResizeHeight(true)
+        border_bottom:SetCanResizeWidth(true)
+    
+        popup_list:SetCanResizeHeight(true)
+        popup_list:SetCanResizeWidth(true)
+        popup_list:Resize(w * 1.1, h * (#all_profiles) + 10)
+        --popup_list:MoveTo(popup_menu:Position())
+        popup_list:SetDockingPoint(2)
+        --popup_list:SetDocKOffset()
+    
+        popup_menu:SetCanResizeHeight(true)
+        popup_menu:SetCanResizeWidth(true)
+        popup_list:SetCanResizeHeight(false)
+        popup_list:SetCanResizeWidth(false)
+        
+        local w, h = popup_list:Bounds()
+        popup_menu:Resize(w,h)
+    else
+        -- if there are no profiles, lock the dropdown and set text to empty
+        profiles_dropdown:SetState("inactive")
+
+        -- clear out the selected text
+        selected_tx:SetStateText("")
+    end
+
+    core:add_listener(
+        "mct_profiles_ui",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == "mct_profiles_dropdown"
+        end,
+        function(context)
+            local box = UIComponent(context.component)
+            local menu = find_uicomponent(box, "popup_menu")
+            if is_uicomponent(menu) then
+                if menu:Visible() then
+                    menu:SetVisible(false)
+                else
+                    menu:SetVisible(true)
+                    menu:RegisterTopMost()
+                    -- next time you click something, close the menu!
+                    core:add_listener(
+                        "mct_profiles_ui_close",
+                        "ComponentLClickUp",
+                        true,
+                        function(context)
+                            if box:CurrentState() == "selected" then
+                                box:SetState("active")
+                            end
+
+                            menu:SetVisible(false)
+                            menu:RemoveTopMost()
+                        end,
+                        false
+                    )
+                end
+            end
+        end,
+        true
+    )
+
+    -- Set Selected listeners
+    core:add_listener(
+        "mct_profiles_ui",
+        "ComponentLClickUp",
+        function(context)
+            local uic = UIComponent(context.component)
+            
+            return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_profiles_dropdown"
+        end,
+        function(context)
+            core:remove_listener("mct_profiles_ui_close")
+
+            local old_selected_uic = nil
+            local new_selected_uic = UIComponent(context.component)
+
+            local old_key = mct.settings:get_selected_profile()
+            local new_key = new_selected_uic:Id()
+
+            local popup_list = UIComponent(new_selected_uic:Parent())
+            local popup_menu = UIComponent(popup_list:Parent())
+            local dropdown_box = UIComponent(popup_menu:Parent())
+
+            if is_string(old_key) then
+                old_selected_uic = find_uicomponent(popup_list, old_key)
+                if is_uicomponent(old_selected_uic) then
+                    mct.ui:uic_SetState(old_selected_uic, "unselected")
+                end
+            end
+
+            mct.ui:uic_SetState(new_selected_uic, "selected")
+            mct.settings:set_selected_profile(new_key)
+            
+            local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
+            --local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()
+            local tx = find_uicomponent(dropdown_box, "dy_selected_txt")
+    
+            mct.ui:uic_SetStateText(tx, t)
+            --mct.ui:uic_SetTooltipText(dropdown_box, tt, true)
+    
+            -- set the menu invisible and unclick the box
+            if dropdown_box:CurrentState() == "selected" then
+                mct.ui:uic_SetState(dropdown_box, "active")
+            end
+    
+            popup_menu:SetVisible(false)
+            popup_menu:RemoveTopMost()
+        end,
+        true
+    )
+end
+
+function ui_obj:create_actions_panel()
+    -- clear out any existing listeners
+    core:remove_listener("mct_profiles_new")
+    core:remove_listener("mct_profiles_delete")
+    core:remove_listener("mct_profiles_apply")
+    core:remove_listener("mct_profiles_save")
+
+    local panel = self.panel
+
+    local actions_panel = core:get_or_create_component("actions_panel", "ui/vandy_lib/custom_image_tiled", panel)
+    actions_panel:SetState("custom_state_2")
+    actions_panel:SetImagePath("ui/skins/default/panel_stack.png",1)
+    actions_panel:SetDockingPoint(7)
+    actions_panel:SetDockOffset(10,-65)
+
+    actions_panel:SetCanResizeWidth(true) actions_panel:SetCanResizeHeight(true)
+    actions_panel:Resize(panel:Width() * 0.1625, panel:Height() * 0.38)
+
+    -- create "Profiles" text
+    local profiles_title = core:get_or_create_component("mct_profiles_title", "ui/templates/panel_subtitle", actions_panel)
+    profiles_title:Resize(actions_panel:Width() * 0.9, profiles_title:Height())
+    profiles_title:SetDockingPoint(2)
+    profiles_title:SetDockOffset(0, profiles_title:Height() * 0.1)
+
+    local profiles_text = core:get_or_create_component("mct_profiles_title_text", "ui/vandy_lib/text/la_gioconda", profiles_title)
+    profiles_text:SetVisible(true)
+
+    profiles_text:SetDockingPoint(5)
+    profiles_text:SetDockOffset(0, 0)
+    profiles_text:Resize(profiles_title:Width() * 0.9, profiles_title:Height() * 0.9)
+
+    local w,h = profiles_text:TextDimensionsForText("[[col:fe_white]]Profiles[[/col]]")
+
+    profiles_text:ResizeTextResizingComponentToInitialSize(w, h)
+    profiles_text:SetStateText("[[col:fe_white]]Profiles[[/col]]")
+
+    -- create "Profiles" dropdown
+    local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/vandy_lib/dropdown_button_no_event", actions_panel)
+    --local profiles_dropdown_text = find_uicomponent(profiles_dropdown, "dy_selected_txt")
+
+    profiles_dropdown:SetVisible(true)
+    profiles_dropdown:SetDockingPoint(2)
+    profiles_dropdown:SetDockOffset(0, profiles_title:Height() * 1.2)
+
+    local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
+    popup_menu:PropagatePriority(1000)
+    popup_menu:SetVisible(false)
+
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+
+    self:delete_component(find_uicomponent(popup_list, "row_example"))
+
+
+    -- add in profiles buttons
+    local w, h = actions_panel:Dimensions()
+    local b_w = w * 0.45
+
+    local buttons_parent = core:get_or_create_component("mct_profiles_button_parent", "ui/mct/script_dummy", actions_panel)
+    buttons_parent:Resize(w, h * 0.20)
+    buttons_parent:SetDockingPoint(2)
+    buttons_parent:SetDockOffset(0, profiles_title:Height() * 2.2)
+    
+    -- "New" button
+    local profiles_new = core:get_or_create_component("mct_profiles_new", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    profiles_new:SetVisible(true)
+    profiles_new:Resize(b_w, profiles_new:Height())
+    profiles_new:SetDockingPoint(1)
+    profiles_new:SetDockOffset(15, -5)    
+    
+    do
+        local uic = profiles_new
+        local key = "mct_profiles_new"
+        local txt = UIComponent(uic:Find("dy_province"))
+        txt:SetTooltipText(effect.get_localised_string(key.."_tt"), true)
+        txt:SetStateText(effect.get_localised_string(key.."_txt"))
+
+        core:add_listener(
+            key,
+            "ComponentLClickUp",
+            function(context)
+                return context.string == key
+            end,
+            function(context)
+                if is_uicomponent(uic) then
+                    uic:SetState('active')
+                end
+
+                -- build the popup panel itself
+                local popup = core:get_or_create_component("mct_profiles_new_popup", "ui/common ui/dialogue_box")
+                -- grey out the rest of the world
+                popup:RegisterTopMost()
+
+                popup:LockPriority()
+
+                -- TODO plop in a pretty title
+                local tx = find_uicomponent(popup, "DY_text")
+                tx:SetStateText("Hi! Type in your desired profile key below.")
+
+                local input = core:get_or_create_component("text_input", "ui/common ui/text_box", popup)
+                input:SetDockingPoint(8)
+                input:SetDockOffset(0, -70)
+                input:SetStateText("")
+                input:SetInteractive(true)
+
+                -- TODO add a "Check Name" button
+
+                core:add_listener(
+                    "mct_profiles_new_popup_button_pressed",
+                    "ComponentLClickUp",
+                    function(context)
+                        local button = UIComponent(context.component)
+                        return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_profiles_new_popup"
+                    end,
+                    function(context)
+                        local button = UIComponent(context.component)
+                        local id = context.string
+
+                        if id == "button_tick" then
+                            local current_key = input:GetStateText()
+                            local test = mct.settings:add_profile_with_key(current_key)
+
+                            if test == true then
+                                -- it worked, close the boi
+                                ui_obj:delete_component(popup)
+                                core:remove_listener("mct_profiles_new_popup_button_pressed")
+                            else
+                                if test == "bad_key" then
+                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - not a valid string![[/col]]")
+                                elseif test == "exists" then
+                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]")
+                                elseif test == "blank_key" then
+                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - you have to insert a string![[/col]]")
+                                end
+                            end
+                        elseif id == "button_cancel" then
+                            ui_obj:delete_component(popup)
+                            core:remove_listener("mct_profiles_new_popup_button_pressed")
+                        end
+                    end,
+                    true
+                )
+            end,
+            true
+        )
+    end
+    
+    -- "Delete" button
+    local profiles_delete = core:get_or_create_component("mct_profiles_delete", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    profiles_delete:SetVisible(true)
+    profiles_delete:Resize(b_w, profiles_delete:Height())
+    profiles_delete:SetDockingPoint(3)
+    profiles_delete:SetDockOffset(-15, -5)
+
+    do
+        local uic = profiles_delete
+        local key = "mct_profiles_delete"
+        local txt = UIComponent(uic:Find("dy_province"))
+        txt:SetTooltipText(effect.get_localised_string(key.."_tt"), true)
+        txt:SetStateText(effect.get_localised_string(key.."_txt"))
+
+        core:add_listener(
+            key,
+            "ComponentLClickUp",
+            function(context)
+                return context.string == key
+            end,
+            function(context)
+                if is_uicomponent(uic) then
+                    uic:SetState('active')
+                end
+                -- trigger a popup with "Are you Sure?"
+                -- yes: clear this profile from mct.settings, and selected_profile as well (just deselect profile entirely?) (probably!)
+                -- no: close the popup, do naught
+                ui_obj:create_popup(
+                    "mct_profiles_delete_popup",
+                    "Are you sure you would like to delete your Profile with the key ["..mct.settings:get_selected_profile().."]? This action is irreversible!",
+                    true,
+                    function(context) -- "button_tick" triggered for yes
+                        mct.settings:delete_profile_with_key(mct.settings:get_selected_profile())
+                    end,
+                    function(context) -- "button_cancel" triggered for no
+                        -- do nothing!
+                    end
+                )
+            end,
+            true
+        )
+    end
+
+    -- "Save" button
+    local profiles_save = core:get_or_create_component("mct_profiles_save", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    profiles_save:SetVisible(true)
+    profiles_save:Resize(b_w, profiles_save:Height())
+    profiles_save:SetDockingPoint(7)
+    profiles_save:SetDockOffset(15, 5)
+
+    do
+        local uic = profiles_save
+        local key = "mct_profiles_save"
+        local txt = UIComponent(uic:Find("dy_province"))
+        txt:SetTooltipText(effect.get_localised_string(key.."_tt"), true)
+        txt:SetStateText(effect.get_localised_string(key.."_txt"))
+
+        core:add_listener(
+            key,
+            "ComponentLClickUp",
+            function(context)
+                return context.string == key
+            end,
+            function(context)
+                if is_uicomponent(uic) then
+                    uic:SetState('active')
+                end
+
+                -- save the current stuff as the current profile
+                mct.settings:save_profile_with_key(mct.settings:get_selected_profile())
+            end,
+            true
+        )
+    end
+
+    -- "Apply" button
+    local profiles_apply = core:get_or_create_component("mct_profiles_apply", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    profiles_apply:SetVisible(true)
+    profiles_apply:Resize(b_w, profiles_apply:Height())
+    profiles_apply:SetDockingPoint(9)
+    profiles_apply:SetDockOffset(-15, 5)
+
+    do
+        local uic = profiles_apply
+        local key = "mct_profiles_apply"
+        local txt = UIComponent(uic:Find("dy_province"))
+        txt:SetTooltipText(effect.get_localised_string(key.."_tt"), true)
+        txt:SetStateText(effect.get_localised_string(key.."_txt"))
+
+        core:add_listener(
+            key,
+            "ComponentLClickUp",
+            function(context)
+                return context.string == key
+            end,
+            function(context)
+                if is_uicomponent(uic) then
+                    uic:SetState('active')
+                end
+
+                -- apply the settings in this profile to all mods
+                mct.settings:apply_profile_with_key(mct.settings:get_selected_profile())
+            end,
+            true
+        )
+    end
+
+    local aw = actions_panel:Width() * 1.05
+
+    -- create the "finalize" button on the main panel (for all mods)
+    local finalize_button = core:get_or_create_component("button_mct_finalize_settings", "ui/templates/square_large_text_button", actions_panel)
+    finalize_button:SetCanResizeWidth(true) finalize_button:SetCanResizeHeight(true)
+    finalize_button:Resize(aw, finalize_button:Height())
+    finalize_button:SetDockingPoint(8)
+    finalize_button:SetDockOffset(0, finalize_button:Height() * -0.2)
+
+    local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
+    finalize_button_txt:SetState("inactive")
+    finalize_button_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings"))
+    finalize_button_txt:SetState("active")
+    finalize_button_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings"))
+    finalize_button:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_tt"), true)
+
+    -- create the "finalize for mod" button on the actions menu
+    local finalize_button_for_mod = core:get_or_create_component("mct_finalize_settings_on_mod", "ui/templates/square_large_text_button", actions_panel)
+    finalize_button_for_mod:SetCanResizeWidth(true) finalize_button_for_mod:SetCanResizeHeight(true)
+    finalize_button_for_mod:Resize(aw, finalize_button_for_mod:Height())
+    finalize_button_for_mod:SetDockingPoint(8)
+    finalize_button_for_mod:SetDockOffset(0, finalize_button_for_mod:Height() * -1.2)
+
+    finalize_button_for_mod:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_for_mod_tt"), true)
+    local finalize_button_for_mod_txt = find_uicomponent(finalize_button_for_mod, "button_txt")
+
+    finalize_button_for_mod_txt:SetState("inactive")
+    finalize_button_for_mod_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings_for_mod"))
+    finalize_button_for_mod_txt:SetState("active")
+    finalize_button_for_mod_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings_for_mod"))
+
+    -- create "Revert to Default"
+    local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", actions_panel)
+    revert_to_default:SetCanResizeWidth(true) revert_to_default:SetCanResizeHeight(true)
+    revert_to_default:Resize(aw, revert_to_default:Height())
+    revert_to_default:SetDockingPoint(8)
+    revert_to_default:SetDockOffset(0, revert_to_default:Height() * -2.2)
+
+    revert_to_default:SetTooltipText(effect.get_localised_string("mct_button_revert_to_default_tt"), true)
+    find_uicomponent(revert_to_default, "button_txt"):SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
+
+    self.actions_panel = actions_panel
+
+end
+
 function ui_obj:close_frame()
+    -- save the profiles file every time we close it up
+    mct.settings:save_profiles_file()
+
     local panel = self.panel
     if is_uicomponent(panel) then
         self:delete_component(panel)
@@ -373,6 +905,8 @@ function ui_obj:close_frame()
     self.mod_details_panel = nil
     self.mod_settings_panel = nil
     self.selected_mod_row = nil
+    self.actions_panel = nil
+
     self.locally_edited = false
 
     -- clear uic's attached to mct_options
@@ -404,20 +938,27 @@ function ui_obj:create_panels()
     -- create image background
     local left_panel_bg = core:get_or_create_component("left_panel_bg", "ui/vandy_lib/custom_image_tiled", panel)
     left_panel_bg:SetState("custom_state_2") -- 50/50/50/50 margins
-    left_panel_bg:SetImagePath(img_path, 1) -- img attached to custom_state_2
-    left_panel_bg:SetDockingPoint(4)
-    left_panel_bg:SetDockOffset(20, 0)
+    left_panel_bg:SetImagePath(img_path,1) -- img attached to custom_state_2
+    left_panel_bg:SetDockingPoint(1)
+    left_panel_bg:SetDockOffset(20, 40)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() - 175)
+    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() * 0.5)
 
     local w,h = left_panel_bg:Dimensions()
+
+    -- make the stationary title (on left_panel_bg, doesn't scroll)
+    local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel_bg)
+    left_panel_title:SetStateText(effect.get_localised_string("mct_ui_mods_header"))
+    left_panel_title:Resize(left_panel_bg:Width(), left_panel_title:Height())
+    left_panel_title:SetDockingPoint(2)
+    left_panel_title:SetDockOffset(0,0)
 
     -- create listview
     local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/vandy_lib/vlist", left_panel_bg)
     left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
     left_panel_listview:Resize(w, h-30) -- -30 to account for the 15px offset below (and the ruffled margin of the image)
-    left_panel_listview:SetDockingPoint(5)
-    left_panel_listview:SetDockOffset(0, 15)
+    left_panel_listview:SetDockingPoint(2)
+    left_panel_listview:SetDockOffset(0, left_panel_title:Height() * 1.1)
 
     local x,y = left_panel_listview:Position()
     local w,h = left_panel_listview:Bounds()
@@ -436,20 +977,12 @@ function ui_obj:create_panels()
     self.mod_row_list_view = left_panel_listview
     self.mod_row_list_box = lbox
 
-    -- make the stationary title (on left_panel_bg, doesn't scroll)
-    local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel_bg)
-    left_panel_title:SetStateText(effect.get_localised_string("mct_ui_mods_header"))
-    left_panel_title:SetDockingPoint(0)
-    local x, y = left_panel_listview:Position()
-    left_panel_title:MoveTo(x, y - left_panel_title:Height())
-    left_panel_title:Resize(left_panel_listview:Width(), left_panel_title:Height())
-
     -- RIGHT SIDE
     local right_panel = core:get_or_create_component("right_panel", "ui/mct/mct_frame", panel)
     right_panel:SetVisible(true)
 
     right_panel:SetCanResizeWidth(true) right_panel:SetCanResizeHeight(true)
-    right_panel:Resize(panel:Width() - (left_panel_bg:Width() + 60), left_panel_bg:Height() + left_panel_title:Height())
+    right_panel:Resize(panel:Width() - (left_panel_bg:Width() + 60), panel:Height() * 0.85)
     right_panel:SetDockingPoint(6)
     right_panel:SetDockOffset(-20, -20) -- margin on bottom + right
     --local x, y = left_panel_title:Position()
@@ -546,7 +1079,7 @@ function ui_obj:create_panels()
     logging_tab:SetImagePath(img_path)
 
     -- set the left side (logging list view/mod settings) as 3/4th of the width
-    local w = w * 0.8
+    local w = w * 0.99
 
     local logging_list_view = core:get_or_create_component("logging_list_view", "ui/vandy_lib/vlist", mod_settings_panel)
     --logging_list_view:MoveTo(mod_settings_panel:Position())
@@ -605,206 +1138,6 @@ function ui_obj:create_panels()
     handle:SetDockingPoint(6)
     handle:SetDockOffset(-20, 0)
 
-    -- create the "finalize" button on the main panel (for all mods)
-    local finalize_button = core:get_or_create_component("button_mct_finalize_settings", "ui/templates/square_large_text_button", mod_settings_panel)
-    finalize_button:SetDockingPoint(8)
-    finalize_button:SetDockOffset(0, finalize_button:Height() * 1.5)
-
-    local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
-    finalize_button_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings"))
-    finalize_button:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_tt"), true)
-
-    local w, h = mod_settings_panel:Dimensions()
-    w = w * 0.24
-
-    local actions_panel = core:get_or_create_component("actions_panel", "ui/vandy_lib/custom_image_tiled", mod_settings_panel)
-    actions_panel:SetState("custom_state_2")
-    actions_panel:SetImagePath("ui/skins/default/panel_stack.png",1)
-    actions_panel:SetDockingPoint(6)
-    actions_panel:SetDockOffset(0,0)
-
-    actions_panel:SetCanResizeWidth(true) actions_panel:SetCanResizeHeight(true)
-    actions_panel:Resize(w,h)
-
-    local actions_list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", actions_panel)
-    actions_list_view:SetDockingPoint(1)
-    actions_list_view:SetDockOffset(0, 10)
-    actions_list_view:SetCanResizeWidth(true) actions_list_view:SetCanResizeHeight(true)
-    actions_list_view:Resize(w,h-20)
-
-    local actions_list_clip = find_uicomponent(actions_list_view, "list_clip")
-    actions_list_clip:SetCanResizeWidth(true) actions_list_clip:SetCanResizeHeight(true)
-    actions_list_clip:SetDockingPoint(1)
-    actions_list_clip:SetDockOffset(0, 0)
-    actions_list_clip:Resize(w,h-20)
-
-    local actions_list_box = find_uicomponent(actions_list_clip, "list_box")
-    actions_list_box:SetCanResizeWidth(true) actions_list_box:SetCanResizeHeight(true)
-    actions_list_box:SetDockingPoint(1)
-    actions_list_box:SetDockOffset(0, 0)
-    actions_list_box:Resize(w,h-20)
-
-    actions_list_box:Layout()
-
-    local actions_handle = find_uicomponent(actions_list_view, "vslider")
-    actions_handle:SetDockingPoint(6)
-    actions_handle:SetDockOffset(-20, 0)
-
-    -- create "Profiles" text
-    local profiles_title = core:get_or_create_component("mct_profiles_title", "ui/templates/panel_subtitle", actions_panel)
-    profiles_title:Resize(actions_panel:Width() * 0.9, profiles_title:Height())
-    profiles_title:SetDockingPoint(2)
-    profiles_title:SetDockOffset(0, profiles_title:Height() * 0.1)
-
-    local profiles_text = core:get_or_create_component("mct_profiles_title_text", "ui/vandy_lib/text/la_gioconda", profiles_title)
-    profiles_text:SetVisible(true)
-
-    profiles_text:SetDockingPoint(5)
-    profiles_text:SetDockOffset(0, 0)
-    profiles_text:Resize(profiles_title:Width() * 0.9, profiles_title:Height() * 0.9)
-
-    local w,h = profiles_text:TextDimensionsForText("[[col:fe_white]]Profiles[[/col]]")
-
-    profiles_text:ResizeTextResizingComponentToInitialSize(w, h)
-    profiles_text:SetStateText("[[col:fe_white]]Profiles[[/col]]")
-
-    -- create "Profiles" dropdown
-    local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/vandy_lib/dropdown_button_no_event", actions_panel)
-    local profiles_dropdown_text = find_uicomponent(profiles_dropdown, "dy_selected_txt")
-    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
-
-    profiles_dropdown:SetVisible(true)
-
-    local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
-    popup_menu:PropagatePriority(1000)
-    popup_menu:SetVisible(false)
-
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
-
-    self:delete_component(find_uicomponent(popup_list, "row_example"))
-
-    
-
-    --[[    local templates = option_obj:get_uic_template()
-    local box = "ui/vandy_lib/dropdown_button_no_event"
-    local dropdown_option = templates[2]
-
-    local new_uic = core:get_or_create_component("mct_dropdown_box", box, row_parent)
-    new_uic:SetVisible(true)
-
-    local popup_menu = find_uicomponent(new_uic, "popup_menu")
-    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
-    popup_menu:SetVisible(false)
-    --popup_menu:SetInteractive(true)
-
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
-    popup_list:PropagatePriority(popup_menu:Priority()+1)
-    --popup_list:SetInteractive(true)
-
-    local selected_tx = find_uicomponent(new_uic, "dy_selected_txt")
-
-    local dummy = find_uicomponent(popup_list, "row_example")
-
-    local w = 0
-    local h = 0
-
-    local default_value = option_obj:get_selected_setting()
-
-    local values = option_obj:get_values()
-    for i = 1, #values do
-        local value = values[i]
-        local key = value.key
-        local tt = value.tt
-        local text = value.text
-
-        local new_entry = core:get_or_create_component(key, dropdown_option, popup_list)
-
-        -- if they're localised text strings, localise them!
-        do
-            local test_tt = effect.get_localised_string(tt)
-            if test_tt ~= "" then
-                tt = test_tt
-            end
-
-            local test_text = effect.get_localised_string(text)
-            if test_text ~= "" then
-                text = test_text
-            end
-        end
-
-        new_entry:SetTooltipText(tt, true)
-
-        local off_y = 5 + (new_entry:Height() * (i-1))
-
-        new_entry:SetDockingPoint(2)
-        new_entry:SetDockOffset(0, off_y)
-
-        w,h = new_entry:Dimensions()
-
-        local txt = find_uicomponent(new_entry, "row_tx")
-
-        txt:SetStateText(text)
-
-        -- check if this is the default value
-        if default_value == key then
-            new_entry:SetState("selected")
-            option_obj:set_selected_setting(default_value, true)
-
-            -- add the value's tt to the actual dropdown box
-            selected_tx:SetStateText(text)
-            new_uic:SetTooltipText(tt, true)
-        end
-
-        new_entry:SetCanResizeHeight(false)
-        new_entry:SetCanResizeWidth(false)
-    end
-
-    self:delete_component(dummy)
-
-    local border_top = find_uicomponent(popup_menu, "border_top")
-    local border_bottom = find_uicomponent(popup_menu, "border_bottom")
-    
-    border_top:SetCanResizeHeight(true)
-    border_top:SetCanResizeWidth(true)
-    border_bottom:SetCanResizeHeight(true)
-    border_bottom:SetCanResizeWidth(true)
-
-    popup_list:SetCanResizeHeight(true)
-    popup_list:SetCanResizeWidth(true)
-    popup_list:Resize(w * 1.1, h * (#values) + 10)
-    --popup_list:MoveTo(popup_menu:Position())
-    popup_list:SetDockingPoint(2)
-    --popup_list:SetDocKOffset()
-
-    popup_menu:SetCanResizeHeight(true)
-    popup_menu:SetCanResizeWidth(true)
-    popup_list:SetCanResizeHeight(false)
-    popup_list:SetCanResizeWidth(false)
-    
-    local w, h = popup_list:Bounds()
-    popup_menu:Resize(w,h)
-
-    return new_uic]]
-
-    -- create the "finalize for mod" button on the actions menu
-    local finalize_button_for_mod = core:get_or_create_component("mct_finalize_settings_on_mod", "ui/templates/square_large_text_button", actions_panel)
-    finalize_button_for_mod:Resize(finalize_button_for_mod:Width() * 0.9, finalize_button_for_mod:Height())
-    finalize_button_for_mod:SetDockingPoint(8)
-    finalize_button_for_mod:SetDockOffset(0, finalize_button_for_mod:Height() * -0.1)
-
-    finalize_button_for_mod:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_for_mod_tt"), true)
-    local finalize_button_for_mod_txt = find_uicomponent(finalize_button_for_mod, "button_txt")
-    finalize_button_for_mod_txt:SetStateText(effect.get_localised_string("mct_button_finalize_settings_for_mod"))
-
-    -- create "Revert to Default"
-    local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", actions_panel)
-    revert_to_default:Resize(revert_to_default:Width() * 0.9, revert_to_default:Height())
-    revert_to_default:SetDockingPoint(8)
-    revert_to_default:SetDockOffset(0, revert_to_default:Height() * -1.1)
-
-    revert_to_default:SetTooltipText(effect.get_localised_string("mct_button_revert_to_default_tt"), true)
-    find_uicomponent(revert_to_default, "button_txt"):SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
-
     self.mod_settings_panel = mod_settings_panel
 end
 
@@ -814,6 +1147,8 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
 
     -- set the positions for all options in the mod
     selected_mod:set_positions_for_options()
+
+    self:set_actions_states()
 
     local former_mod = nil
     if is_string(former_mod_key) then
@@ -1517,7 +1852,7 @@ function ui_obj.new_slider(self, option_obj, row_parent)
     local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
 
     text_input:SetCanResizeWidth(true)
-    text_input:Resize(text_input:Width() * 0.25, text_input:Height())
+    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
     text_input:SetCanResizeWidth(false)
 
     left_button:SetDockingPoint(4)
