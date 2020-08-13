@@ -164,6 +164,8 @@ function settings:save_profiles_file()
     file:close()
 end
 
+-- make sure nothing is being erased here - only overwritten
+-- not erasing the tables makes cached settings work
 function settings:save_profile_with_key(key)
     if not is_string(key) then
         -- errmsg
@@ -175,18 +177,25 @@ function settings:save_profile_with_key(key)
         return "none_found"
     end
 
-    self.profiles[key].settings = {}
+    -- if the table doesn't exist, make one!
+    if not is_table(self.profiles[key].settings) then
+        self.profiles[key].settings = {}
+    end
 
     local mods = mct:get_mods()
 
     for mod_key, mod_obj in pairs(mods) do
-        self.profiles[key]["settings"][mod_key] = {}
+        -- ditto
+        if not is_table(self.profiles[key]["settings"][mod_key]) then
+            self.profiles[key]["settings"][mod_key] = {}
+        end
 
         local options = mod_obj:get_options()
 
         for option_key, option_obj in pairs(options) do
             local setting = option_obj:get_selected_setting()
 
+            -- one final ditto
             self.profiles[key]["settings"][mod_key][option_key] = setting
         end
     end
@@ -218,8 +227,7 @@ function settings:apply_profile_with_key(key)
     end
 end
 
-
-function settings:add_profile_with_key(key)
+function settings:test_profile_with_key(key)
     if not is_string(key) then
         -- errmsg
         return "bad_key"
@@ -238,6 +246,16 @@ function settings:add_profile_with_key(key)
         -- errmsg
         -- return error to the popup
         return "exists"
+    end
+
+    return true
+end
+
+function settings:add_profile_with_key(key)
+    local test = self:test_profile_with_key(key)
+
+    if test ~= true then
+        return test
     end
 
     self.profiles[key] = {}
