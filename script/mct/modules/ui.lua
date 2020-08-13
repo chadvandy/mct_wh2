@@ -685,48 +685,94 @@ function ui_obj:create_actions_panel()
                 local tx = find_uicomponent(popup, "DY_text")
                 tx:SetStateText("Hi! Type in your desired profile key below.")
 
+                local xx,yy = tx:GetDockOffset()
+                yy = yy - 40
+                tx:SetDockOffset(xx,yy)
+
                 local input = core:get_or_create_component("text_input", "ui/common ui/text_box", popup)
                 input:SetDockingPoint(8)
-                input:SetDockOffset(0, -70)
+                input:SetDockOffset(0, input:Height() * -4.5)
                 input:SetStateText("")
                 input:SetInteractive(true)
 
+                input:Resize(input:Width() * 0.75, input:Height())
+
+                input:PropagatePriority(popup:Priority())
+
                 -- TODO add a "Check Name" button
+                local check_name = core:get_or_create_component("check_name", "ui/templates/square_medium_text_button_toggle", popup)
+                check_name:PropagatePriority(input:Priority() + 100)
+                check_name:SetDockingPoint(8)
+                check_name:SetDockOffset(0, input:Height() * -3.0)
+
+                check_name:Resize(input:Width() * 0.95, input:Height() * 1.45)
+
+                local txt = find_uicomponent(check_name, "dy_province")
+                txt:SetStateText("Check Name")
+                txt:SetDockingPoint(5)
+                txt:SetDockOffset(0,0)
+
+                local button_tick = find_uicomponent(popup, "both_group", "button_tick")
+                button_tick:SetState("inactive")
+
+                local current_name = ""
 
                 core:add_listener(
-                    "mct_profiles_new_popup_button_pressed",
+                    "mct_profiles_new_popup_check_name",
                     "ComponentLClickUp",
                     function(context)
-                        local button = UIComponent(context.component)
-                        return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_profiles_new_popup"
+                        mct:log("NEW POPUP CHECK NAME")
+                        return context.string == "check_name"
                     end,
                     function(context)
-                        local button = UIComponent(context.component)
-                        local id = context.string
+                        local ok, err = pcall(function()
+                            mct:log("NEW POPUP CHECK NAME 1")
+                        check_name:SetState("active")
 
-                        if id == "button_tick" then
-                            local current_key = input:GetStateText()
-                            local test = mct.settings:add_profile_with_key(current_key)
+                        mct:log("NEW POPUP CHECK NAMe 2")
 
-                            if test == true then
-                                -- it worked, close the boi
-                                ui_obj:delete_component(popup)
-                                core:remove_listener("mct_profiles_new_popup_button_pressed")
-                            else
-                                if test == "bad_key" then
-                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - not a valid string![[/col]]")
-                                elseif test == "exists" then
-                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]")
-                                elseif test == "blank_key" then
-                                    tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - you have to insert a string![[/col]]")
-                                end
+                        local current_key = input:GetStateText()
+                        local test = mct.settings:test_profile_with_key(current_key)
+
+                        if test == true then
+                            button_tick:SetState("active")
+
+                            current_name = current_key
+                            tx:SetStateText("Hi! Type in your desired profile key below.\nCurrent name: " .. current_name)
+                        else
+                            button_tick:SetState("inactive")
+
+                            current_name = ""
+
+                            if test == "bad_key" then
+                                tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - not a valid string![[/col]]")
+                            elseif test == "exists" then
+                                tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]")
+                            elseif test == "blank_key" then
+                                tx:SetStateText("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - you have to insert a string![[/col]]")
                             end
-                        elseif id == "button_cancel" then
-                            ui_obj:delete_component(popup)
-                            core:remove_listener("mct_profiles_new_popup_button_pressed")
                         end
+                    end) if not ok then mct:error(err) end
                     end,
                     true
+                )
+
+                core:add_listener(
+                    "mct_profiles_popup_close",
+                    "ComponentLClickUp",
+                    function(context)
+                        return context.string == "button_tick" or context.string == "button_cancel"
+                    end,
+                    function(context)
+                        if context.string == "button_tick" then
+                            --local current_key = input:GetStateText()
+                            
+                            mct.settings:add_profile_with_key(current_name)
+                        end
+
+                        core:remove_listener("mct_profiles_new_popup_check_name")
+                    end,
+                    false
                 )
             end,
             true
