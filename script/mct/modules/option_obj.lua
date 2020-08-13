@@ -391,7 +391,17 @@ function mct_option:is_val_valid_for_type(val)
         if not is_number(val) then
             return false
         end
-        -- TODO check if the number is valid in the slider's number range
+
+        local values = self:get_values()
+
+        local min = values.min
+        local max = values.max
+
+        if val > max or val < min then
+            return false
+        end
+
+        
     elseif type == "checkbox" then
         if not is_boolean(val) then
             return false
@@ -400,10 +410,22 @@ function mct_option:is_val_valid_for_type(val)
         if not is_string(val) then
             return false
         end
-        -- TODO check if the dropdown value has been assigned as a value already
-        --[[if not valid then
+
+        local values = self:get_values()
+        
+        -- check if this key exists as a dropdown option
+        local valid = false
+        for i = 1, #values do
+            local test = values[i].key
+
+            if val == test then
+                valid = true
+            end
+        end
+
+        if not valid then
             return false
-        end]]
+        end
     end
 
     return true
@@ -428,28 +450,11 @@ function mct_option:get_finalized_setting()
     return self._finalized_setting
 end
 
----- Internal use only.
---- @todo this sucks!
---- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
---- @local
-function mct_option:set_finalized_setting_event_free(val)
-    if self:is_val_valid_for_type(val) then
-        -- ignore read-only since this is only used for save/load
-        --[[if self:get_read_only() then
-            -- can't change finalized setting for read onlys! Error!
-            mct:error("set_finalized_setting_event_free() called for mct_option ["..self:get_key().."], but the option is read only! This REALLY shouldn't happen, investigate.")
-            return false
-        end]]
-
-        self._finalized_setting = val
-        --self._selected_setting = val
-    end
-end
-
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 --- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
+--- @tparam boolean is_event_free Set to true to skip MctOptionSettingFinalized. Used by save/load version.
 --- @local
-function mct_option:set_finalized_setting(val)
+function mct_option:set_finalized_setting(val, is_event_free)
     if self:is_val_valid_for_type(val) then
         if self:get_read_only() and __game_mode == __lib_type_campaign then
             -- can't change finalized setting for read onlys! Error!
