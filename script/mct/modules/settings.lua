@@ -384,6 +384,16 @@ function settings:local_only_finalize(sent_by_host)
     core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = sent_by_host})
 end
 
+function settings:finalize_first_time(force)
+    local mods = mct:get_mods()
+
+    for key, mod in pairs(mods) do
+        mod:load_finalized_settings()
+    end
+
+    self:save_mct_settings()
+end
+
 function settings:finalize(force, specific_mod)
     --mct:log("Finalizing Settings!")
     --local ret = {}
@@ -495,7 +505,7 @@ function settings:load()
         -- create a file with all the defaults!
         mct:log("First time load - creating settings file! Using defaults for every option.")
         mct._first_load = true
-        self:finalize(true)
+        self:finalize_first_time(true)
         mct:log("Settings file created, all defaults applied!")
     else
         mct:log("Loading settings file!")
@@ -504,14 +514,14 @@ function settings:load()
 
         if not pcall(function() content() end) then
             mct:error("The mct_settings.lua file had a script error in it and couldn't be loaded. Investigate!")
-            self:finalize(true)
+            self:finalize_first_time(true)
             return
         end
 
         content = content()
 
         if not content then
-            self:finalize(true)
+            self:finalize_first_time(true)
             return
         end
 
@@ -595,7 +605,7 @@ function settings:load()
             self.cached_settings[mod_key] = mod_data
         end
 
-        self:finalize()
+        --self:finalize()
 
         mct:log(tostring(any_added))
         if any_added then

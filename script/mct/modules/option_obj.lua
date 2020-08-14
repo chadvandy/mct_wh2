@@ -397,9 +397,12 @@ function mct_option:is_val_valid_for_type(val)
         local min = values.min
         local max = values.max
 
-        if val > max or val < min then
-            return false
-        end
+        -- TODO handle this better; instead, return the min or max?
+
+        -- min/max is dealt with in the 
+        --if val > max or val < min then
+        --    return false
+        --end
 
         
     elseif type == "checkbox" then
@@ -462,7 +465,14 @@ function mct_option:set_finalized_setting(val, is_event_free)
             return false
         end
 
+        -- save locally
         self._finalized_setting = val
+
+
+        -- save on the mct_mod attached, too
+        local mod = self:get_mod()
+        mod._finalized_settings[self:get_key()] = val
+
 
         -- trigger an event to listen for externally
         core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
@@ -522,6 +532,10 @@ function mct_option:set_selected_setting(val, is_creation)
         self._selected_setting = val
 
         core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
+
+        if not is_creation then
+            mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
+        end
 
         --[[if not event_free then
             -- run the callback, passing the mct_option along as an arg
@@ -688,6 +702,8 @@ function mct_option:ui_select_value(val)
         popup_menu:SetVisible(false)
         popup_menu:RemoveTopMost()
     end
+
+    mct.ui:set_actions_states()
 end
 
 ---- Getter for whether this UIC is currently locked.
