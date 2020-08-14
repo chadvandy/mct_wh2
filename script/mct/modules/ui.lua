@@ -30,11 +30,71 @@ local ui_obj = {
     game_ui_created = false,
 
     ui_created_callbacks = {},
+
+    -- a better way to read if any settings have been changed
+    -- table of mod keys (only added when a setting is changed)
+    -- within each mod key table, option keys (only added when that specific option changed)
+    -- within each option key table, two field - old_value (for finalized-setting) and new_value (for selected-setting) (option key table removed if new_value is set to old_value)
+    changed_settings = {},
 }
 
 local mct = mct
 
 mct:mixin(ui_obj)
+
+--- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
+function ui_obj:set_changed_setting(mod_key, option_key, new_value)
+    if not is_string(mod_key) then
+        -- errmsg
+        return false
+    end
+
+    if not is_string(option_key) then
+        -- errmsg
+        return false
+    end
+
+    local mct_mod = mct:get_mod_by_key(mod_key)
+    local mct_option = mct_mod:get_option_by_key(option_key)
+
+    -- add this as a table if it doesn't exist already
+    if not is_table(self.changed_settings[mod_key]) then
+        self.changed_settings[mod_key] = {}
+    end
+
+    -- ditto for the setting
+    if not is_table(self.changed_settings[mod_key][option_key]) then
+        self.changed_settings[mod_key][option_key] = {}
+    end
+
+    local old = nil
+    --[[local new = nil
+
+    if not is_nil(self.changed_settings[mod_key][option_key]["old_value"]) then
+        old = self.changed_settings[mod_key][option_key]["old_value"]
+    end
+
+    if not is_nil(self.changed_settings[mod_key][option_key]["new_value"]) then
+        new = self.changed_settings[mod_key][option_key]["new_value"]
+    end]]
+
+    if is_nil(old) then
+        old = mct_option:get_finalized_setting()
+    end
+
+    -- if the new value is the finalized setting, remove it
+    if old == new_value then
+        self.changed_settings[mod_key][option_key] = nil
+
+        -- check to see if the mod_key obj needs to be removed too
+        if next(self.changed_settings[mod_key]) == nil then
+            self.changed_settings[mod_key] = nil
+        end
+    else
+        self.changed_settings[mod_key][option_key]["old_value"] = old
+        self.changed_settings[mod_key][option_key]["new_value"] = new_value
+    end
+end
 
 function ui_obj:delete_component(uic)
     if not is_uicomponent(self.dummy) then
@@ -295,9 +355,11 @@ end
 
 function ui_obj:open_frame()
     -- check if one exists already
+    local ok, err = pcall(function()
     local test = self.panel
 
     self.locally_edited = false
+    self.changed_settings = {}
 
     -- load up the profiles file
     mct.settings:read_profiles_file()
@@ -362,6 +424,7 @@ function ui_obj:open_frame()
     end
 
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
+end) if not ok then mct:error(err) end
 end
 
 function ui_obj:set_actions_states()
@@ -376,6 +439,8 @@ function ui_obj:set_actions_states()
     local profiles_delete = find_uicomponent(button_parent, "mct_profiles_delete")
     local profiles_save = find_uicomponent(button_parent, "mct_profiles_save")
     local profiles_apply = find_uicomponent(button_parent, "mct_profiles_apply")
+
+    local selected_mod_key = mct:get_selected_mod_name()
 
     local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
     local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
@@ -392,15 +457,22 @@ function ui_obj:set_actions_states()
         profiles_apply:SetState("active")
     end
 
-    -- check if the UI has been edited - if not, lock the finalize buttons
-    if self.locally_edited then
-        button_mct_finalize_settings:SetState("active")
-        mct_finalize_settings_on_mod:SetState("active")
-    else
-        -- TODO change the on-mod bit to properly read if the current mod has been edited
-
+    -- easy to start - if changed_settings is empty, lock everything!
+    if next(self.changed_settings) == nil then
         button_mct_finalize_settings:SetState("inactive")
         mct_finalize_settings_on_mod:SetState("inactive")
+    else
+        -- set the finalize settings button to active; SOMETHING was changed!
+        button_mct_finalize_settings:SetState("active")
+
+        -- check if there are any changed settings for the currently selected mod
+        if (not is_table(self.changed_settings[selected_mod_key])) or next(self.changed_settings[selected_mod_key]) == nil then
+            -- no changed settings - lock this mod
+            mct_finalize_settings_on_mod:SetState("inactive")
+        else
+            -- changed settings - unlock!
+            mct_finalize_settings_on_mod:SetState("active")
+        end
     end
 end
 
@@ -953,6 +1025,7 @@ function ui_obj:close_frame()
     self.selected_mod_row = nil
     self.actions_panel = nil
 
+    self.changed_settings = {}
     self.locally_edited = false
 
     -- clear uic's attached to mct_options
@@ -1637,7 +1710,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     if option_obj == "MCT_BLANK" then
         -- no need to do anything, skip
     else
-        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/mct/script_dummy", column)
+        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/vandy_lib/custom_image_tiled", column)
 
         do
             -- set to be flush with the column dummy
@@ -1645,6 +1718,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             dummy_option:Resize(w, h)
             dummy_option:SetCanResizeHeight(false) dummy_option:SetCanResizeWidth(false)
 
+            dummy_option:SetVisible(true)
+            dummy_option:SetState("custom_state_2")
+
+            dummy_option:SetImagePath("ui/skins/default/panel_back_border.png", 1)
 
             -- set to dock center
             dummy_option:SetDockingPoint(5)
@@ -1656,9 +1733,9 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda", dummy_option)
             option_text:SetVisible(true)
             option_text:SetDockingPoint(4)
-            option_text:SetDockOffset(5, 0)
+            option_text:SetDockOffset(15, 0)
 
-            self:uic_SetStateText(option_text, option_obj:get_text())
+            --
             self:uic_SetTooltipText(option_text, option_obj:get_tooltip_text(), true)
 
             local new_option
@@ -1684,9 +1761,15 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             local w = t_w - n_w
             local _, h = option_text:Dimensions()
 
-            option_text:Resize(w, h)
+            option_text:Resize(w-15, h)
+
+            local w, h = option_text:TextDimensionsForText(option_obj:get_text())
+            option_text:ResizeTextResizingComponentToInitialSize(w, h)
+
+            self:uic_SetStateText(option_text, option_obj:get_text())
 
             new_option:SetDockingPoint(6)
+            new_option:SetDockOffset(-15, 0)
 
             option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
@@ -2169,6 +2252,12 @@ core:add_listener(
     true
 )
 
+function ui_obj:add_finalize_settings_popup()
+    local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/common ui/dialogue_box")
+
+    
+end
+
 -- Finalize settings/print to settings file
 core:add_listener(
     "mct_finalize_button_pressed",
@@ -2177,7 +2266,9 @@ core:add_listener(
         return context.string == "button_mct_finalize_settings"
     end,
     function(context)
+        -- create the popup 
         mct:finalize()
+        ui_obj:set_actions_states()
     end,
     true
 )
@@ -2190,6 +2281,7 @@ core:add_listener(
     end,
     function(context)
         mct:finalize(mct:get_selected_mod_name())
+        ui_obj:set_actions_states()
     end,
     true
 )
@@ -2215,6 +2307,10 @@ core:add_listener(
     true
 )
 
+function ui_obj:get_locally_edited()
+    return (next(self.changed_settings) ~= nil)
+end
+
 core:add_listener(
     "mct_close_button_pressed",
     "ComponentLClickUp",
@@ -2223,14 +2319,28 @@ core:add_listener(
     end,
     function(context)
         -- check if MCT was finalized or no changes were done during the latest UI operation
-        if not ui_obj.locally_edited then
+        if not ui_obj:get_locally_edited() then
             ui_obj:close_frame()
         else
             -- trigger a popup to either close with unsaved changes, or cancel the close procedure
             local key = "mct_unsaved"
             local text = "[[col:red]]WARNING: Unsaved Changes![[/col]]\n\nThere are unsaved changes in the Mod Configuration Tool!\nIf you would like to close anyway, press accept. If you want to go back and save your changes, press cancel and use Finalize Settings!"
 
-            ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() end, nil)
+            local actions_panel = ui_obj.actions_panel
+
+            local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
+            local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+
+            -- highlight the finalize buttons!
+            button_mct_finalize_settings:StartPulseHighlight(2, "active")
+            mct_finalize_settings_on_mod:StartPulseHighlight(2, "active")
+
+            local function func()
+                button_mct_finalize_settings:StopPulseHighlight()
+                mct_finalize_settings_on_mod:StopPulseHighlight()
+            end
+
+            ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() func() end, function() func() end)
         end
     end,
     true
