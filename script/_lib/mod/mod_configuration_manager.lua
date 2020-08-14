@@ -592,6 +592,11 @@ end
 --- @tparam string mod_name Unique identifier for the desired mct_mod.
 --- @treturn mct_mod
 function mod_configuration_tool:get_mod_by_key(mod_name)
+    if not is_string(mod_name) then
+        self:error("get_mod_by_key() called, but the mod_name provided ["..tostring(mod_name).."] is not a string!")
+        return nil
+    end
+    
     local test = self._registered_mods[mod_name]
     if type(test) == "nil" then
         self:error("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
