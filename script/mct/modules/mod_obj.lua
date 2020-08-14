@@ -498,6 +498,7 @@ function mct_mod:set_positions_for_options()
     end
 end
 
+-- TODO change this to use changed_settings? 
 --- Set all options to their default value in the UI
 function mct_mod:revert_to_defaults()
     mct:log("Reverting to defaults for mod ["..self:get_key().."]")
@@ -535,6 +536,36 @@ end
 --- Used when finalizing the settings in MCT.
 --- @local
 function mct_mod:finalize_settings()
+    local changed_options = mct.ui.changed_settings[self:get_key()]
+    if not is_table(changed_options) then
+        -- this mod hasn't had any changed settings - skip!
+        mct:log("Finalizing settings for mod ["..self:get_key().."], but nothing was changed in this mod! Cool!")
+        return false
+    end
+
+    mct:log("Finalizing settings for mod ["..self:get_key().."]")
+
+    for option_key, option_data in pairs(changed_options) do
+        local option_obj = self:get_option_by_key(option_key)
+
+        if not mct:is_mct_option(option_obj) then
+            -- errmsg
+            return false
+        end
+
+        local new_setting = option_data.new_value
+        local old_setting = option_data.old_value
+
+        mct:log("Finalizing setting for option ["..option_key.."], changing ["..tostring(old_setting).."] to ["..tostring(new_setting).."].")
+
+        option_obj:set_finalized_setting(new_setting)
+
+    end
+
+    mct.ui.changed_settings[self:get_key()] = nil
+end
+
+function mct_mod:load_finalized_settings()
     local options = self:get_options()
 
     local ret = {}
@@ -551,8 +582,6 @@ function mct_mod:finalize_settings()
     end
 
     self._finalized_settings = ret
-
-    return ret
 end
 
 --- Returns the `finalized_settings` field of this `mct_mod`.
