@@ -37,7 +37,7 @@ function mod_configuration_tool:init()
     self:log_init()
 
     -- load modules!
-    local ok, err = pcall(function()
+    --local ok, err = pcall(function()
         self:log("********\nLOADING INTERNAL MODULES\n********")
 
         -- add the modules and modules/extern/ paths to the Lua field
@@ -62,8 +62,8 @@ function mod_configuration_tool:init()
         self:load_mods()
 
         --self:load_and_start(loading_game_context, is_mp)
-    end)
-    if not ok then self:log(err) end
+    --end)
+    --if not ok then self:log(err) end
 end
 
 --- triggers the listeners for MP communication events!
@@ -91,7 +91,7 @@ function mod_configuration_tool:mp_prep()
 end
 
 function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
-    local ok, err = pcall(function()
+    --local ok, err = pcall(function()
     self:init()
 
     core:add_listener(
@@ -285,7 +285,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         end,
         true
     )
-end) if not ok then self:error(err) end
+--end) if not ok then self:error(err) end
 end
 
 function mod_configuration_tool:log_init()

@@ -537,7 +537,7 @@ function settings:load()
         local all_mods = mct:get_mods()
 
         for mod_key, mod_obj in pairs(all_mods) do
-            mct:log("Loading settings for mod ["..mod_key.."].")
+            --mct:log("Loading settings for mod ["..mod_key.."].")
 
             -- check if there's any saved data for this mod obj
             local data = content[mod_key]
@@ -557,9 +557,9 @@ function settings:load()
                     if not is_nil(saved_data) then
                         setting = saved_data._setting
                     else -- this is a new setting!
-                        mct:log("New setting found! ["..option_key.."]")
+                        --mct:log("New setting found! ["..option_key.."]")
                         if is_nil(self.new_settings[mod_key]) then
-                            mct:log("?")
+                            --mct:log("?")
                             self.new_settings[mod_key] = {}
                             --mct:log("??")
                         end
@@ -586,7 +586,7 @@ function settings:load()
                 -- set the finalized setting and read only stuffs
                 option_obj:set_finalized_setting(setting, true)
 
-                mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
+                --mct:log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
 
                 -- remove this from `data`, so non-existent settings will be cached
                 if is_table(data) then
@@ -613,11 +613,10 @@ function settings:load()
 
         --self:finalize()
 
-        mct:log(tostring(any_added))
+        --mct:log(tostring(any_added))
         if any_added then
             --mct:log("does this exist")
             mct.ui:add_ui_created_callback(function()
-                local ok, err = pcall(function()
                 local mod_keys = {}
                 for k, _ in pairs(self.new_settings) do
                     mod_keys[#mod_keys+1] = k
@@ -654,7 +653,6 @@ function settings:load()
                     function()  -- the "cancel" button was triggered - do nuffin, really
                     end
                 )
-            end) if not ok then mct:log(err) end
             end)
         end
     end
