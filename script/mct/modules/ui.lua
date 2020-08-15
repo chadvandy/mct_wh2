@@ -2254,8 +2254,175 @@ core:add_listener(
 
 function ui_obj:add_finalize_settings_popup()
     local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/common ui/dialogue_box")
+    local tx = find_uicomponent(popup, "DY_text")
+    tx:SetVisible(false)
 
+    popup:SetCanResizeWidth(true)
+    popup:SetCanResizeHeight(true)
+
+    -- this is the width/height of the parchment image
+    local pw, ph = popup:GetCurrentStateImageDimensions(3)
+
+    -- this is the width/height of the bottom bar image
+    local bw, bh = popup:GetCurrentStateImageDimensions(2)
+
+    local popup_width = popup:Width() * 2
+    local popup_height = popup:Height() * 2
+
+    --local sx, sy = core:get_screen_resolution()
+    popup:Resize(popup_width, popup_height)
+
+    popup:SetCanResizeWidth(false)
+    popup:SetCanResizeHeight(false)
+
+    -- resize the parchment and bottom bar to prevent ugly stretching
+    local nbw, nbh = popup:GetCurrentStateImageDimensions(2)
+    local height_gap = nbh-bh -- this is the height different in px between the stretched bottom bar and the old bottom bar
+
+    -- set the bottom bar to exactly what it was before (but keep the width, dumbo)
+    popup:ResizeCurrentStateImage(2, nbw, bh)
+
+    -- set the parchment to the bottom bar's height gap
+    local npw, nph = popup:GetCurrentStateImageDimensions(3)
+    nph = nph + height_gap - 10
+    popup:ResizeCurrentStateImage(3, npw, nph)
+
+    -- position/dimensions of the entire popup
+    local tx, ty = popup:Position()
+    local tw, th = popup:Dimensions()
+
+    -- get the proper x/y position of the parchment
+    local w_offset = (tw - npw) / 2
+    local h_offset = ((th - bh) - nph) / 2
+
+    local x,y = tx+w_offset, ty+h_offset
+
+    local top_row = core:get_or_create_component("header", "ui/mct/script_dummy", popup)
+    top_row:SetDockingPoint(2)
+    top_row:SetDockOffset(0,h_offset)
+    top_row:SetCanResizeWidth(true) top_row:SetCanResizeHeight(true)
+
+    --top_row:Resize(npw, top_row:Height())
     
+    local mod_header = core:get_or_create_component("mod_header", "ui/vandy_lib/text/la_gioconda", top_row)
+    local old_value_header = core:get_or_create_component("old_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
+    local new_value_header = core:get_or_create_component("new_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
+
+    top_row:Resize(npw, mod_header:Height() * 1)
+
+    mod_header:SetCanResizeWidth(true) mod_header:SetCanResizeHeight(true)
+    old_value_header:SetCanResizeWidth(true) old_value_header:SetCanResizeHeight(true)
+    new_value_header:SetCanResizeWidth(true) new_value_header:SetCanResizeHeight(true)
+
+    mod_header:Resize(npw * 0.25, mod_header:Height())
+    old_value_header:Resize(npw*0.25, old_value_header:Height())
+    new_value_header:Resize(npw*0.25, new_value_header:Height())
+
+    top_row:SetCanResizeWidth(false) top_row:SetCanResizeHeight(false)
+
+    mod_header:SetDockingPoint(4)
+    mod_header:SetDockOffset(20, 0)
+    mod_header:SetStateText("Mods & Options")
+
+    old_value_header:SetDockingPoint(5)
+    old_value_header:SetDockOffset(-20, 0)
+    old_value_header:SetStateText("Previous Value")
+
+    new_value_header:SetDockingPoint(6)
+    new_value_header:SetDockOffset(-60, 0)
+    new_value_header:SetStateText("New Value")
+
+    nph = nph - top_row:Height()
+    mct:log("h offset: " ..tostring(h_offset))
+    h_offset = h_offset + top_row:Height()
+    mct:log("h offset after: " ..tostring(h_offset))
+
+    -- create the listview on the parchment
+    local list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", popup)
+    list_view:SetDockingPoint(2)
+    list_view:SetDockOffset(0, h_offset)
+    list_view:SetCanResizeHeight(true) list_view:SetCanResizeWidth(true)
+    list_view:Resize(npw,nph)
+    list_view:SetCanResizeHeight(false) list_view:SetCanResizeWidth(false)
+
+    local list_clip = find_uicomponent(list_view, "list_clip")
+    list_clip:SetDockingPoint(0)
+    list_clip:SetDockOffset(0,10)
+    list_clip:SetCanResizeHeight(true) list_clip:SetCanResizeWidth(true)
+    list_clip:Resize(npw,nph-20)
+    list_clip:SetCanResizeHeight(false) list_clip:SetCanResizeWidth(false)
+
+    local list_box = find_uicomponent(list_clip, "list_box")
+    list_box:SetDockingPoint(0)
+    list_box:SetDockOffset(0,0)
+    list_box:SetCanResizeHeight(true)
+    list_box:Resize(npw,nph+100)
+    list_box:SetCanResizeHeight(false) list_box:SetCanResizeWidth(false)
+
+    local vslider = find_uicomponent(list_view, "vslider")
+    vslider:SetDockingPoint(6)
+    vslider:SetDockOffset(-w_offset, 0)
+
+    vslider:SetVisible(true)
+
+
+    -- loop through all changed settings mod-keys and display them!
+    local changed_settings = self.changed_settings
+
+    local ok, err = pcall(function()
+
+    for mod_key, mod_data in pairs(changed_settings) do
+        -- add text row with the mod key
+        local mod_display = core:get_or_create_component("mod_"..mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
+        local mod_obj = mct:get_mod_by_key(mod_key)
+        mod_display:SetStateText(mod_obj:get_title())
+
+        mod_display:SetDockOffset(10, 0)
+
+        -- loop through all changed options and display them!
+        for option_key, option_data in pairs(mod_data) do
+            -- add a full row to put everything within!
+            local option_row = core:get_or_create_component(mod_key.."_"..option_key, "ui/mct/script_dummy", list_box)
+            option_row:Resize(npw, nph * 0.10)
+
+            local option_obj = mod_obj:get_option_by_key(option_key)
+
+            local option_display = core:get_or_create_component(mod_key.."_"..option_key, "ui/vandy_lib/text/la_gioconda", option_row)
+            option_display:SetStateText(option_obj:get_text())
+            option_display:SetDockingPoint(4)
+            option_display:SetDockOffset(20, 0)
+
+            local old_value = option_data.old_value
+            local new_value = option_data.new_value
+
+            local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda", option_row)
+            old_value_uic:SetStateText(tostring(old_value))
+            old_value_uic:SetDockingPoint(5)
+            old_value_uic:SetDockOffset(-20, 0)
+
+            local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+            old_value_checkbox:SetState("active")
+            old_value_checkbox:SetDockingPoint(5)
+            old_value_checkbox:SetDockOffset(-5, 0)
+
+            local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda", option_row)
+            new_value_uic:SetStateText(tostring(new_value))
+            new_value_uic:SetDockingPoint(6)
+            new_value_uic:SetDockOffset(-60, 0)
+
+            local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+            new_value_checkbox:SetState("selected")
+            new_value_checkbox:SetDockingPoint(6)
+            new_value_checkbox:SetDockOffset(-45, 0)
+        end
+    end
+end) if not ok then mct:error(err) end
+
+    list_box:Layout()
+
+    list_box:SetCanResizeHeight(true)
+    list_box:Resize(list_box:Width(), list_box:Height() + 100)
+    list_box:SetCanResizeHeight(false)
 end
 
 -- Finalize settings/print to settings file
@@ -2267,8 +2434,9 @@ core:add_listener(
     end,
     function(context)
         -- create the popup 
-        mct:finalize()
-        ui_obj:set_actions_states()
+        ui_obj:add_finalize_settings_popup()
+        --[[mct:finalize()
+        ui_obj:set_actions_states()]]
     end,
     true
 )
