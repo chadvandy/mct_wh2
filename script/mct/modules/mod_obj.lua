@@ -509,8 +509,8 @@ function mct_mod:revert_to_defaults()
         local default_val = option_obj:get_default_value()
 
         if current_val ~= default_val then
-            --option_obj:set_selected_setting(default_val)
-            option_obj:ui_select_value(default_val)
+            option_obj:set_selected_setting(default_val)
+            --option_obj:ui_select_value(default_val)
         else
             mct:log("currently on default value")
         end

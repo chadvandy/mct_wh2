@@ -499,6 +499,8 @@ function ui_obj:populate_profiles_dropdown_box()
     local popup_list = find_uicomponent(popup_menu, "popup_list")
     local selected_tx = find_uicomponent(profiles_dropdown, "dy_selected_txt")
 
+    selected_tx:SetStateText("")
+
     local all_profiles = mct.settings:get_all_profile_keys()
 
     popup_list:DestroyChildren()
@@ -512,9 +514,10 @@ function ui_obj:populate_profiles_dropdown_box()
 
         for i = 1, #all_profiles do
             local profile_key = all_profiles[i]
-            if selected_boi == "" or selected_boi == nil and i == 1 then
+
+            --[[if selected_boi == "" or selected_boi == nil and i == 1 then
                 mct.settings:set_selected_profile(profile_key)
-            end
+            end]]
 
             local new_entry = core:get_or_create_component(profile_key, dropdown_option_template, popup_list)
             new_entry:SetTooltipText("", true)
@@ -1829,11 +1832,11 @@ function ui_obj.new_checkbox(self, option_obj, row_parent)
     -- returns the default value if none has been selected
     local default_val = option_obj:get_selected_setting()
 
-    if default_val == true then
+    --[[if default_val == true then
         new_uic:SetState("selected")
     else
         new_uic:SetState("active")
-    end
+    end]]
 
     option_obj:set_selected_setting(default_val, true)
 
@@ -2185,7 +2188,7 @@ core:add_listener(
 
         -- this operation is set externally (so we can perform the same operation outside of here)
         local ok, err = pcall(function()
-        option_obj:ui_select_value(uic:Id())
+        option_obj:set_selected_setting(uic:Id())
         end) if not ok then mct:error(err) end
     end,
     true
@@ -2218,9 +2221,9 @@ core:add_listener(
 
         if step == "right_button" then
             mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
-            option_obj:ui_select_value(option_obj:get_selected_setting() + step_size)
+            option_obj:set_selected_setting(option_obj:get_selected_setting() + step_size)
         elseif step == "left_button" then
-            option_obj:ui_select_value(option_obj:get_selected_setting() - step_size)
+            option_obj:set_selected_setting(option_obj:get_selected_setting() - step_size)
         end
     end) if not ok then mct:error(err) end
     end,
@@ -2247,7 +2250,7 @@ core:add_listener(
             return false
         end
 
-        option_obj:ui_select_value(not option_obj:get_selected_setting())
+        option_obj:set_selected_setting(not option_obj:get_selected_setting())
     end,
     true
 )

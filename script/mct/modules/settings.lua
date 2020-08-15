@@ -110,8 +110,9 @@ function settings:read_profiles_file()
 
         self.profiles[profile_key] = profile_data
 
+        -- TODO temporarily disable this - start with no prof's selected!
         if profile_data.selected then
-            self:set_selected_profile(profile_key)
+            --self:set_selected_profile(profile_key)
         end
     end
 end) if not ok then mct:error(err) end end
@@ -216,13 +217,18 @@ function settings:apply_profile_with_key(key)
 
     local profile_settings = self.profiles[key].settings
 
+    mct:log("applying profile with key ["..key.."].")
+
     for mod_key, mod_data in pairs(profile_settings) do
+        mct:log("in mct_mod ["..mod_key.."]")
         local mod_obj = mct:get_mod_by_key(mod_key)
 
         for option_key, selected_setting in pairs(mod_data) do
             local option_obj = mod_obj:get_option_by_key(option_key)
 
-            option_obj:ui_select_value(selected_setting)
+            if selected_setting ~= option_obj:get_finalized_setting() then
+                option_obj:set_selected_setting(selected_setting)
+            end
         end
     end
 end

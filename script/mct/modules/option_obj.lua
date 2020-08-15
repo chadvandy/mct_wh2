@@ -537,6 +537,11 @@ function mct_option:set_selected_setting(val, is_creation)
             mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
         end
 
+        -- call ui_select_value if the UI exists
+        if is_uicomponent(self:get_uics()[1]) then
+            self:ui_select_value(val)
+        end
+
         --[[if not event_free then
             -- run the callback, passing the mct_option along as an arg
             self:process_callback()
@@ -569,7 +574,7 @@ function mct_option:ui_select_value(val)
         --local current_state = self:get_selected_setting()
         --local new_state = not current_state
 
-        self:set_selected_setting(val)
+        --self:set_selected_setting(val)
 
         mct.ui.locally_edited = true
 
@@ -637,7 +642,7 @@ function mct_option:ui_select_value(val)
         local new_num = round(val, precision, true)
         --local new_str = round(val, precision, false)
 
-        self:set_selected_setting(new_num)
+        --self:set_selected_setting(new_num)
 
         local current = self:get_selected_setting()
         current = round(current, precision, true)
@@ -681,7 +686,7 @@ function mct_option:ui_select_value(val)
 
         -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
         mct.ui:uic_SetState(new_selected_uic, "selected")
-        self:set_selected_setting(val)
+        --self:set_selected_setting(val)
 
         -- set the UI obj's "locally_edited" field as true so the close button will know!
         mct.ui.locally_edited = true
@@ -943,11 +948,11 @@ function mct_option:slider_set_min_max(min, max)
         local current_val = self:get_selected_setting()
 
         if current_val > max then
-            self:ui_select_value(max)
+            self:set_selected_setting(max)
         elseif current_val < min then
-            self:ui_select_value(min)
+            self:set_selected_setting(min)
         else
-            self:ui_select_value(current_val)
+            self:set_selected_setting(current_val)
         end
     end
 end
