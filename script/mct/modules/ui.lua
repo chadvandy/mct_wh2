@@ -2217,7 +2217,6 @@ function ui_obj:add_finalize_settings_popup()
     popup:RegisterTopMost()
 
     popup:LockPriority()
-    
 
     -- this is the width/height of the parchment image
     local pw, ph = popup:GetCurrentStateImageDimensions(3)
