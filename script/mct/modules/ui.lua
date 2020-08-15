@@ -2213,6 +2213,12 @@ function ui_obj:add_finalize_settings_popup()
     popup:SetCanResizeWidth(true)
     popup:SetCanResizeHeight(true)
 
+    -- grey out the rest of the world
+    popup:RegisterTopMost()
+
+    popup:LockPriority()
+    
+
     -- this is the width/height of the parchment image
     local pw, ph = popup:GetCurrentStateImageDimensions(3)
 
@@ -2227,6 +2233,7 @@ function ui_obj:add_finalize_settings_popup()
 
     popup:SetCanResizeWidth(false)
     popup:SetCanResizeHeight(false)
+
 
     -- resize the parchment and bottom bar to prevent ugly stretching
     local nbw, nbh = popup:GetCurrentStateImageDimensions(2)
