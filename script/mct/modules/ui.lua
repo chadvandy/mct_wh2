@@ -397,11 +397,12 @@ function ui_obj:open_frame()
 
         -- setup the actions panel UI (buttons + profiles)
         self:create_actions_panel()
-        self:populate_profiles_dropdown_box()
-        self:set_actions_states()
 
         -- create the MCT row first
         self:new_mod_row(mct:get_mod_by_key("mct_mod"))
+
+        self:populate_profiles_dropdown_box()
+        self:set_actions_states()
 
         local ordered_mod_keys = {}
         for n in pairs(mct._registered_mods) do
@@ -441,7 +442,9 @@ function ui_obj:set_actions_states()
     local profiles_apply = find_uicomponent(button_parent, "mct_profiles_apply")
 
     local selected_mod_key = mct:get_selected_mod_name()
+    local selected_mod = mct:get_mod_by_key(selected_mod_key)
 
+    local revert_to_defaults = find_uicomponent(actions_panel, "mct_revert_to_default")
     local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
     local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
 
@@ -473,6 +476,12 @@ function ui_obj:set_actions_states()
             -- changed settings - unlock!
             mct_finalize_settings_on_mod:SetState("active")
         end
+    end
+
+    if selected_mod:are_any_settings_not_default() then
+        revert_to_defaults:SetState("active")
+    else
+        revert_to_defaults:SetState("inactive")
     end
 end
 
@@ -999,11 +1008,15 @@ function ui_obj:create_actions_panel()
     revert_to_default:SetDockingPoint(8)
     revert_to_default:SetDockOffset(0, revert_to_default:Height() * -2.2)
 
+    local revert_to_default_txt = find_uicomponent(revert_to_default, "button_txt")
+    revert_to_default_txt:SetState("inactive")
+    revert_to_default_txt:SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
+    revert_to_default_txt:SetState("active")
+    revert_to_default_txt:SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
+
     revert_to_default:SetTooltipText(effect.get_localised_string("mct_button_revert_to_default_tt"), true)
-    find_uicomponent(revert_to_default, "button_txt"):SetStateText(effect.get_localised_string("mct_button_revert_to_default"))
 
     self.actions_panel = actions_panel
-
 end
 
 function ui_obj:close_frame()

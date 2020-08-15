@@ -61,7 +61,7 @@ core:add_listener(
     false
 )
 
-real_timer.register_repeating("check_for_da_button", 1)
+real_timer.register_singleshot("check_for_da_button", 1)
 
 core:add_listener(
     "check_for_finalization",

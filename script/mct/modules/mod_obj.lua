@@ -501,7 +501,7 @@ end
 -- TODO change this to use changed_settings? 
 --- Set all options to their default value in the UI
 function mct_mod:revert_to_defaults()
-    mct:log("Reverting to defaults for mod ["..self:get_key().."]")
+    --mct:log("Reverting to defaults for mod ["..self:get_key().."]")
     local all_options = self:get_options()
 
     for option_key, option_obj in pairs(all_options) do
@@ -512,9 +512,25 @@ function mct_mod:revert_to_defaults()
             option_obj:set_selected_setting(default_val)
             --option_obj:ui_select_value(default_val)
         else
-            mct:log("currently on default value")
+            --mct:log("currently on default value")
         end
     end
+end
+
+--- Check if any selected settings are not default!
+function mct_mod:are_any_settings_not_default()
+    local all_options = self:get_options()
+
+    for option_key, option_obj in pairs(all_options) do
+        local current_val = option_obj:get_selected_setting()
+        local default_val = option_obj:get_default_value()
+
+        if current_val ~= default_val then
+            return true
+        end
+    end
+
+    return false
 end
 
 --- Used when loading the mct_settings.lua file.
