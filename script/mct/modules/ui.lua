@@ -2256,9 +2256,8 @@ function ui_obj:add_finalize_settings_popup()
 
     local x,y = tx+w_offset, ty+h_offset
 
-    mct:log("header start")
     local top_row = core:get_or_create_component("header", "ui/mct/script_dummy", popup)
-    mct:log("header end")
+
     top_row:SetDockingPoint(2)
     top_row:SetDockOffset(0,h_offset)
     top_row:SetCanResizeWidth(true) top_row:SetCanResizeHeight(true)
@@ -2281,17 +2280,21 @@ function ui_obj:add_finalize_settings_popup()
 
     top_row:SetCanResizeWidth(false) top_row:SetCanResizeHeight(false)
 
+    local mod_header_text = effect.get_localised_string("mct_finalize_settings_popup_mod_header")
+    local old_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_old_value_header")
+    local new_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_new_value_header")
+
     mod_header:SetDockingPoint(4)
     mod_header:SetDockOffset(20, 0)
-    mod_header:SetStateText("Mods & Options")
+    mod_header:SetStateText(mod_header_text)
 
     old_value_header:SetDockingPoint(5)
     old_value_header:SetDockOffset(-20, 0)
-    old_value_header:SetStateText("Previous Value")
+    old_value_header:SetStateText(old_value_header_text)
 
     new_value_header:SetDockingPoint(6)
     new_value_header:SetDockOffset(-60, 0)
-    new_value_header:SetStateText("New Value")
+    new_value_header:SetStateText(new_value_header_text)
 
     nph = nph - top_row:Height()
     mct:log("h offset: " ..tostring(h_offset))
@@ -2334,13 +2337,12 @@ function ui_obj:add_finalize_settings_popup()
     
     local reverted_options = {}
 
-    mct:log("starting the lbox")
+
 
     for mod_key, mod_data in pairs(changed_settings) do
         -- add text row with the mod key
-        mct:log("mod ["..mod_key.."] start")
         local mod_display = core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
-        mct:log("header maded")
+
         local mod_obj = mct:get_mod_by_key(mod_key)
         mod_display:SetStateText(mod_obj:get_title())
 
@@ -2351,15 +2353,13 @@ function ui_obj:add_finalize_settings_popup()
         -- loop through all changed options and display them!
         for option_key, option_data in pairs(mod_data) do
             -- add a full row to put everything within!
-            mct:log("option ["..option_key.."] start")
             local option_row = core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
-            mct:log("option_row crafted")
+
             option_row:Resize(npw, nph * 0.10)
 
             local option_obj = mod_obj:get_option_by_key(option_key)
 
             local option_display = core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
-            mct:log("option_display crafted")
 
             option_display:SetStateText(option_obj:get_text())
             option_display:SetDockingPoint(4)
@@ -2371,16 +2371,12 @@ function ui_obj:add_finalize_settings_popup()
             local old_value_txt = tostring(old_value)
             local new_value_txt = tostring(new_value)
 
-            mct:log("old value text: "..old_value_txt)
-            mct:log("new value text: "..new_value_txt)
-
             local option_type = option_obj:get_type()
             local values = option_obj:get_values()
 
             if option_type == "dropdown" then
                 for i = 1, #values do
                     local value = values[i]
-                    mct:log("in value key ["..value.key.."] in dropdown")
                     if value.key == old_value then
                         old_value_txt = value.text
                     elseif value.key == new_value then
@@ -2392,29 +2388,23 @@ function ui_obj:add_finalize_settings_popup()
                 new_value_txt = option_obj:slider_get_precise_value(new_value, true)
             end
 
-            mct:log("old value text: "..old_value_txt)
-            mct:log("new value text: "..new_value_txt)
 
             local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda", option_row)
-            mct:log("it's definitely this")
             old_value_uic:SetStateText(old_value_txt)
             old_value_uic:SetDockingPoint(5)
             old_value_uic:SetDockOffset(-20, 0)
 
             local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-            mct:log("doodoo")
             old_value_checkbox:SetState("active")
             old_value_checkbox:SetDockingPoint(5)
             old_value_checkbox:SetDockOffset(-5, 0)
 
             local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda", option_row)
-            mct:log("doodoo 2")
             new_value_uic:SetStateText(new_value_txt)
             new_value_uic:SetDockingPoint(6)
             new_value_uic:SetDockOffset(-60, 0)
 
             local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-            mct:log("doodoo 3")
             new_value_checkbox:SetState("selected")
             new_value_checkbox:SetDockingPoint(6)
             new_value_checkbox:SetDockOffset(-45, 0)
@@ -2439,7 +2429,6 @@ function ui_obj:add_finalize_settings_popup()
                     local opposite_uic = nil
                     local value = nil
 
-                    mct:log("status: "..status)
         
                     is_new_value = not is_new_value
 
