@@ -549,6 +549,54 @@ function mct_option:set_selected_setting(val, is_creation)
     end
 end
 
+function mct_option:slider_get_precise_value(value, as_string, override_precision)
+    if not self:get_type() == "slider" then
+        -- errmsg
+        return false
+    end
+
+    if not is_number(value) then
+        -- errmsg
+        return false
+    end
+
+    if is_nil(as_string) then
+        as_string = false
+    end
+
+    if not is_boolean(as_string) then
+        -- errmsg
+        return false
+    end
+
+
+    local function round_num(num, numDecimalPlaces)
+        local mult = 10^(numDecimalPlaces or 0)
+        if num >= 0 then
+            return math.floor(num * mult + 0.5) / mult
+        else
+            return math.ceil(num * mult - 0.5) / mult
+        end
+    end
+
+    local function round(num, places, is_string)
+        if not is_string then
+            return round_num(num, places)
+        end
+
+        return string.format("%."..(places or 0) .. "f", num)
+    end
+
+    local values = self:get_values()
+    local precision = values.precision
+
+    if is_number(override_precision) then
+        precision = override_precision
+    end
+
+    return round(value, precision, as_string)
+end
+
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 function mct_option:ui_select_value(val)
@@ -557,9 +605,9 @@ function mct_option:ui_select_value(val)
         return false
     end
 
-    local uic_test = self:get_uics()[1]
+    local option_uic = self:get_uics()[1]
 
-    if not is_uicomponent(uic_test) then
+    if not is_uicomponent(option_uic) then
         mct:error("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
         return false
     end
@@ -568,15 +616,6 @@ function mct_option:ui_select_value(val)
     -- trigger separate functions for the types!
     if self:get_type() == "checkbox" then
         -- grab the checkbox UI
-        local option_uic = self:get_uics()[1]
-
-        -- this will return true/false for checked/unchecked
-        --local current_state = self:get_selected_setting()
-        --local new_state = not current_state
-
-        --self:set_selected_setting(val)
-
-        mct.ui.locally_edited = true
 
         local state = "selected"
 
@@ -588,40 +627,22 @@ function mct_option:ui_select_value(val)
     end
 
     if self:get_type() == "slider" then
-        local function round_num(num, numDecimalPlaces)
-            local mult = 10^(numDecimalPlaces or 0)
-            if num >= 0 then
-                return math.floor(num * mult + 0.5) / mult
-            else
-                return math.ceil(num * mult - 0.5) / mult
-            end
-        end
-    
-        local function round(num, places, is_num)
-            if is_num then
-                return round_num(num, places)
-            end
-    
-            return string.format("%."..(places or 0) .. "f", num)
-        end
-
-        mct:log("ui select val for slider")
-        mct:log("new val is "..val)
-
-        local option_uic = self:get_uics()[1]
+        --mct:log("ui select val for slider")
+        --mct:log("new val is "..val)
 
         local right_button = find_uicomponent(option_uic, "right_button")
         local left_button = find_uicomponent(option_uic, "left_button")
         local text_input = find_uicomponent(option_uic, "text_input")
 
-        mct:log("ui select val for slider 2")
+        --mct:log("ui select val for slider 2")
 
         local values = self:get_values()
         local max = values.max
         local min = values.min
-        local precision = values.precision
+        local step_size = values.step_size
+        local step_size_precision = values.step_size_precision
 
-        mct:log("ui select val for slider 3")
+        --mct:log("ui select val for slider 3")
 
         -- enable both buttons & push new value
         right_button:SetState("active")
@@ -639,29 +660,20 @@ function mct_option:ui_select_value(val)
             val = min
         end
 
-        local new_num = round(val, precision, true)
-        --local new_str = round(val, precision, false)
+        -- TODO move step size edits out of this one?
+        local step_size_str = self:slider_get_precise_value(step_size, true, step_size_precision)
 
-        --self:set_selected_setting(new_num)
+        left_button:SetTooltipText("-"..step_size_str, true)
+        right_button:SetTooltipText("+"..step_size_str, true)
 
-        local current = self:get_selected_setting()
-        current = round(current, precision, true)
-
-        mct:log("ui select val for slider 4")
-
-        local current_str = round(current, precision, false)
+        local current = self:slider_get_precise_value(self:get_selected_setting(), false)
+        local current_str = self:slider_get_precise_value(self:get_selected_setting(), true)
 
         text_input:SetStateText(tostring(current_str))
-
-        if current ~= self:get_finalized_setting() then
-            mct.ui.locally_edited = true
-        end
+        text_input:SetInteractive(false)
     end
 
-    if self:get_type() == "dropdown" then
-        -- grab the current setting, so we can deselect that UIC
-        local current_val = self:get_selected_setting()
-        
+    if self:get_type() == "dropdown" then        
         -- grab necessary UIC's
         local dropdown_box_uic = self:get_uic_with_key("mct_dropdown_box")
         if not is_uicomponent(dropdown_box_uic) then
@@ -672,24 +684,28 @@ function mct_option:ui_select_value(val)
         -- ditto
         local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
         local popup_list = UIComponent(popup_menu:Find("popup_list"))
-        local currently_selected_uic = find_uicomponent(popup_list, current_val)
         local new_selected_uic = find_uicomponent(popup_list, val)
 
+        local currently_selected_uic = nil
+
+        for i = 0, popup_list:ChildCount() - 1 do
+            local child = UIComponent(popup_list:Find(i))
+            if child:CurrentState() == "selected" then
+                currently_selected_uic = child
+            end
+        end
 
         -- unselected the currently-selected dropdown option
         if is_uicomponent(currently_selected_uic) then
             mct.ui:uic_SetState(currently_selected_uic, "unselected")
         else
-            mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no currently_selected_uic with key ["..tostring(current_val).."] was found internally. Aborting!")
-            return false
+            mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no currently_selected_uic with key was found internally. Investigate!")
+            --return false
         end
 
         -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
         mct.ui:uic_SetState(new_selected_uic, "selected")
         --self:set_selected_setting(val)
-
-        -- set the UI obj's "locally_edited" field as true so the close button will know!
-        mct.ui.locally_edited = true
 
         -- set the state text of the dropdown box to be the state text of the row
         local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
