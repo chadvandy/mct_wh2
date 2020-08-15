@@ -1790,6 +1790,12 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
 
+            -- TODO set_uics has to be better and set elsewhere, so I don't have to do this here
+            if option_obj:get_type() == "dropdown" then
+                -- TODO this should *really* be called in new_dropdown_box
+                self:refresh_dropdown_box(option_obj)
+            end
+
             option_obj:ui_select_value(option_obj:get_selected_setting(), true)
 
             -- TODO do all this shit through /script/campaign/mod/ or similar
@@ -1859,42 +1865,34 @@ function ui_obj.new_textbox(self, option_obj, row_parent)
     return new_uic
 end
 
--- TODO dynamic dropdown box stuff!
-function ui_obj.new_dropdown_box(self, option_obj, row_parent)
-    local templates = option_obj:get_uic_template()
-    local box = "ui/vandy_lib/dropdown_button_no_event"
-    local dropdown_option = templates[2]
+--- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
+-- Allows for dynamic dropdowns!
+function ui_obj:refresh_dropdown_box(option_obj)
+    local uic = option_obj:get_uic_with_key("mct_dropdown_box")
 
-    local new_uic = core:get_or_create_component("mct_dropdown_box", box, row_parent)
-    new_uic:SetVisible(true)
+    local popup_menu = UIComponent(uic:Find("popup_menu"))
+    local popup_list = UIComponent(popup_menu:Find("popup_list"))
 
-    local popup_menu = find_uicomponent(new_uic, "popup_menu")
-    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
-    popup_menu:SetVisible(false)
-    --popup_menu:SetInteractive(true)
+    -- clear out any extant chil'uns
+    popup_list:DestroyChildren()
 
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
-    popup_list:PropagatePriority(popup_menu:Priority()+1)
-    --popup_list:SetInteractive(true)
+    local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
+    
+    local selected_value = option_obj:get_selected_setting()
 
-    local selected_tx = find_uicomponent(new_uic, "dy_selected_txt")
+    local dropdown_values = option_obj:get_values()
 
-    local dummy = find_uicomponent(popup_list, "row_example")
+    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
 
-    local w = 0
-    local h = 0
+    for i = 1, #dropdown_values do
+        local dropdown_value = dropdown_values[i]
 
-    local default_value = option_obj:get_selected_setting()
+        local key = dropdown_value.key
+        local text = dropdown_value.text
+        local tt = dropdown_value.tt
 
-    local values = option_obj:get_values()
-    for i = 1, #values do
-        local value = values[i]
-        local key = value.key
-        local tt = value.tt
-        local text = value.text
-
-        local new_entry = core:get_or_create_component(key, dropdown_option, popup_list)
-
+        local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
+        
         -- if they're localised text strings, localise them!
         do
             local test_tt = effect.get_localised_string(tt)
@@ -1922,19 +1920,18 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
         txt:SetStateText(text)
 
         -- check if this is the default value
-        if default_value == key then
+        if selected_value == key then
             new_entry:SetState("selected")
 
             -- add the value's tt to the actual dropdown box
             selected_tx:SetStateText(text)
-            new_uic:SetTooltipText(tt, true)
+            uic:SetTooltipText(tt, true)
         end
 
         new_entry:SetCanResizeHeight(false)
         new_entry:SetCanResizeWidth(false)
     end
 
-    self:delete_component(dummy)
 
     local border_top = find_uicomponent(popup_menu, "border_top")
     local border_bottom = find_uicomponent(popup_menu, "border_bottom")
@@ -1946,7 +1943,7 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
 
     popup_list:SetCanResizeHeight(true)
     popup_list:SetCanResizeWidth(true)
-    popup_list:Resize(w * 1.1, h * (#values) + 10)
+    popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
     --popup_list:MoveTo(popup_menu:Position())
     popup_list:SetDockingPoint(2)
     --popup_list:SetDocKOffset()
@@ -1959,7 +1956,28 @@ function ui_obj.new_dropdown_box(self, option_obj, row_parent)
     local w, h = popup_list:Bounds()
     popup_menu:Resize(w,h)
 
-    --option_obj:ui_select_value(default_value)
+end
+
+-- TODO dynamic dropdown box stuff!
+function ui_obj.new_dropdown_box(self, option_obj, row_parent)
+    local templates = option_obj:get_uic_template()
+    local box = "ui/vandy_lib/dropdown_button_no_event"
+    local dropdown_option = templates[2]
+
+    local new_uic = core:get_or_create_component("mct_dropdown_box", box, row_parent)
+    new_uic:SetVisible(true)
+
+    local popup_menu = find_uicomponent(new_uic, "popup_menu")
+    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
+    popup_menu:SetVisible(false)
+    --popup_menu:SetInteractive(true)
+
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+    popup_list:PropagatePriority(popup_menu:Priority()+1)
+    --popup_list:SetInteractive(true)
+
+
+
 
     return new_uic
 end

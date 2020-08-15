@@ -1050,6 +1050,11 @@ function mct_option:add_dropdown_value(key, text, tt, is_default)
     if is_default then
         self:set_default_value(key)
     end
+
+    -- if the UI already exists, refresh the dropdown box!
+    if is_uicomponent(self:get_uics()[1]) then
+        mct.ui:refresh_dropdown_box(self)
+    end
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
