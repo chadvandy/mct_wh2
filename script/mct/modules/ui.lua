@@ -83,17 +83,17 @@ function ui_obj:set_changed_setting(mod_key, option_key, new_value)
     end
 
     -- if the new value is the finalized setting, remove it
-    if old == new_value then
+    --[[if old == new_value then
         self.changed_settings[mod_key][option_key] = nil
 
         -- check to see if the mod_key obj needs to be removed too
         if next(self.changed_settings[mod_key]) == nil then
             self.changed_settings[mod_key] = nil
         end
-    else
+    else]]
         self.changed_settings[mod_key][option_key]["old_value"] = old
         self.changed_settings[mod_key][option_key]["new_value"] = new_value
-    end
+    --end
 end
 
 function ui_obj:delete_component(uic)
@@ -1790,7 +1790,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
 
-            option_obj:ui_select_value(option_obj:get_selected_setting())
+            option_obj:ui_select_value(option_obj:get_selected_setting(), true)
 
             -- TODO do all this shit through /script/campaign/mod/ or similar
 
@@ -2325,6 +2325,8 @@ function ui_obj:add_finalize_settings_popup()
 
     -- loop through all changed settings mod-keys and display them!
     local changed_settings = self.changed_settings
+    
+    local reverted_options = {}
 
     mct:log("starting the lbox")
 
@@ -2337,6 +2339,8 @@ function ui_obj:add_finalize_settings_popup()
         mod_display:SetStateText(mod_obj:get_title())
 
         mod_display:SetDockOffset(10, 0)
+
+        reverted_options[mod_key] = {}
 
         -- loop through all changed options and display them!
         for option_key, option_data in pairs(mod_data) do
@@ -2437,20 +2441,23 @@ function ui_obj:add_finalize_settings_popup()
                         value = new_value
                         new_value_checkbox:SetState("selected")
                         old_value_checkbox:SetState("active")
+                        reverted_options[mod_key][option_key] = nil
                     else
+                        reverted_options[mod_key][option_key] = true
                         value = old_value
                         new_value_checkbox:SetState("active")
                         old_value_checkbox:SetState("selected")
                     end
 
-                    local  ok, err = pcall(function()
+                    local ok, err = pcall(function()
 
                     local mod_obj = mct:get_mod_by_key(mod_key)
                     local option_obj = mod_obj:get_option_by_key(option_key)
 
-                    -- TODO hook this up, dummy :)
-                    -- TODO this is going to fail on non-strings
-                    option_obj:set_selected_setting(value) end) if not ok then mct:error(err) end
+                    -- TODO don't change the background UI
+                    self:set_changed_setting(mod_key, option_key, value)
+                    --option_obj:set_selected_setting(value)
+                    end) if not ok then mct:error(err) end
                 end,
                 true
             )
@@ -2469,11 +2476,28 @@ function ui_obj:add_finalize_settings_popup()
 
             -- if accepted, Finalize!
             if context.string == "button_tick" then
+                -- loop through reverted-options to refresh their UI
+                --[[mct:log("checking reverted options")
+                for mod_key, data in pairs(reverted_options) do
+                    mct:log("checking mod "..mod_key)
+                    local mod_obj = mct:get_mod_by_key(mod_key)
+
+                    for option_key, _ in pairs(data) do
+                        mct:log("checking option "..option_key)
+                        local option_obj = mod_obj:get_option_by_key(option_key)
+
+                        local option_data = self.changed_settings[mod_key][option_key]
+                        mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
+                        option_obj:set_selected_setting(option_data.old_value)
+                    end
+                end ]]
+
                 mct:finalize()
                 ui_obj:set_actions_states()
             else
                 -- nada
             end
+
         end,
         false
     )

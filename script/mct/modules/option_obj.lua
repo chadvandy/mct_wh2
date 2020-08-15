@@ -473,6 +473,9 @@ function mct_option:set_finalized_setting(val, is_event_free)
         local mod = self:get_mod()
         mod._finalized_settings[self:get_key()] = val
 
+        if self:get_selected_setting() ~= val then
+            self:set_selected_setting(val)
+        end
 
         -- trigger an event to listen for externally
         core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
@@ -539,7 +542,7 @@ function mct_option:set_selected_setting(val, is_creation)
 
         -- call ui_select_value if the UI exists
         if is_uicomponent(self:get_uics()[1]) then
-            self:ui_select_value(val)
+            self:ui_select_value(val, true)
         end
 
         --[[if not event_free then
@@ -599,7 +602,8 @@ end
 
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
-function mct_option:ui_select_value(val)
+--- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
+function mct_option:ui_select_value(val, is_new_version)
     if not self:is_val_valid_for_type(val) then
         mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
         return false
@@ -722,6 +726,10 @@ function mct_option:ui_select_value(val)
 
         popup_menu:SetVisible(false)
         popup_menu:RemoveTopMost()
+    end
+
+    if not is_new_version then
+        self:set_selected_seting(val)
     end
 
     mct.ui:set_actions_states()
