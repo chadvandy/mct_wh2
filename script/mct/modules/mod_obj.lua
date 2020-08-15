@@ -575,7 +575,6 @@ function mct_mod:finalize_settings()
         mct:log("Finalizing setting for option ["..option_key.."], changing ["..tostring(old_setting).."] to ["..tostring(new_setting).."].")
 
         option_obj:set_finalized_setting(new_setting)
-
     end
 
     mct.ui.changed_settings[self:get_key()] = nil
