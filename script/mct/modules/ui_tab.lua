@@ -1,4 +1,5 @@
 --- This is the internal functionality to have fully customizable custom tabs for your mct_mod.
+--- @class ui_tab
 
 local mct = mct
 

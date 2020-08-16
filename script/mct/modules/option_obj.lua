@@ -27,21 +27,21 @@ local mct_option = {
 --- @param option_key string
 --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
 function mct_option.new(mod, option_key, type)
-    local self = {}
-    setmetatable(self, {
-        __index = mct_option,
-        __tostring = function() return "MCT_OPTION" end
-    })
+    local new_option = {}
+    setmetatable(new_option, mct_option)
 
-    self._mod = mod
-    self._key = option_key
-    self._type = type or "NULL_TYPE"
+    new_option._mod = mod
+    new_option._key = option_key
+    new_option._type = type or "NULL_TYPE"
     --self._text = text or ""
     --self._tooltip_text = tooltip_text or ""
-    self._values = {}
+    new_option._values = {}
+
+    -- create the wrapped type
+    new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
 
     if type == "slider" then
-        self._values = {
+        new_option._values = {
             min = 0,
             max = 100,
             step_size = 1,
@@ -51,44 +51,86 @@ function mct_option.new(mod, option_key, type)
     end
 
     -- assigned section, used for UI, defaults to the last created section unless one is specified
-    self._assigned_section = mod:get_last_section():get_key()
+    new_option._assigned_section = mod:get_last_section():get_key()
 
     -- add the option to the mct_section
-    self._mod:get_section_by_key(self._assigned_section):assign_option(self)
+    new_option._mod:get_section_by_key(new_option._assigned_section):assign_option(new_option)
 
     -- default setting is the mct_mod default and the one to reset to;
     -- selected setting is the current UI state, defaults to default_setting if no finalized_setting;
     -- finalized setting is the saved setting in the file/etc;
-    self._default_setting = nil
-    self._selected_setting = nil
-    self._finalized_setting = nil
+    new_option._default_setting = nil
+    new_option._selected_setting = nil
+    new_option._finalized_setting = nil
 
     -- whether this option obj is read only for campaign
-    self._read_only = false
+    new_option._read_only = false
 
-    self._local_only = false
-    self._mp_disabled = false
+    new_option._local_only = false
+    new_option._mp_disabled = false
 
     -- the UICs linked to this option (the option + the txt)
-    self._uics = {}
+    new_option._uics = {}
 
     -- UIC options for construction
-    self._uic_visible = true
-    self._uic_locked = false
-    self._uic_lock_reason = {}
-    self._uic_in_ui = true
+    new_option._uic_visible = true
+    new_option._uic_locked = false
+    new_option._uic_lock_reason = {}
+    new_option._uic_in_ui = true
 
-    self._pos = {
+    new_option._pos = {
         x = 0,
         y = 0
     }
 
     -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
-    self._template = self.__templates[type]
+    new_option._template = new_option.__templates[type]
     
     --self._wrapped = wrapped
 
-    return self
+    return new_option
+end
+
+-- if there are any calls on mct_option that don't exist, check if they exist
+-- in the `wrapped` type object.
+function mct_option:__index(attempt)
+    --mct:log("start")
+    --mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
+
+    if type(field) == "nil" then
+        --mct:log("not found, checking wrapped type")
+        local wrapped = rawget(self, "_wrapped_type")
+
+        field = wrapped and wrapped[attempt]
+
+        if type(field) == "function" then
+            --mct:log("func found")
+            retval = function(obj, ...)
+                return field(wrapped, ...)
+            end
+        else
+            --mct:log("non-func found")
+            retval = field
+        end
+    else
+        if type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
+    
+    return retval
+end
+
+function mct_option:__tostring()
+    return "MCT_OPTION"
 end
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
@@ -381,57 +423,16 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
--- TODO put these in wrapped types
+function mct_option:get_wrapped_type()
+    return self._wrapped_type
+end
 
 --- Internal checker to see if the values passed through mct_option methods are valid.
 --- @tparam any val Value being tested for type.
 function mct_option:is_val_valid_for_type(val)
-    local type = self:get_type()
-    if type == "slider" then
-        if not is_number(val) then
-            return false
-        end
+    local wrapped = self:get_wrapped_type()
 
-        local values = self:get_values()
-
-        local min = values.min
-        local max = values.max
-
-        -- TODO handle this better; instead, return the min or max?
-
-        -- min/max is dealt with in the 
-        --if val > max or val < min then
-        --    return false
-        --end
-
-        
-    elseif type == "checkbox" then
-        if not is_boolean(val) then
-            return false
-        end
-    elseif type == "dropdown" then
-        if not is_string(val) then
-            return false
-        end
-
-        local values = self:get_values()
-        
-        -- check if this key exists as a dropdown option
-        local valid = false
-        for i = 1, #values do
-            local test = values[i].key
-
-            if val == test then
-                valid = true
-            end
-        end
-
-        if not valid then
-            return false
-        end
-    end
-
-    return true
+    return wrapped:check_validity(val)
 end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
@@ -503,23 +504,9 @@ function mct_option:get_default_value()
             -- between min/max for sliders
             -- first added option for dropdowns
 
-        local type = self:get_type()
-        local values = self:get_values()
+        local wrapped = self:get_wrapped_type()
 
-        if type == "checkbox" then
-            -- default value as false for checkboxes, because why not
-            self._default_setting = false
-        elseif type == "slider" then
-            local min = values.min
-            local max = values.max
-
-            -- get the "average" of the two numbers, (min+max)/2
-            -- TODO set this with respect for the step sizes, precision, etc
-            self._default_setting = (min+max)/2
-        elseif type == "dropdown" then
-            -- set the default value as the first added dropdown option
-            self._default_setting = values[1]
-        end
+        wrapped:set_default()
     end
 
     return self._default_setting
@@ -552,54 +539,6 @@ function mct_option:set_selected_setting(val, is_creation)
     end
 end
 
-function mct_option:slider_get_precise_value(value, as_string, override_precision)
-    if not self:get_type() == "slider" then
-        -- errmsg
-        return false
-    end
-
-    if not is_number(value) then
-        -- errmsg
-        return false
-    end
-
-    if is_nil(as_string) then
-        as_string = false
-    end
-
-    if not is_boolean(as_string) then
-        -- errmsg
-        return false
-    end
-
-
-    local function round_num(num, numDecimalPlaces)
-        local mult = 10^(numDecimalPlaces or 0)
-        if num >= 0 then
-            return math.floor(num * mult + 0.5) / mult
-        else
-            return math.ceil(num * mult - 0.5) / mult
-        end
-    end
-
-    local function round(num, places, is_string)
-        if not is_string then
-            return round_num(num, places)
-        end
-
-        return string.format("%."..(places or 0) .. "f", num)
-    end
-
-    local values = self:get_values()
-    local precision = values.precision
-
-    if is_number(override_precision) then
-        precision = override_precision
-    end
-
-    return round(value, precision, as_string)
-end
-
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
@@ -616,117 +555,7 @@ function mct_option:ui_select_value(val, is_new_version)
         return false
     end
 
-    -- TODO put these in wrapped option objects
-    -- trigger separate functions for the types!
-    if self:get_type() == "checkbox" then
-        -- grab the checkbox UI
-
-        local state = "selected"
-
-        if val == false then
-            state = "active"
-        end
-
-        mct.ui:uic_SetState(option_uic, state)
-    end
-
-    if self:get_type() == "slider" then
-        --mct:log("ui select val for slider")
-        --mct:log("new val is "..val)
-
-        local right_button = find_uicomponent(option_uic, "right_button")
-        local left_button = find_uicomponent(option_uic, "left_button")
-        local text_input = find_uicomponent(option_uic, "text_input")
-
-        --mct:log("ui select val for slider 2")
-
-        local values = self:get_values()
-        local max = values.max
-        local min = values.min
-        local step_size = values.step_size
-        local step_size_precision = values.step_size_precision
-
-        --mct:log("ui select val for slider 3")
-
-        -- enable both buttons & push new value
-        right_button:SetState("active")
-        left_button:SetState("active")
-
-        if val >= max then
-            right_button:SetState("inactive")
-            left_button:SetState("active")
-
-            val = max
-        elseif val <= min then
-            left_button:SetState("inactive")
-            right_button:SetState("active")
-
-            val = min
-        end
-
-        -- TODO move step size edits out of this one?
-        local step_size_str = self:slider_get_precise_value(step_size, true, step_size_precision)
-
-        left_button:SetTooltipText("-"..step_size_str, true)
-        right_button:SetTooltipText("+"..step_size_str, true)
-
-        local current = self:slider_get_precise_value(self:get_selected_setting(), false)
-        local current_str = self:slider_get_precise_value(self:get_selected_setting(), true)
-
-        text_input:SetStateText(tostring(current_str))
-        text_input:SetInteractive(false)
-    end
-
-    if self:get_type() == "dropdown" then        
-        -- grab necessary UIC's
-        local dropdown_box_uic = self:get_uic_with_key("mct_dropdown_box")
-        if not is_uicomponent(dropdown_box_uic) then
-            mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no dropdown_box_uic was found internally. Aborting!")
-            return false
-        end
-
-        -- ditto
-        local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
-        local popup_list = UIComponent(popup_menu:Find("popup_list"))
-        local new_selected_uic = find_uicomponent(popup_list, val)
-
-        local currently_selected_uic = nil
-
-        for i = 0, popup_list:ChildCount() - 1 do
-            local child = UIComponent(popup_list:Find(i))
-            if child:CurrentState() == "selected" then
-                currently_selected_uic = child
-            end
-        end
-
-        -- unselected the currently-selected dropdown option
-        if is_uicomponent(currently_selected_uic) then
-            mct.ui:uic_SetState(currently_selected_uic, "unselected")
-        else
-            mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no currently_selected_uic with key was found internally. Investigate!")
-            --return false
-        end
-
-        -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
-        mct.ui:uic_SetState(new_selected_uic, "selected")
-        --self:set_selected_setting(val)
-
-        -- set the state text of the dropdown box to be the state text of the row
-        local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
-        local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()
-        local tx = find_uicomponent(dropdown_box_uic, "dy_selected_txt")
-
-        mct.ui:uic_SetStateText(tx, t)
-        mct.ui:uic_SetTooltipText(dropdown_box_uic, tt, true)
-
-        -- set the menu invisible and unclick the box
-        if dropdown_box_uic:CurrentState() == "selected" then
-            mct.ui:uic_SetState(dropdown_box_uic, "active")
-        end
-
-        popup_menu:SetVisible(false)
-        popup_menu:RemoveTopMost()
-    end
+    self:get_wrapped_type():ui_select_value(val)
 
     if not is_new_version then
         self:set_selected_seting(val)
@@ -793,83 +622,7 @@ end
 --- Use `mct_option:set_uic_locked()` for the external version of this.
 --- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
-    local type = self:get_type()
-    local option_uic = self:get_uics()[1]
-    local text_uic = self:get_uic_with_key("text")
-
-    local locked = self:get_uic_locked()
-    local lock_reason = ""
-    if locked then
-        local lock_reason_tab = self._uic_lock_reason 
-        if lock_reason_tab.is_localised then
-            lock_reason = effect.get_localised_string(lock_reason_tab.text)
-        else
-            lock_reason = lock_reason_tab.text
-        end
-
-        if lock_reason == "" then
-            -- revert to default? TODO
-        end
-    end
-    
-    -- TODO lock the text input!
-    if type == "slider" then
-        local left_button = find_uicomponent(option_uic, "left_button")
-        local right_button = find_uicomponent(option_uic, "right_button")
-        --local text_input = find_uicomponent(option_uic, "text_input")
-
-        local state = "active"
-        local tt = self:get_tooltip_text()
-        if locked then
-            state = "inactive"
-            tt = lock_reason .. "\n" .. tt
-        end
-
-        --mct.ui:uic_SetInteractive(text_input, not locked)
-        mct.ui:uic_SetState(left_button, state)
-        mct.ui:uic_SetState(right_button, state)
-        mct.ui:uic_SetTooltipText(text_uic, lock_reason.."\n"..tt, true)
-    end
-
-    if type == "checkbox" then
-        local value = self:get_selected_setting()
-
-        local state = "active"
-        local tt = self:get_tooltip_text()
-
-        if locked then
-            -- disable the checkbox, set it as checked if the finalized setting is true
-            if value == true then
-                state = "selected_inactive"
-            else
-                state = "inactive"
-            end
-            tt = lock_reason .. "\n" .. tt
-        else
-            if value == true then
-                state = "selected"
-            else
-                state = "active"
-            end
-        end
-
-        mct.ui:uic_SetState(option_uic, state)
-        mct.ui:uic_SetTooltipText(text_uic, tt, true)
-    end
-
-    if type == "dropdown" then
-        -- disable the dropdown box
-        local state = "active"
-        local tt = self:get_tooltip_text()
-
-        if locked then
-            state = "inactive"
-            tt = lock_reason .. "\n" .. tt
-        end
-
-        mct.ui:uic_SetState(option_uic, state)
-        mct.ui:uic_SetTooltipText(text_uic, tt, true)
-    end
+    self:get_wrapped_type():ui_change_state()
 end
 
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
@@ -891,170 +644,6 @@ function mct_option:get_selected_setting()
     end
 
     return self._selected_setting
-end
-
----- Set function to set the step size for moving left/right through the slider.
---- Works with floats and other numbers. Use the optional second argument if using floats/decimals
---- @tparam number step_size The number to jump when using the left/right button.
---- @tparam number step_size_precision The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
-function mct_option:slider_set_step_size(step_size, step_size_precision)
-    if not self:get_type() == "slider" then
-        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
-        return false
-    end
-
-    if not is_number(step_size) then
-        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the step size value supplied ["..tostring(step_size).."] is not a number! Returning false.")
-        return false
-    end
-
-    if is_nil(step_size_precision) then
-        step_size_precision = 0
-    end
-
-    if not is_number(step_size_precision) then
-        mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the step size precision value supplied ["..tostring(step_size_precision).."] is not a number! Returning false.")
-        return false
-    end
-
-    self._values.step_size = step_size
-    self._values.step_size_precision = step_size_precision
-end
-
----- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
---- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
---- @tparam number precision The precision used for floats.
-function mct_option:slider_set_precision(precision)
-    if not self:get_type() == "slider" then
-        mct:error("slider_set_precision() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
-        return false
-    end
-
-    if not is_number(precision) then
-        mct:error("slider_set_precision() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(precision).."] is not a number! Returning false.")
-        return false
-    end
-
-    self._values.precision = precision
-end
-
----- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
---- @tparam number min The minimum number the slider value can reach.
---- @tparam number max The maximum number the slider value can reach.
---- @within API
-function mct_option:slider_set_min_max(min, max)
-    if not self:get_type() == "slider" then
-        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")
-        return false
-    end
-
-    if not is_number(min) then
-        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the min value supplied ["..tostring(min).."] is not a number! Returning false.")
-        return false
-    end
-
-    if not is_number(max) then
-        mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the max value supplied ["..tostring(max).."] is not a number! Returning false.")
-        return false
-    end
-
-    --[[if not is_number(current) then
-        mct:error("slider_set_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the current value supplied ["..tostring(current).."] is not a number! Returning false.")
-        return false
-    end]]
-
-    self._values.min = min
-    self._values.max = max
-
-    -- if the UI exists, change the buttons and set the value if it's above the max/below the min
-    local uic = self:get_uics()[1]
-    if is_uicomponent(uic) then
-        local current_val = self:get_selected_setting()
-
-        if current_val > max then
-            self:set_selected_setting(max)
-        elseif current_val < min then
-            self:set_selected_setting(min)
-        else
-            self:set_selected_setting(current_val)
-        end
-    end
-end
-
----- Method to set the `dropdown_values`. This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.
---- ex:
----      mct_option:add_dropdown_values({
----          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
----          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
----      })
---- @within API
-function mct_option:add_dropdown_values(dropdown_table)
-    if not self:get_type() == "dropdown" then
-        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
-        return false
-    end
-
-    if not is_table(dropdown_table) then
-        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the dropdown_table supplied is not a table! Returning false.")
-        return false
-    end
-
-    if is_nil(dropdown_table[1]) then
-        mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the dropdown_table supplied is an empty table! Returning false.")
-        return false
-    end
-
-    for i = 1, #dropdown_table do
-        local dropdown_option = dropdown_table[i]
-        local key = dropdown_option.key
-        local text = dropdown_option.text or ""
-        local tt = dropdown_option.tt or ""
-        local is_default = dropdown_option.default or false
-
-        self:add_dropdown_value(key, text, tt, is_default)
-    end
-end
-
----- Used to create a single dropdown_value; also called within @{mct_option:add_dropdown_values}
---- @tparam string key The unique identifier for this dropdown value.
---- @tparam string text The localised text for this dropdown value.
---- @tparam string tt The localised tooltip for this dropdown value.
---- @tparam boolean is_default Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
-function mct_option:add_dropdown_value(key, text, tt, is_default)
-    if not self:get_type() == "dropdown" then
-        mct:error("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
-        return false
-    end
-
-    if not is_string(key) then
-        mct:error("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the key supplied is not a string! Returning false.")
-        return false
-    end
-
-    text = text or ""
-    tt = tt or ""
-
-    local val = {
-        key = key,
-        text = text,
-        tt = tt
-    }
-
-    self._values[#self._values+1] = val
-
-    -- check if it's the first value being assigned to the dropdown, to give at least one default value
-    if #self._values == 1 then
-        self:set_default_value(key)
-    end
-
-    if is_default then
-        self:set_default_value(key)
-    end
-
-    -- if the UI already exists, refresh the dropdown box!
-    if is_uicomponent(self:get_uics()[1]) then
-        mct.ui:refresh_dropdown_box(self)
-    end
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
