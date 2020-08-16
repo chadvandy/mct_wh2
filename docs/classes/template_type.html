@@ -30,10 +30,6 @@
   <li><a href="../index.html">Index</a></li>
 </ul>
 
-<h2>Contents</h2>
-<ul>
-<li><a href="#Functions">Functions</a></li>
-</ul>
 
 
 <h2>Classes</h2>
@@ -42,8 +38,8 @@
   <li><a href="../classes/mct_mod.html">mct_mod</a></li>
   <li><a href="../classes/mct_option.html">mct_option</a></li>
   <li><a href="../classes/mct_section.html">mct_section</a></li>
-  <li><strong>mct_settings</strong></li>
-  <li><a href="../classes/template_type.html">template_type</a></li>
+  <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><strong>template_type</strong></li>
   <li><a href="../classes/mct_ui.html">mct_ui</a></li>
   <li><a href="../classes/ui_tab.html">ui_tab</a></li>
 </ul>
@@ -61,44 +57,16 @@
 
 <div id="content">
 
-<h1>Class <code>mct_settings</code></h1>
-<p>Settings Object.</p>
-<p> INTERNAL USE ONLY.</p>
+<h1>Class <code>template_type</code></h1>
+<p>Template file for the "types" objects.</p>
+<p> Used for any functions shared by all types, and to catch any type-specific functions being called on the wrong type, ie. calling <code>slider_set_min_max</code> on a dropdown.</p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#settings:load">settings:load ()</a></td>
-	<td class="summary">This is the function that reads the mct_settings.lua file and loads up all the necessary components from it.</td>
-	</tr>
-</table>
 
 <br/>
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
-    Methods
-    <dl class="function">
-    <dt>
-    <a name = "settings:load"></a>
-    <strong>settings:load ()</strong>
-    </dt>
-    <dd>
-    This is the function that reads the mct<em>settings.lua file and loads up all the necessary components from it.
--- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
--- This is also where settings are "cached" for any mct</em>mods that aren't currently enabled but are in the mct_settings.lua file
-
-    </ul>
-
-
-
-
-
-
-</dd>
-</dl>
 
 
 </div> <!-- id="content" -->

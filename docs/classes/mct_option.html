@@ -43,7 +43,9 @@
   <li><strong>mct_option</strong></li>
   <li><a href="../classes/mct_section.html">mct_section</a></li>
   <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><a href="../classes/template_type.html">template_type</a></li>
   <li><a href="../classes/mct_ui.html">mct_ui</a></li>
+  <li><a href="../classes/ui_tab.html">ui_tab</a></li>
 </ul>
 <h2>Scripts</h2>
 <ul class="nowrap">
@@ -141,7 +143,7 @@
 	<td class="summary">Getter for the default setting for this mct_option.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:ui_select_value">mct_option:ui_select_value (val)</a></td>
+	<td class="name" nowrap><a href="#mct_option:ui_select_value">mct_option:ui_select_value (val, is_new_version)</a></td>
 	<td class="summary">Internal function that calls the operation to change an option's selected value.</td>
 	</tr>
 	<tr>
@@ -159,26 +161,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_selected_setting">mct_option:get_selected_setting ()</a></td>
 	<td class="summary">Getter for the current selected setting.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:slider_set_step_size">mct_option:slider_set_step_size (step_size, step_size_precision)</a></td>
-	<td class="summary">Set function to set the step size for moving left/right through the slider.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:slider_set_precision">mct_option:slider_set_precision (precision)</a></td>
-	<td class="summary">Setter for the precision on the slider's displayed value.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:slider_set_min_max">mct_option:slider_set_min_max (min, max)</a></td>
-	<td class="summary">Setter for the minimum and maximum values for the slider.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:add_dropdown_values">mct_option:add_dropdown_values (dropdown_table)</a></td>
-	<td class="summary">Method to set the <code>dropdown_values</code>.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#mct_option:add_dropdown_value">mct_option:add_dropdown_value (key, text, tt, is_default)</a></td>
-	<td class="summary">Used to create a single dropdown_value; also called within <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_key">mct_option:get_key ()</a></td>
@@ -633,7 +615,7 @@ end
 </dd>
     <dt>
     <a name = "mct_option:ui_select_value"></a>
-    <strong>mct_option:ui_select_value (val)</strong>
+    <strong>mct_option:ui_select_value (val, is_new_version)</strong>
     </dt>
     <dd>
     Internal function that calls the operation to change an option's selected value.  Exposed here so it can be called through presets and the like.
@@ -644,6 +626,10 @@ end
     <ul>
         <li><span class="parameter">val</span>
          any Set the selected setting as the passed value, tested with <a href="../classes/mct_option.html#mct_option:is_val_valid_for_type">mct_option:is_val_valid_for_type</a>
+        </li>
+        <li><span class="parameter">is_new_version</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Set this to true to skip calling ??? from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui<em>select</em>value -> set<em>selected</em>setting; the new Order of Operations is the inverse.
         </li>
     </ul>
 
@@ -740,147 +726,6 @@ end
            <span class="types"><span class="type">any</span></span>
         val The value set as the selected<em>setting for this mct</em>option.
     </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:slider_set_step_size"></a>
-    <strong>mct_option:slider_set_step_size (step_size, step_size_precision)</strong>
-    </dt>
-    <dd>
-    Set function to set the step size for moving left/right through the slider.
- Works with floats and other numbers. Use the optional second argument if using floats/decimals
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">step_size</span>
-            <span class="types"><span class="type">number</span></span>
-         The number to jump when using the left/right button.
-        </li>
-        <li><span class="parameter">step_size_precision</span>
-            <span class="types"><span class="type">number</span></span>
-         The precision for the step size, to prevent weird number changing. If the step size is 0.2, for instance, the precision would be 1, for one-decimal-place.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:slider_set_precision"></a>
-    <strong>mct_option:slider_set_precision (precision)</strong>
-    </dt>
-    <dd>
-    Setter for the precision on the slider's displayed value.  Necessary when working with decimal numbers.
- The number should be how many decimal places you want, ie. if you are using one decimal place, send 1 to this function; if you are using none, send 0.
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">precision</span>
-            <span class="types"><span class="type">number</span></span>
-         The precision used for floats.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:slider_set_min_max"></a>
-    <strong>mct_option:slider_set_min_max (min, max)</strong>
-    </dt>
-    <dd>
-    Setter for the minimum and maximum values for the slider.  If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">min</span>
-            <span class="types"><span class="type">number</span></span>
-         The minimum number the slider value can reach.
-        </li>
-        <li><span class="parameter">max</span>
-            <span class="types"><span class="type">number</span></span>
-         The maximum number the slider value can reach.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:add_dropdown_values"></a>
-    <strong>mct_option:add_dropdown_values (dropdown_table)</strong>
-    </dt>
-    <dd>
-
-<p>Method to set the <code>dropdown_values</code>.  This function takes a table of tables, where the inner tables have the fields ["key"], ["text"], ["tt"], and ["is_default"]. The latter three are optional.
- ex:</p>
-<pre><code>  mct_option:add_dropdown_values({
-      {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
-      {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
-  })
-</code></pre>
-
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">dropdown_table</span>
-
-
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "mct_option:add_dropdown_value"></a>
-    <strong>mct_option:add_dropdown_value (key, text, tt, is_default)</strong>
-    </dt>
-    <dd>
-    Used to create a single dropdown_value; also called within <a href="../classes/mct_option.html#mct_option:add_dropdown_values">mct_option:add_dropdown_values</a>
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">key</span>
-            <span class="types"><span class="type">string</span></span>
-         The unique identifier for this dropdown value.
-        </li>
-        <li><span class="parameter">text</span>
-            <span class="types"><span class="type">string</span></span>
-         The localised text for this dropdown value.
-        </li>
-        <li><span class="parameter">tt</span>
-            <span class="types"><span class="type">string</span></span>
-         The localised tooltip for this dropdown value.
-        </li>
-        <li><span class="parameter">is_default</span>
-            <span class="types"><span class="type">boolean</span></span>
-         Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
-        </li>
-    </ul>
-
 
 
 
@@ -998,7 +843,7 @@ end
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-10 19:57:07 </i>
+<i style="float:right;">Last updated 2020-08-16 16:30:13 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
