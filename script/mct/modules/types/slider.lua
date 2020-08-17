@@ -126,6 +126,48 @@ function type:ui_change_state()
     mct.ui:uic_SetTooltipText(text_uic, tt, true)
 end
 
+-- UIC Properties:
+-- Value
+-- minValue
+-- maxValue
+-- Notify (unused?)
+-- update_frequency (doesn't change anything?)
+function type:ui_create_option(dummy_parent)
+    local option_obj = self:get_option()
+
+    local templates = option_obj:get_uic_template()
+    --local values = option_obj:get_values()
+
+    local left_button_template = templates[1]
+    local right_button_template = templates[3]
+    
+    local text_input_template = templates[2]
+
+    -- hold it all in a dummy
+    local new_uic = core:get_or_create_component("mct_slider", "ui/mct/script_dummy", dummy_parent)
+    new_uic:SetVisible(true)
+    new_uic:Resize(dummy_parent:Width() * 0.4, dummy_parent:Height())
+
+    local left_button = core:get_or_create_component("left_button", left_button_template, new_uic)
+    local right_button = core:get_or_create_component("right_button", right_button_template, new_uic)
+    local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
+
+    text_input:SetCanResizeWidth(true)
+    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
+    text_input:SetCanResizeWidth(false)
+
+    left_button:SetDockingPoint(4)
+    text_input:SetDockingPoint(5)
+    right_button:SetDockingPoint(6)
+
+    left_button:SetDockOffset(0,0)
+    right_button:SetDockOffset(0,0)
+
+    option_obj:set_uics(new_uic)
+
+    return new_uic
+end
+
 --------- UNIQUE SECTION -----------
 -- These functions are unique for this type only. Be careful calling these!
 
@@ -267,5 +309,42 @@ function type:slider_set_min_max(min, max)
         end
     end
 end
+
+---- UI selected listeners & stuff
+core:add_listener(
+    "mct_slider_left_or_right_pressed",
+    "ComponentLClickUp",
+    function(context)
+        local uic = UIComponent(context.component)
+        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider")
+    end,
+    function(context)
+        local ok, err = pcall(function()
+        local step = context.string
+        local uic = UIComponent(context.component)
+
+        local slider = UIComponent(uic:Parent())
+        local dummy_option = UIComponent(slider:Parent())
+
+        local option_key = dummy_option:Id()
+        local mod_obj = mct:get_selected_mod()
+        mct:log("getting mod "..mod_obj:get_key())
+        mct:log("finding option with key "..option_key)
+
+        local option_obj = mod_obj:get_option_by_key(option_key)
+
+        local values = option_obj:get_values()
+        local step_size = values.step_size
+
+        if step == "right_button" then
+            mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
+            option_obj:set_selected_setting(option_obj:get_selected_setting() + step_size)
+        elseif step == "left_button" then
+            option_obj:set_selected_setting(option_obj:get_selected_setting() - step_size)
+        end
+    end) if not ok then mct:error(err) end
+    end,
+    true
+)
 
 return type

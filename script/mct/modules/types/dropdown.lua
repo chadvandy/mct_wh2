@@ -126,6 +126,32 @@ function type:ui_change_state()
     mct.ui:uic_SetTooltipText(text_uic, tt, true)
 end
 
+function type:ui_create_option(dummy_parent)
+    local option_obj = self:get_option()
+
+    --local templates = option_obj:get_uic_template()
+    local box = "ui/vandy_lib/dropdown_button_no_event"
+    --local dropdown_option = templates[2]
+
+    local new_uic = core:get_or_create_component("mct_dropdown_box", box, dummy_parent)
+    new_uic:SetVisible(true)
+
+    local popup_menu = find_uicomponent(new_uic, "popup_menu")
+    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
+    popup_menu:SetVisible(false)
+    --popup_menu:SetInteractive(true)
+
+    local popup_list = find_uicomponent(popup_menu, "popup_list")
+    popup_list:PropagatePriority(popup_menu:Priority()+1)
+    --popup_list:SetInteractive(true)
+
+    option_obj:set_uics(new_uic)
+
+    self:refresh_dropdown_box()
+
+    return new_uic
+end
+
 --------- UNIQUE SECTION -----------
 -- These functions are unique for this type only. Be careful calling these!
 
@@ -203,8 +229,172 @@ function type:add_dropdown_value(key, text, tt, is_default)
 
     -- if the UI already exists, refresh the dropdown box!
     if is_uicomponent(option:get_uics()[1]) then
-        mct.ui:refresh_dropdown_box(option)
+        self:refresh_dropdown_box(option)
     end
 end
+
+
+--- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
+-- Allows for dynamic dropdowns!
+function type:refresh_dropdown_box()
+    local option_obj = self:get_option()
+
+    local uic = option_obj:get_uic_with_key("mct_dropdown_box")
+
+    local popup_menu = UIComponent(uic:Find("popup_menu"))
+    local popup_list = UIComponent(popup_menu:Find("popup_list"))
+
+    -- clear out any extant chil'uns
+    popup_list:DestroyChildren()
+
+    local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
+    
+    local selected_value = option_obj:get_selected_setting()
+
+    local dropdown_values = option_obj:get_values()
+
+    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
+
+    for i = 1, #dropdown_values do
+        local dropdown_value = dropdown_values[i]
+
+        local key = dropdown_value.key
+        local text = dropdown_value.text
+        local tt = dropdown_value.tt
+
+        local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
+        
+        -- if they're localised text strings, localise them!
+        do
+            local test_tt = effect.get_localised_string(tt)
+            if test_tt ~= "" then
+                tt = test_tt
+            end
+
+            local test_text = effect.get_localised_string(text)
+            if test_text ~= "" then
+                text = test_text
+            end
+        end
+
+        new_entry:SetTooltipText(tt, true)
+
+        local off_y = 5 + (new_entry:Height() * (i-1))
+
+        new_entry:SetDockingPoint(2)
+        new_entry:SetDockOffset(0, off_y)
+
+        w,h = new_entry:Dimensions()
+
+        local txt = find_uicomponent(new_entry, "row_tx")
+
+        txt:SetStateText(text)
+
+        -- check if this is the default value
+        if selected_value == key then
+            new_entry:SetState("selected")
+
+            -- add the value's tt to the actual dropdown box
+            selected_tx:SetStateText(text)
+            uic:SetTooltipText(tt, true)
+        end
+
+        new_entry:SetCanResizeHeight(false)
+        new_entry:SetCanResizeWidth(false)
+    end
+
+
+    local border_top = find_uicomponent(popup_menu, "border_top")
+    local border_bottom = find_uicomponent(popup_menu, "border_bottom")
+    
+    border_top:SetCanResizeHeight(true)
+    border_top:SetCanResizeWidth(true)
+    border_bottom:SetCanResizeHeight(true)
+    border_bottom:SetCanResizeWidth(true)
+
+    popup_list:SetCanResizeHeight(true)
+    popup_list:SetCanResizeWidth(true)
+    popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
+    --popup_list:MoveTo(popup_menu:Position())
+    popup_list:SetDockingPoint(2)
+    --popup_list:SetDocKOffset()
+
+    popup_menu:SetCanResizeHeight(true)
+    popup_menu:SetCanResizeWidth(true)
+    popup_list:SetCanResizeHeight(false)
+    popup_list:SetCanResizeWidth(false)
+    
+    local w, h = popup_list:Bounds()
+    popup_menu:Resize(w,h)
+end
+
+
+---- Specific listeners for the UI
+core:add_listener(
+    "mct_dropdown_box",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_dropdown_box"
+    end,
+    function(context)
+        local box = UIComponent(context.component)
+        local menu = find_uicomponent(box, "popup_menu")
+        if is_uicomponent(menu) then
+            if menu:Visible() then
+                menu:SetVisible(false)
+            else
+                menu:SetVisible(true)
+                menu:RegisterTopMost()
+                -- next time you click something, close the menu!
+                core:add_listener(
+                    "mct_dropdown_box_close",
+                    "ComponentLClickUp",
+                    true,
+                    function(context)
+                        if box:CurrentState() == "selected" then
+                            box:SetState("active")
+                        end
+
+                        menu:SetVisible(false)
+                        menu:RemoveTopMost()
+                    end,
+                    false
+                )
+            end
+        end
+    end,
+    true
+)
+
+-- Set Selected listeners
+core:add_listener(
+    "mct_dropdown_box_option_selected",
+    "ComponentLClickUp",
+    function(context)
+        local uic = UIComponent(context.component)
+        
+        return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box"
+    end,
+    function(context)
+        core:remove_listener("mct_dropdown_box_close")
+
+        local uic = UIComponent(context.component)
+        local popup_list = UIComponent(uic:Parent())
+        local popup_menu = UIComponent(popup_list:Parent())
+        local dropdown_box = UIComponent(popup_menu:Parent())
+
+
+        -- will tell us the name of the option
+        local parent_id = UIComponent(dropdown_box:Parent()):Id()
+        local mod_obj = mct:get_selected_mod()
+        local option_obj = mod_obj:get_option_by_key(parent_id)
+
+        -- this operation is set externally (so we can perform the same operation outside of here)
+        local ok, err = pcall(function()
+        option_obj:set_selected_setting(uic:Id())
+        end) if not ok then mct:error(err) end
+    end,
+    true
+)
 
 return type

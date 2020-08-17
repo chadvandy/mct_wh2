@@ -42,6 +42,10 @@ local mct = mct
 
 mct:mixin(ui_obj)
 
+function ui_obj:get_locally_edited()
+    return (next(self.changed_settings) ~= nil)
+end
+
 --- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
 function ui_obj:set_changed_setting(mod_key, option_key, new_value)
     if not is_string(mod_key) then
@@ -1507,19 +1511,11 @@ function ui_obj:create_sections_and_contents(mod_obj)
     local mod_settings_panel = self.mod_settings_panel
     local mod_settings_box = find_uicomponent(mod_settings_panel, "list_view", "list_clip", "list_box")
 
-    local sections = mod_obj:get_sections()
-
-    --self._sections_to_rows = {}
-
     core:remove_listener("MCT_SectionHeaderPressed")
     
     local ordered_section_keys = mod_obj:sort_sections()
 
-    for i, section_key in ipairs(ordered_section_keys) do
-        --local section_table = sections[i]
-        --local section_key = section_table.key
-        --self._sections_to_rows[section_key] = {}
-        
+    for _, section_key in ipairs(ordered_section_keys) do
         local section_obj = mod_obj:get_section_by_key(section_key);
 
         if section_obj._options == nil then
@@ -1572,16 +1568,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
             -- this is the table with the positions to the options
             -- ie. options_table["1,1"] = "option 1 key"
-            local options_table, num_remaining_options = section_obj:get_ordered_options() --[[{}
-
-            for option_key, option_obj in pairs(options) do
-                num_remaining_options = num_remaining_options + 1
-
-                local x,y = option_obj:get_position()
-                local index = tostring(x) .. "," .. tostring(y)
-
-                options_table[index] = option_key
-            end]]
+            local options_table, num_remaining_options = section_obj:get_ordered_options()
 
             local x = 1
             local y = 1
@@ -1685,12 +1672,6 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 
     local dummy_row = core:get_or_create_component("settings_row_"..section_key.."_"..tostring(y), "ui/mct/script_dummy", mod_settings_box)
 
-    --[[if section_obj:is_visible() then
-        dummy_row:SetVisible(true)
-    else
-        dummy_row:SetVisible(false)
-    end]]
-
     -- TODO make sliders the entire row so text and all work fine
     -- TODO above isn't really needed, huh?
 
@@ -1758,22 +1739,9 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             --
             self:uic_SetTooltipText(option_text, option_obj:get_tooltip_text(), true)
 
-            local new_option
-
-            --mct:log(tostring(is_uicomponent(dummy_option)))
-    
             -- create the interactive option
-            do
-                local type_to_command = {
-                    dropdown = self.new_dropdown_box,
-                    checkbox = self.new_checkbox,
-                    slider = self.new_slider,
-                    textbox = self.new_textbox,
-                }
-        
-                local func = type_to_command[option_obj._type]
-                new_option = func(self, option_obj, dummy_option)
-            end
+            option_obj:set_uics(option_text)
+            local new_option = option_obj:ui_create_option(dummy_option)
 
             -- resize the text so it takes up the space of the dummy column that is not used by the option
             local n_w = new_option:Width()
@@ -1791,14 +1759,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             new_option:SetDockingPoint(6)
             new_option:SetDockOffset(-15, 0)
 
-            option_obj:set_uics({new_option, option_text})
             option_obj:set_uic_visibility(option_obj:get_uic_visibility())
-
-            -- TODO set_uics has to be better and set elsewhere, so I don't have to do this here
-            if option_obj:get_type() == "dropdown" then
-                -- TODO this should *really* be called in new_dropdown_box
-                self:refresh_dropdown_box(option_obj)
-            end
 
             option_obj:ui_select_value(option_obj:get_selected_setting(), true)
 
@@ -1848,183 +1809,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     end
 end
 
-function ui_obj.new_checkbox(self, option_obj, row_parent)
-    local template = option_obj:get_uic_template()
 
-    local new_uic = core:get_or_create_component("mct_checkbox_toggle", template, row_parent)
-    new_uic:SetVisible(true)
-
-    return new_uic
-end
-
-function ui_obj.new_textbox(self, option_obj, row_parent)
-    local template = option_obj:get_uic_template()
-
-    local new_uic = core:get_or_create_component("mct_textbox", template, row_parent)
-
-    -- TODO auto-type the default value
-    -- TODO a button next to the textbox to "submit" the new value?
-        -- TODO if above, setup some way for the modder to set up specific values and some UX for "this isn't valid!"
-
-    return new_uic
-end
-
---- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
--- Allows for dynamic dropdowns!
-function ui_obj:refresh_dropdown_box(option_obj)
-    local uic = option_obj:get_uic_with_key("mct_dropdown_box")
-
-    local popup_menu = UIComponent(uic:Find("popup_menu"))
-    local popup_list = UIComponent(popup_menu:Find("popup_list"))
-
-    -- clear out any extant chil'uns
-    popup_list:DestroyChildren()
-
-    local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
-    
-    local selected_value = option_obj:get_selected_setting()
-
-    local dropdown_values = option_obj:get_values()
-
-    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
-
-    for i = 1, #dropdown_values do
-        local dropdown_value = dropdown_values[i]
-
-        local key = dropdown_value.key
-        local text = dropdown_value.text
-        local tt = dropdown_value.tt
-
-        local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
-        
-        -- if they're localised text strings, localise them!
-        do
-            local test_tt = effect.get_localised_string(tt)
-            if test_tt ~= "" then
-                tt = test_tt
-            end
-
-            local test_text = effect.get_localised_string(text)
-            if test_text ~= "" then
-                text = test_text
-            end
-        end
-
-        new_entry:SetTooltipText(tt, true)
-
-        local off_y = 5 + (new_entry:Height() * (i-1))
-
-        new_entry:SetDockingPoint(2)
-        new_entry:SetDockOffset(0, off_y)
-
-        w,h = new_entry:Dimensions()
-
-        local txt = find_uicomponent(new_entry, "row_tx")
-
-        txt:SetStateText(text)
-
-        -- check if this is the default value
-        if selected_value == key then
-            new_entry:SetState("selected")
-
-            -- add the value's tt to the actual dropdown box
-            selected_tx:SetStateText(text)
-            uic:SetTooltipText(tt, true)
-        end
-
-        new_entry:SetCanResizeHeight(false)
-        new_entry:SetCanResizeWidth(false)
-    end
-
-
-    local border_top = find_uicomponent(popup_menu, "border_top")
-    local border_bottom = find_uicomponent(popup_menu, "border_bottom")
-    
-    border_top:SetCanResizeHeight(true)
-    border_top:SetCanResizeWidth(true)
-    border_bottom:SetCanResizeHeight(true)
-    border_bottom:SetCanResizeWidth(true)
-
-    popup_list:SetCanResizeHeight(true)
-    popup_list:SetCanResizeWidth(true)
-    popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
-    --popup_list:MoveTo(popup_menu:Position())
-    popup_list:SetDockingPoint(2)
-    --popup_list:SetDocKOffset()
-
-    popup_menu:SetCanResizeHeight(true)
-    popup_menu:SetCanResizeWidth(true)
-    popup_list:SetCanResizeHeight(false)
-    popup_list:SetCanResizeWidth(false)
-    
-    local w, h = popup_list:Bounds()
-    popup_menu:Resize(w,h)
-
-end
-
--- TODO dynamic dropdown box stuff!
-function ui_obj.new_dropdown_box(self, option_obj, row_parent)
-    local templates = option_obj:get_uic_template()
-    local box = "ui/vandy_lib/dropdown_button_no_event"
-    local dropdown_option = templates[2]
-
-    local new_uic = core:get_or_create_component("mct_dropdown_box", box, row_parent)
-    new_uic:SetVisible(true)
-
-    local popup_menu = find_uicomponent(new_uic, "popup_menu")
-    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
-    popup_menu:SetVisible(false)
-    --popup_menu:SetInteractive(true)
-
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
-    popup_list:PropagatePriority(popup_menu:Priority()+1)
-    --popup_list:SetInteractive(true)
-
-
-
-
-    return new_uic
-end
-
-
--- UIC Properties:
--- Value
--- minValue
--- maxValue
--- Notify (unused?)
--- update_frequency (doesn't change anything?)
-function ui_obj.new_slider(self, option_obj, row_parent)
-    local templates = option_obj:get_uic_template()
-    local values = option_obj:get_values()
-
-    local left_button_template = templates[1]
-    local right_button_template = templates[3]
-    
-    local text_input_template = templates[2]
-
-    -- hold it all in a dummy
-    local new_uic = core:get_or_create_component("mct_slider", "ui/mct/script_dummy", row_parent)
-    new_uic:SetVisible(true)
-    new_uic:Resize(row_parent:Width() * 0.4, row_parent:Height())
-
-    local left_button = core:get_or_create_component("left_button", left_button_template, new_uic)
-    local right_button = core:get_or_create_component("right_button", right_button_template, new_uic)
-    local text_input = core:get_or_create_component("text_input", text_input_template, new_uic)
-
-    text_input:SetCanResizeWidth(true)
-    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
-    text_input:SetCanResizeWidth(false)
-
-    left_button:SetDockingPoint(4)
-    text_input:SetDockingPoint(5)
-    right_button:SetDockingPoint(6)
-
-    left_button:SetDockOffset(0,0)
-    right_button:SetDockOffset(0,0)
-
-
-    return new_uic
-end
 
 function ui_obj:new_mod_row(mod_obj)
     local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
@@ -2098,134 +1883,6 @@ function ui_obj:new_mod_row(mod_obj)
         self:populate_panel_on_mod_selected()
     end
 end
-
-core:add_listener(
-    "mct_dropdown_box",
-    "ComponentLClickUp",
-    function(context)
-        return context.string == "mct_dropdown_box"
-    end,
-    function(context)
-        local box = UIComponent(context.component)
-        local menu = find_uicomponent(box, "popup_menu")
-        if is_uicomponent(menu) then
-            if menu:Visible() then
-                menu:SetVisible(false)
-            else
-                menu:SetVisible(true)
-                menu:RegisterTopMost()
-                -- next time you click something, close the menu!
-                core:add_listener(
-                    "mct_dropdown_box_close",
-                    "ComponentLClickUp",
-                    true,
-                    function(context)
-                        if box:CurrentState() == "selected" then
-                            box:SetState("active")
-                        end
-
-                        menu:SetVisible(false)
-                        menu:RemoveTopMost()
-                    end,
-                    false
-                )
-            end
-        end
-    end,
-    true
-)
-
--- Set Selected listeners
-core:add_listener(
-    "mct_dropdown_box_option_selected",
-    "ComponentLClickUp",
-    function(context)
-        local uic = UIComponent(context.component)
-        
-        return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box"
-    end,
-    function(context)
-        core:remove_listener("mct_dropdown_box_close")
-
-        local uic = UIComponent(context.component)
-        local popup_list = UIComponent(uic:Parent())
-        local popup_menu = UIComponent(popup_list:Parent())
-        local dropdown_box = UIComponent(popup_menu:Parent())
-
-
-        -- will tell us the name of the option
-        local parent_id = UIComponent(dropdown_box:Parent()):Id()
-        local mod_obj = mct:get_selected_mod()
-        local option_obj = mod_obj:get_option_by_key(parent_id)
-
-        -- this operation is set externally (so we can perform the same operation outside of here)
-        local ok, err = pcall(function()
-        option_obj:set_selected_setting(uic:Id())
-        end) if not ok then mct:error(err) end
-    end,
-    true
-)
-
-core:add_listener(
-    "mct_slider_left_or_right_pressed",
-    "ComponentLClickUp",
-    function(context)
-        local uic = UIComponent(context.component)
-        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider")
-    end,
-    function(context)
-        local ok, err = pcall(function()
-        local step = context.string
-        local uic = UIComponent(context.component)
-
-        local slider = UIComponent(uic:Parent())
-        local dummy_option = UIComponent(slider:Parent())
-
-        local option_key = dummy_option:Id()
-        local mod_obj = mct:get_selected_mod()
-        mct:log("getting mod "..mod_obj:get_key())
-        mct:log("finding option with key "..option_key)
-
-        local option_obj = mod_obj:get_option_by_key(option_key)
-
-        local values = option_obj:get_values()
-        local step_size = values.step_size
-
-        if step == "right_button" then
-            mct:log("changing val from "..option_obj:get_selected_setting().. " to "..option_obj:get_selected_setting() + step_size)
-            option_obj:set_selected_setting(option_obj:get_selected_setting() + step_size)
-        elseif step == "left_button" then
-            option_obj:set_selected_setting(option_obj:get_selected_setting() - step_size)
-        end
-    end) if not ok then mct:error(err) end
-    end,
-    true
-)
-
-core:add_listener(
-    "mct_checkbox_toggle_option_selected",
-    "ComponentLClickUp",
-    function(context)
-        return context.string == "mct_checkbox_toggle"
-    end,
-    function(context)
-        local uic = UIComponent(context.component)
-
-        -- will tell us the name of the option
-        local parent_id = UIComponent(uic:Parent()):Id()
-        --mct:log("Checkbox Pressed - parent id ["..parent_id.."]")
-        local mod_obj = mct:get_selected_mod()
-        local option_obj = mod_obj:get_option_by_key(parent_id)
-
-        if not mct:is_mct_option(option_obj) then
-            mct:error("mct_checkbox_toggle_option_selected listener trigger, but the checkbox pressed ["..parent_id.."] doesn't have a valid mct_option attached. Returning false.")
-            return false
-        end
-
-        option_obj:set_selected_setting(not option_obj:get_selected_setting())
-    end,
-    true
-)
 
 function ui_obj:add_finalize_settings_popup()
     local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/common ui/dialogue_box")
@@ -2575,10 +2232,6 @@ core:add_listener(
     end,
     true
 )
-
-function ui_obj:get_locally_edited()
-    return (next(self.changed_settings) ~= nil)
-end
 
 core:add_listener(
     "mct_close_button_pressed",

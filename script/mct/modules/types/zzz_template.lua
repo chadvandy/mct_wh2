@@ -78,6 +78,10 @@ function template_type:ui_change_state(val)
     return self:override_error("ui_change_state")
 end
 
+function template_type:ui_create_option()
+    return self:override_error("ui_create_option")
+end
+
 ---- Unique Calls ----
 -- These only exist for specific types; put defaults here to check if they're called on the wrong type
 function template_type:type_error(function_name, type_expected)
@@ -110,6 +114,10 @@ end
 
 function template_type:add_dropdown_value()
     return self:type_error("add_dropdown_value", "dropdown")
+end
+
+function template_type:refresh_dropdown_box()
+    return self:type_error("refresh_dropdown_box", "dropdown")
 end
 
 return template_type

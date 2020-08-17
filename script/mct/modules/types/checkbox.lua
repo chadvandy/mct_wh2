@@ -89,7 +89,48 @@ function type:ui_change_state(val)
     mct.ui:uic_SetTooltipText(text_uic, tt, true)
 end
 
+function type:ui_create_option(dummy_parent)
+    local option = self:get_option()
+    local template = option:get_uic_template()
+
+    local new_uic = core:get_or_create_component("mct_checkbox_toggle", template, dummy_parent)
+    new_uic:SetVisible(true)
+
+    option:set_uics(new_uic)
+
+    return new_uic
+end
+
 --------- UNIQUE SECTION -----------
 -- These functions are unique for this type only. Be careful calling these!
+
+
+
+--------- List'n'rs ----------
+-- Unique listeners for just this type.
+core:add_listener(
+    "mct_checkbox_toggle_option_selected",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_checkbox_toggle"
+    end,
+    function(context)
+        local uic = UIComponent(context.component)
+
+        -- will tell us the name of the option
+        local parent_id = UIComponent(uic:Parent()):Id()
+        --mct:log("Checkbox Pressed - parent id ["..parent_id.."]")
+        local mod_obj = mct:get_selected_mod()
+        local option_obj = mod_obj:get_option_by_key(parent_id)
+
+        if not mct:is_mct_option(option_obj) then
+            mct:error("mct_checkbox_toggle_option_selected listener trigger, but the checkbox pressed ["..parent_id.."] doesn't have a valid mct_option attached. Returning false.")
+            return false
+        end
+
+        option_obj:set_selected_setting(not option_obj:get_selected_setting())
+    end,
+    true
+)
 
 return type
