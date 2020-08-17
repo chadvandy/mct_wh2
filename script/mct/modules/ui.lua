@@ -1522,145 +1522,149 @@ function ui_obj:create_sections_and_contents(mod_obj)
         
         local section_obj = mod_obj:get_section_by_key(section_key);
 
-        -- make sure the dummy rows table is clear before doing anything
-        section_obj._dummy_rows = {}
+        if section_obj._options == nil then
+            -- skip
+        else
+            -- make sure the dummy rows table is clear before doing anything
+            section_obj._dummy_rows = {}
 
-        -- first, create the section header
-        local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/expandable_row_header", mod_settings_box)
-        --local open = true
+            -- first, create the section header
+            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/expandable_row_header", mod_settings_box)
+            --local open = true
 
-        section_obj._header = section_header
+            section_obj._header = section_header
 
-        core:add_listener(
-            "MCT_SectionHeaderPressed",
-            "ComponentLClickUp",
-            function(context)
-                return context.string == "mct_section_"..section_key
-            end,
-            function(context)
-                mct:log("Changing visibility for section "..section_key)
-                local visible = section_obj:is_visible()
-                mct:log("Is visible: "..tostring(visible))
-                section_obj:set_visibility(not visible)
-            end,
-            true
-        )
+            core:add_listener(
+                "MCT_SectionHeaderPressed",
+                "ComponentLClickUp",
+                function(context)
+                    return context.string == "mct_section_"..section_key
+                end,
+                function(context)
+                    mct:log("Changing visibility for section "..section_key)
+                    local visible = section_obj:is_visible()
+                    mct:log("Is visible: "..tostring(visible))
+                    section_obj:set_visibility(not visible)
+                end,
+                true
+            )
 
-        -- TODO set text & width and shit
-        section_header:SetCanResizeWidth(true)
-        section_header:SetCanResizeHeight(false)
-        section_header:Resize(mod_settings_box:Width() * 0.95, section_header:Height())
-        section_header:SetCanResizeWidth(false)
+            -- TODO set text & width and shit
+            section_header:SetCanResizeWidth(true)
+            section_header:SetCanResizeHeight(false)
+            section_header:Resize(mod_settings_box:Width() * 0.95, section_header:Height())
+            section_header:SetCanResizeWidth(false)
 
-        section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
-        
-        local child_count = find_uicomponent(section_header, "child_count")
-        child_count:SetVisible(false)
-
-        local text = section_obj:get_localised_text()
-
-        local dy_title = find_uicomponent(section_header, "dy_title")
-        self:uic_SetStateText(dy_title, text)
-        --dy_title:SetStateText(text)
-
-        -- lastly, create all the rows and options within
-        --local num_remaining_options = 0
-        local valid = true
-
-        -- this is the table with the positions to the options
-        -- ie. options_table["1,1"] = "option 1 key"
-        local options_table, num_remaining_options = section_obj:get_ordered_options() --[[{}
-
-        for option_key, option_obj in pairs(options) do
-            num_remaining_options = num_remaining_options + 1
-
-            local x,y = option_obj:get_position()
-            local index = tostring(x) .. "," .. tostring(y)
-
-            options_table[index] = option_key
-        end]]
-
-        local x = 1
-        local y = 1
-
-        local function move_to_next()
-            if x >= 3 then
-                x = 1
-                y = y + 1
-            else
-                x = x + 1
-            end
-        end
-
-        -- prevent infinite loops, will only do nothing 3 times
-        local loop_num = 0
-
-        --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
-
-        while valid do
-            --loop_num = loop_num + 1
-            if num_remaining_options < 1 then
-                -- mct:log("No more remaining options!")
-                -- no more options, abort!
-                break
-            end
-
-            if loop_num >= 3 then
-                break
-            end
-
-            local index = tostring(x) .. "," .. tostring(y)
-            local option_key = options_table[index]
-
-            -- check to see if any option was even made at this index!
-            --[[if option_key == nil then
-                -- skip, go to the next index
-                move_to_next()
-
-                -- prevent it from looping without doing anything more than 6 times
-                loop_num = loop_num + 1
-            else]]
-            --loop_num = 0
-
-            if option_key == nil then option_key = "MCT_BLANK" end
+            section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
             
-            local option_obj
-            if is_string(option_key) then
-                --mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
-                if option_key == "NONE" then
-                    -- no option objects remaining, kill the engine
+            local child_count = find_uicomponent(section_header, "child_count")
+            child_count:SetVisible(false)
+
+            local text = section_obj:get_localised_text()
+
+            local dy_title = find_uicomponent(section_header, "dy_title")
+            self:uic_SetStateText(dy_title, text)
+            --dy_title:SetStateText(text)
+
+            -- lastly, create all the rows and options within
+            --local num_remaining_options = 0
+            local valid = true
+
+            -- this is the table with the positions to the options
+            -- ie. options_table["1,1"] = "option 1 key"
+            local options_table, num_remaining_options = section_obj:get_ordered_options() --[[{}
+
+            for option_key, option_obj in pairs(options) do
+                num_remaining_options = num_remaining_options + 1
+
+                local x,y = option_obj:get_position()
+                local index = tostring(x) .. "," .. tostring(y)
+
+                options_table[index] = option_key
+            end]]
+
+            local x = 1
+            local y = 1
+
+            local function move_to_next()
+                if x >= 3 then
+                    x = 1
+                    y = y + 1
+                else
+                    x = x + 1
+                end
+            end
+
+            -- prevent infinite loops, will only do nothing 3 times
+            local loop_num = 0
+
+            --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
+
+            while valid do
+                --loop_num = loop_num + 1
+                if num_remaining_options < 1 then
+                    -- mct:log("No more remaining options!")
+                    -- no more options, abort!
                     break
                 end
-                if option_key == "MCT_BLANK" then
-                    option_obj = option_key
+
+                if loop_num >= 3 then
+                    break
+                end
+
+                local index = tostring(x) .. "," .. tostring(y)
+                local option_key = options_table[index]
+
+                -- check to see if any option was even made at this index!
+                --[[if option_key == nil then
+                    -- skip, go to the next index
+                    move_to_next()
+
+                    -- prevent it from looping without doing anything more than 6 times
                     loop_num = loop_num + 1
-                else
-                    -- only iterate down this iterator when it's a real option
-                    num_remaining_options = num_remaining_options - 1
-                    loop_num = 0
-                    option_obj = mod_obj:get_option_by_key(option_key)
-                end
+                else]]
+                --loop_num = 0
 
-                if not mct:is_mct_option(option_obj) then
-                    mct:error("no option found with the key ["..option_key.."]. Issue!")
-                else
-                    -- add a new column (and potentially, row, if x==1) for this position
-                    self:new_option_row_at_pos(option_obj, x, y, section_key) 
-                end
+                if option_key == nil then option_key = "MCT_BLANK" end
+                
+                local option_obj
+                if is_string(option_key) then
+                    --mct:log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
+                    if option_key == "NONE" then
+                        -- no option objects remaining, kill the engine
+                        break
+                    end
+                    if option_key == "MCT_BLANK" then
+                        option_obj = option_key
+                        loop_num = loop_num + 1
+                    else
+                        -- only iterate down this iterator when it's a real option
+                        num_remaining_options = num_remaining_options - 1
+                        loop_num = 0
+                        option_obj = mod_obj:get_option_by_key(option_key)
+                    end
 
-            else
-                -- issue? break? dunno?
-                mct:log("issue? break? dunno?")
-                break
+                    if not mct:is_mct_option(option_obj) then
+                        mct:error("no option found with the key ["..option_key.."]. Issue!")
+                    else
+                        -- add a new column (and potentially, row, if x==1) for this position
+                        self:new_option_row_at_pos(option_obj, x, y, section_key) 
+                    end
+
+                else
+                    -- issue? break? dunno?
+                    mct:log("issue? break? dunno?")
+                    break
+                end
+        
+                -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
+                move_to_next()
+                --end
             end
-    
-            -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
-            move_to_next()
-            --end
-        end
 
-        -- set own visibility (for sections that default to closed)
-        section_obj:uic_visibility_change(true)
+            -- set own visibility (for sections that default to closed)
+            section_obj:uic_visibility_change(true)
+        end
     end
 end
 
