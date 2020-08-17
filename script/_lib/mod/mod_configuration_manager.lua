@@ -20,14 +20,6 @@ local mod_configuration_tool = {
     _selected_mod = nil,
 
     ui_created_callbacks = {},
-    
-    -- TODO this can be done cleaner. Read all option obj types?
-    _valid_option_types = {
-        slider = true,
-        dropdown = true,
-        checkbox = true,
-        textbox = false,
-    }
 }
 
 
@@ -675,6 +667,23 @@ function mod_configuration_tool:is_mct_section(obj)
     return tostring(obj) == "MCT_SECTION"
 end
 
+--- Type-checker for @{mct_option} types.
+--- @tparam any val Tested value.
+--- @treturn boolean If this is a valid option type.
+function mod_configuration_tool:is_valid_option_type(val)
+    return self._MCT_TYPES[val] ~= nil
+end
+
+function mod_configuration_tool:get_valid_option_types()
+    local retval = {}
+    for k,_ in pairs(self._MCT_TYPES) do
+        if k ~= "template" then
+            retval[#retval+1] = k
+        end
+    end
+
+    return retval
+end
 
 --- Global functions
 --- @section globals
@@ -703,12 +712,14 @@ function mod_configuration_tool:create_class(...)
     setmetatable(c, {
         __index = function (t, k)
             local v = search(k, arg)
+            self:log("searching for "..tostring(k) .. " in metatable.")
             t[k] = v       -- save for next access
             return v
         end
     })
 
     c.__index = c
+    c.template_type = arg[1]
 
     function c:new(o)
         o = o or {}

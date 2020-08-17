@@ -2,15 +2,62 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
+local lua_type = type
+
 local type = mct:create_class(template_type)
 
---[[function type.new(mct_mod, mct_option, key)
-    local new_type = template_type.new(mct_mod, mct_option, key)
+function type:__index(attempt)
+    mct:log("start")
+    mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
 
-    setmetatable(new_type, type)
+    if lua_type(field) == "nil" then
+        mct:log("not found, checking template_type")
+        local wrapped = rawget(self, "template_type")
+
+        field = wrapped and wrapped[attempt]
+
+        if lua_type(field) == "nil" then
+            mct:log("not found, check mct_option")
+            -- not found in mct_option, check template_type!
+            local wrapped_boi = rawget(self, "option")
+
+            field = wrapped_boi and wrapped_boi[attempt]
+
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
+            end
+        else
+            -- found in mct_option, woop
+            if lua_type(field) == "function" then
+                mct:log("func found")
+                retval = function(obj, ...)
+                    return field(wrapped, ...)
+                end
+            else
+                mct:log("non-func found")
+                retval = field
+            end
+        end
+    else
+        if lua_type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
     
-    return new_type
-end]]
+    return retval
+end
 
 
 --------- OVERRIDEN SECTION -------------
@@ -95,19 +142,7 @@ function type:ui_change_state()
     local text_uic = option:get_uic_with_key("text")
 
     local locked = option:get_uic_locked()
-    local lock_reason = ""
-    if locked then
-        local lock_reason_tab = option._uic_lock_reason 
-        if lock_reason_tab.is_localised then
-            lock_reason = effect.get_localised_string(lock_reason_tab.text)
-        else
-            lock_reason = lock_reason_tab.text
-        end
-
-        if lock_reason == "" then
-            -- revert to default? TODO
-        end
-    end
+    local lock_reason = option:get_lock_reason()
 
     local left_button = find_uicomponent(option_uic, "left_button")
     local right_button = find_uicomponent(option_uic, "right_button")

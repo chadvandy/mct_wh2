@@ -2,7 +2,6 @@
 --- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
 --- @class mct_mod
 --- @usage testing here
---- @field _valid_option_types table<"'slider'" | "'dropdown'" | "'checkbox'">
 
 -- TODO make "Finalize settings" validate all MCT options; if some are invalid, give some UX notifs that they're not valid. esp. for the textboxes.
 
@@ -13,8 +12,6 @@ local mct_mod = {
 -- TODO how get rid of this error????
 
 local mct = mct
-
-mct_mod._valid_option_types = mct._valid_option_types
 
 --- For internal use, called by the MCT Manager.
 --- @tparam string key The identifying key for this mod object.
@@ -28,12 +25,13 @@ function mct_mod.new(key)
 
     self._key = key
     self._options = {}
-    self._options_by_type = {
-        dropdown = {},
-        checkbox = {},
-        slider = {},
-        textbox = {}
-    }
+    self._options_by_type = {}
+
+    local valid_types = mct:get_valid_option_types()
+    for i = 1, #valid_types do
+        local valid_type = valid_types[i]
+        self._options_by_type[valid_type] = {}
+    end
 
     -- used for the index_sort function
     self._options_by_index_order = {}
@@ -735,8 +733,7 @@ function mct_mod:get_option_keys_by_type(option_type)
         return false
     end
 
-    local valid_types = self._valid_option_types
-    if not valid_types[option_type] then
+    if not mct:is_valid_option_type(option_type) then
         mct:error("Trying `get_option_keys_by_type` for mod ["..self:get_key().."], but type ["..option_type.."] is not a valid type! Returning false.")
         return false
     end
@@ -774,9 +771,7 @@ function mct_mod:add_new_option(option_key, option_type)
         return false
     end
 
-    local valid_types = self._valid_option_types
-
-    if not valid_types[option_type] then
+    if not mct:is_valid_option_type(option_type) then
         mct:error("Trying `add_new_option()` for mod ["..self:get_key().."] but option type provided ["..tostring(option_type).."] is not a valid type! Returning false.")
         return false
     end

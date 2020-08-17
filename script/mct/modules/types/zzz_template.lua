@@ -5,7 +5,7 @@ local mct = mct
 
 local template_type = {}
 
-function template_type:__index(attempt)
+--[[function template_type:__index(attempt)
     mct:log("start")
     mct:log("calling: "..attempt)
     --mct:log("key: "..self:get_key())
@@ -15,7 +15,7 @@ function template_type:__index(attempt)
 
     if type(field) == "nil" then
         mct:log("not found, checking mct_option")
-        local wrapped = self:get_option()
+        local wrapped = rawget(self, "option")
 
         field = wrapped and wrapped[attempt]
 
@@ -39,7 +39,7 @@ function template_type:__index(attempt)
     end
     
     return retval
-end
+end]]
 
 function template_type:get_key()
     return self:get_option():get_key()
@@ -74,11 +74,11 @@ function template_type:ui_select_value(val)
     return self:override_error("ui_select_value")
 end
 
-function template_type:ui_change_state(val)
+function template_type:ui_change_state()
     return self:override_error("ui_change_state")
 end
 
-function template_type:ui_create_option()
+function template_type:ui_create_option(dummy_parent)
     return self:override_error("ui_create_option")
 end
 

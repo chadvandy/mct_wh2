@@ -86,3 +86,7 @@ local mct6 = mct_mod:add_new_option("mct6", "checkbox")
 mct6:set_text("Mp Disabled")
 mct6:set_default_value(true)
 mct6:set_mp_disabled(true)
+
+local mct8 = mct_mod:add_new_option("mct8", "text_input")
+mct8:set_text("Text Input")
+mct8:set_default_value("My Text")

@@ -15,7 +15,7 @@ local mct_option = {
     __templates = {
         checkbox = "ui/templates/checkbox_toggle",
         dropdown = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"},
-        textbox = "ui/common ui/text_box",
+        text_input = "ui/common ui/text_box",
         slider = {"ui/templates/cycle_button_arrow_previous", "ui/common ui/text_box", "ui/templates/cycle_button_arrow_next"}
     },
 
@@ -94,26 +94,26 @@ end
 -- if there are any calls on mct_option that don't exist, check if they exist
 -- in the `wrapped` type object.
 function mct_option:__index(attempt)
-    --mct:log("start")
-    --mct:log("calling: "..attempt)
+    mct:log("start")
+    mct:log("calling: "..attempt)
     --mct:log("key: "..self:get_key())
     --mct:log("calling "..attempt.." on mct option "..self:get_key())
     local field = rawget(getmetatable(self), attempt)
     local retval = nil
 
     if type(field) == "nil" then
-        --mct:log("not found, checking wrapped type")
+        mct:log("not found, checking wrapped type")
         local wrapped = rawget(self, "_wrapped_type")
 
         field = wrapped and wrapped[attempt]
 
         if type(field) == "function" then
-            --mct:log("func found")
+            mct:log("func found")
             retval = function(obj, ...)
                 return field(wrapped, ...)
             end
         else
-            --mct:log("non-func found")
+            mct:log("non-func found")
             retval = field
         end
     else
@@ -623,6 +623,26 @@ end
 --- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
     self:get_wrapped_type():ui_change_state()
+end
+
+function mct_option:get_lock_reason()
+    local locked = self:get_uic_locked()
+
+    local lock_reason = ""
+    if locked then
+        local lock_reason_tab = self._uic_lock_reason 
+        if lock_reason_tab.is_localised then
+            lock_reason = effect.get_localised_string(lock_reason_tab.text)
+        else
+            lock_reason = lock_reason_tab.text
+        end
+
+        if lock_reason == "" then
+            -- revert to default? TODO
+        end
+    end
+
+    return lock_reason
 end
 
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
