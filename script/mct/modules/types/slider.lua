@@ -2,63 +2,26 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
-local lua_type = type
+local type = {}
 
-local type = mct:create_class(template_type)
+function type:new()
+    local tt = template_type:new()
+    local self = {}
 
-function type:__index(attempt)
-    mct:log("start")
-    mct:log("calling: "..attempt)
-    --mct:log("key: "..self:get_key())
-    --mct:log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
-    local retval = nil
-
-    if lua_type(field) == "nil" then
-        mct:log("not found, checking template_type")
-        local wrapped = rawget(self, "template_type")
-
-        field = wrapped and wrapped[attempt]
-
-        if lua_type(field) == "nil" then
-            mct:log("not found, check mct_option")
-            -- not found in mct_option, check template_type!
-            local wrapped_boi = rawget(self, "option")
-
-            field = wrapped_boi and wrapped_boi[attempt]
-
-            if lua_type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi, ...)
-                end
-            else
-                retval = field
-            end
-        else
-            -- found in mct_option, woop
-            if lua_type(field) == "function" then
-                mct:log("func found")
-                retval = function(obj, ...)
-                    return field(wrapped, ...)
-                end
-            else
-                mct:log("non-func found")
-                retval = field
-            end
-        end
-    else
-        if lua_type(field) == "function" then
-            retval = function(obj, ...)
-                return field(self, ...)
-            end
-        else
-            retval = field
-        end
+    for k,v in pairs(getmetatable(tt)) do
+        mct:log("assigning ["..k.."] to slider from template_type.")
+        self[k] = v
     end
-    
-    return retval
-end
 
+    setmetatable(self, type)
+
+    for k,v in pairs(type) do
+        mct:log("assigning ["..k.."] to slider from self!")
+        self[k] = v
+    end
+
+    return self
+end
 
 --------- OVERRIDEN SECTION -------------
 -- These functions exist for every type, and have to be overriden from the version defined in template_types.
@@ -75,8 +38,6 @@ function type:check_validity(value)
 end
 
 function type:set_default()
-    local option = self:get_option()
-
     local values = self:get_values()
 
     local min = values.min
@@ -84,13 +45,17 @@ function type:set_default()
 
     -- get the "average" of the two numbers, (min+max)/2
     -- TODO set this with respect for the step sizes, precision, etc
-    option._default_setting = (min+max)/2
+    self._default_setting = (min+max)/2
 end
 
 function type:ui_select_value(val)
-    local option = self:get_option()
+    local option_uic = self:get_uics()[1]
+    if not is_uicomponent(option_uic) then
+        mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
+        return false
+    end
 
-    local option_uic = option:get_uics()[1]
+    print_all_uicomponent_children(option_uic)
 
     local right_button = find_uicomponent(option_uic, "right_button")
     local left_button = find_uicomponent(option_uic, "left_button")
@@ -98,26 +63,29 @@ function type:ui_select_value(val)
 
     --mct:log("ui select val for slider 2")
 
-    local values = option:get_values()
+    local values = self:get_values()
     local max = values.max
     local min = values.min
     local step_size = values.step_size
     local step_size_precision = values.step_size_precision
 
+    mct:log(values)
+
     --mct:log("ui select val for slider 3")
 
     -- enable both buttons & push new value
-    right_button:SetState("active")
-    left_button:SetState("active")
+    mct.ui:uic_SetState(right_button, "active")
+    mct.ui:uic_SetState(left_button, "active")
+
 
     if val >= max then
-        right_button:SetState("inactive")
-        left_button:SetState("active")
+        mct.ui:uic_SetState(right_button, "inactive")
+        mct.ui:uic_SetState(left_button, "active")
 
         val = max
     elseif val <= min then
-        left_button:SetState("inactive")
-        right_button:SetState("active")
+        mct.ui:uic_SetState(left_button, "inactive")
+        mct.ui:uic_SetState(right_button, "active")
 
         val = min
     end
@@ -125,31 +93,29 @@ function type:ui_select_value(val)
     -- TODO move step size edits out of this one?
     local step_size_str = self:slider_get_precise_value(step_size, true, step_size_precision)
 
-    left_button:SetTooltipText("-"..step_size_str, true)
-    right_button:SetTooltipText("+"..step_size_str, true)
+    mct.ui:uic_SetTooltipText(left_button, "-"..step_size_str, true)
+    mct.ui:uic_SetTooltipText(right_button, "+"..step_size_str, true)
 
     --local current = self:get_precise_value(self:get_selected_setting(), false)
-    local current_str = self:slider_get_precise_value(option:get_selected_setting(), true)
+    local current_str = self:slider_get_precise_value(self:get_selected_setting(), true)
 
     text_input:SetStateText(tostring(current_str))
     text_input:SetInteractive(false)
 end
 
 function type:ui_change_state()
-    local option = self:get_option()
+    local option_uic = self:get_uics()[1]
+    local text_uic = self:get_uic_with_key("text")
 
-    local option_uic = option:get_uics()[1]
-    local text_uic = option:get_uic_with_key("text")
-
-    local locked = option:get_uic_locked()
-    local lock_reason = option:get_lock_reason()
+    local locked = self:get_uic_locked()
+    local lock_reason = self:get_lock_reason()
 
     local left_button = find_uicomponent(option_uic, "left_button")
     local right_button = find_uicomponent(option_uic, "right_button")
     --local text_input = find_uicomponent(option_uic, "text_input")
 
     local state = "active"
-    local tt = option:get_tooltip_text()
+    local tt = self:get_tooltip_text()
     if locked then
         state = "inactive"
         tt = lock_reason .. "\n" .. tt
@@ -168,9 +134,7 @@ end
 -- Notify (unused?)
 -- update_frequency (doesn't change anything?)
 function type:ui_create_option(dummy_parent)
-    local option_obj = self:get_option()
-
-    local templates = option_obj:get_uic_template()
+    local templates = self:get_uic_template()
     --local values = option_obj:get_values()
 
     local left_button_template = templates[1]
@@ -198,7 +162,7 @@ function type:ui_create_option(dummy_parent)
     left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
-    option_obj:set_uics(new_uic)
+    self:set_uics(new_uic)
 
     return new_uic
 end
@@ -239,9 +203,7 @@ function type:slider_get_precise_value(value, as_string, override_precision)
         return string.format("%."..(places or 0) .. "f", num)
     end
 
-    local option = self:get_option()
-
-    local values = option:get_values()
+    local values = self:get_values()
     local precision = values.precision
 
     if is_number(override_precision) then
@@ -274,11 +236,9 @@ function type:slider_set_step_size(step_size, step_size_precision)
         mct:error("slider_set_step_size() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the step size precision value supplied ["..tostring(step_size_precision).."] is not a number! Returning false.")
         return false
     end
-    
-    local option = self:get_option()
 
-    option._values.step_size = step_size
-    option._values.step_size_precision = step_size_precision
+    self._values.step_size = step_size
+    self._values.step_size_precision = step_size_precision
 end
 
 ---- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
@@ -295,9 +255,7 @@ function type:slider_set_precision(precision)
         return false
     end
 
-    local option = self:get_option()
-
-    option._values.precision = precision
+    self._values.precision = precision
 end
 
 ---- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
@@ -325,22 +283,20 @@ function type:slider_set_min_max(min, max)
         return false
     end]]
 
-    local option = self:get_option()
-
-    option._values.min = min
-    option._values.max = max
+    self._values.min = min
+    self._values.max = max
 
     -- if the UI exists, change the buttons and set the value if it's above the max/below the min
-    local uic = option:get_uics()[1]
+    local uic = self:get_uics()[1]
     if is_uicomponent(uic) then
-        local current_val = option:get_selected_setting()
+        local current_val = self:get_selected_setting()
 
         if current_val > max then
-            option:set_selected_setting(max)
+            self:set_selected_setting(max)
         elseif current_val < min then
-            option:set_selected_setting(min)
+            self:set_selected_setting(min)
         else
-            option:set_selected_setting(current_val)
+            self:set_selected_setting(current_val)
         end
     end
 end

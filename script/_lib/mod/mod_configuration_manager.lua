@@ -46,7 +46,7 @@ function mod_configuration_tool:init()
         self._MCT_TYPES.dropdown = self:load_module("dropdown", "script/mct/modules/types/")
         self._MCT_TYPES.checkbox = self:load_module("checkbox", "script/mct/modules/types/")
         self._MCT_TYPES.text_input = self:load_module("text_input", "script/mct/modules/types/")
-        self._MCT_TYPES.multibox = self:load_module("multibox", "script/mct/modules/types/")
+        --self._MCT_TYPES.multibox = self:load_module("multibox", "script/mct/modules/types/")
 
 
         -- load MCT object modules
@@ -696,38 +696,6 @@ end
 function get_mct()
     return core:get_static_object("mod_configuration_tool")
     --return mod_configuration_tool
-end
-
-function mod_configuration_tool:create_class(...)
-
-    local function search (k, plist)
-        for i=1, table.getn(plist) do
-            local v = plist[i][k]     -- try `i'-th superclass
-            if v then return v end
-        end
-    end
-
-    local c = {}
-
-    setmetatable(c, {
-        __index = function (t, k)
-            local v = search(k, arg)
-            self:log("searching for "..tostring(k) .. " in metatable.")
-            t[k] = v       -- save for next access
-            return v
-        end
-    })
-
-    c.__index = c
-    c.template_type = arg[1]
-
-    function c:new(o)
-        o = o or {}
-        setmetatable(o, c)
-        return o
-    end
-
-    return c
 end
 
 core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)

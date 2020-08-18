@@ -2,61 +2,25 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
-local lua_type = type
+local type = {}
 
-local type = mct:create_class(template_type)
+function type:new()
+    local tt = template_type:new()
+    local self = {}
 
-function type:__index(attempt)
-    mct:log("start")
-    mct:log("calling: "..attempt)
-    --mct:log("key: "..self:get_key())
-    --mct:log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
-    local retval = nil
-
-    if lua_type(field) == "nil" then
-        mct:log("not found, checking template_type")
-        local wrapped = rawget(self, "template_type")
-
-        field = wrapped and wrapped[attempt]
-
-        if lua_type(field) == "nil" then
-            mct:log("not found, check mct_option")
-            -- not found in mct_option, check template_type!
-            local wrapped_boi = rawget(self, "option")
-
-            field = wrapped_boi and wrapped_boi[attempt]
-
-            if lua_type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi, ...)
-                end
-            else
-                retval = field
-            end
-        else
-            -- found in mct_option, woop
-            if lua_type(field) == "function" then
-                mct:log("func found")
-                retval = function(obj, ...)
-                    return field(wrapped, ...)
-                end
-            else
-                mct:log("non-func found")
-                retval = field
-            end
-        end
-    else
-        if lua_type(field) == "function" then
-            retval = function(obj, ...)
-                return field(self, ...)
-            end
-        else
-            retval = field
-        end
+    for k,v in pairs(getmetatable(tt)) do
+        mct:log("assigning ["..k.."] to dropdown from template_type.")
+        self[k] = v
     end
-    
-    return retval
+
+    setmetatable(self, type)
+
+    for k,v in pairs(type) do
+        mct:log("assigning ["..k.."] to dropdown from self!")
+        self[k] = v
+    end
+
+    return self
 end
 
 --------- OVERRIDEN SECTION -------------
@@ -67,9 +31,7 @@ function type:check_validity(val)
         return false
     end
 
-    local option = self:get_option()
-
-    local values = option:get_values()
+    local values = self:get_values()
     
     -- check if this key exists as a dropdown option
     local valid = false
@@ -85,11 +47,10 @@ function type:check_validity(val)
 end
 
 function type:set_default()
-    local option = self:get_option()
 
-    local values = option:get_values()
+    local values = self:get_values()
     -- set the default value as the first added dropdown option
-    option._default_setting = values[1]
+    self._default_setting = values[1]
 end
 
 function type:ui_select_value(val)
@@ -143,17 +104,15 @@ function type:ui_select_value(val)
 end
 
 function type:ui_change_state()
-    local option = self:get_option()
+    local option_uic = self:get_uics()[1]
+    local text_uic = self:get_uic_with_key("text")
 
-    local option_uic = option:get_uics()[1]
-    local text_uic = option:get_uic_with_key("text")
-
-    local locked = option:get_uic_locked()
-    local lock_reason = option:get_lock_reason()
+    local locked = self:get_uic_locked()
+    local lock_reason = self:get_lock_reason()
 
     -- disable the dropdown box
     local state = "active"
-    local tt = option:get_tooltip_text()
+    local tt = self:get_tooltip_text()
 
     if locked then
         state = "inactive"
@@ -165,8 +124,6 @@ function type:ui_change_state()
 end
 
 function type:ui_create_option(dummy_parent)
-    local option_obj = self:get_option()
-
     --local templates = option_obj:get_uic_template()
     local box = "ui/vandy_lib/dropdown_button_no_event"
     --local dropdown_option = templates[2]
@@ -183,7 +140,7 @@ function type:ui_create_option(dummy_parent)
     popup_list:PropagatePriority(popup_menu:Priority()+1)
     --popup_list:SetInteractive(true)
 
-    option_obj:set_uics(new_uic)
+    self:set_uics(new_uic)
 
     self:refresh_dropdown_box()
 
@@ -252,22 +209,20 @@ function type:add_dropdown_value(key, text, tt, is_default)
         tt = tt
     }
 
-    local option = self:get_option()
-
-    option._values[#option._values+1] = val
+    self._values[#self._values+1] = val
 
     -- check if it's the first value being assigned to the dropdown, to give at least one default value
-    if #option._values == 1 then
-        option:set_default_value(key)
+    if #self._values == 1 then
+        self:set_default_value(key)
     end
 
     if is_default then
-        option:set_default_value(key)
+        self:set_default_value(key)
     end
 
     -- if the UI already exists, refresh the dropdown box!
-    if is_uicomponent(option:get_uics()[1]) then
-        self:refresh_dropdown_box(option)
+    if is_uicomponent(self:get_uics()[1]) then
+        self:refresh_dropdown_box()
     end
 end
 
@@ -275,9 +230,7 @@ end
 --- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
 -- Allows for dynamic dropdowns!
 function type:refresh_dropdown_box()
-    local option_obj = self:get_option()
-
-    local uic = option_obj:get_uic_with_key("mct_dropdown_box")
+    local uic = self:get_uic_with_key("mct_dropdown_box")
 
     local popup_menu = UIComponent(uic:Find("popup_menu"))
     local popup_list = UIComponent(popup_menu:Find("popup_list"))
@@ -287,9 +240,9 @@ function type:refresh_dropdown_box()
 
     local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
     
-    local selected_value = option_obj:get_selected_setting()
+    local selected_value = self:get_selected_setting()
 
-    local dropdown_values = option_obj:get_values()
+    local dropdown_values = self:get_values()
 
     local dropdown_option_template = "ui/vandy_lib/dropdown_option"
 

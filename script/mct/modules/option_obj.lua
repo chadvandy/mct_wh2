@@ -28,7 +28,19 @@ local mct_option = {
 --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
 function mct_option.new(mod, option_key, type)
     local new_option = {}
-    setmetatable(new_option, mct_option)
+
+    -- create the wrapped type
+    --new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
+
+    local wrapped_type = mct._MCT_TYPES[type]:new()
+
+    -- adopt all methods from the wrapped type!
+    for k,v in pairs(wrapped_type) do
+        mct:log("assigning ["..k.."] from wrapped type ["..type.."] to mct_option ["..option_key.."].")
+        new_option[k] = v
+    end
+
+    setmetatable(new_option, {__index = mct_option, __tostring = function() return "MCT_OPTION" end})
 
     new_option._mod = mod
     new_option._key = option_key
@@ -37,8 +49,6 @@ function mct_option.new(mod, option_key, type)
     --self._tooltip_text = tooltip_text or ""
     new_option._values = {}
 
-    -- create the wrapped type
-    new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
 
     if type == "slider" then
         new_option._values = {
@@ -93,7 +103,7 @@ end
 
 -- if there are any calls on mct_option that don't exist, check if they exist
 -- in the `wrapped` type object.
-function mct_option:__index(attempt)
+--[[function mct_option:__index(attempt)
     mct:log("start")
     mct:log("calling: "..attempt)
     --mct:log("key: "..self:get_key())
@@ -127,11 +137,7 @@ function mct_option:__index(attempt)
     end
     
     return retval
-end
-
-function mct_option:__tostring()
-    return "MCT_OPTION"
-end
+end]]
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
 --- @treturn boolean local_only Whether this option is only edited on the local PC, instead of both.
@@ -423,16 +429,16 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
-function mct_option:get_wrapped_type()
+--[[function mct_option:get_wrapped_type()
     return self._wrapped_type
-end
+end]]
 
 --- Internal checker to see if the values passed through mct_option methods are valid.
 --- @tparam any val Value being tested for type.
 function mct_option:is_val_valid_for_type(val)
-    local wrapped = self:get_wrapped_type()
+    --local wrapped = self:get_wrapped_type()
 
-    return wrapped:check_validity(val)
+    return self:check_validity(val)
 end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
@@ -504,9 +510,9 @@ function mct_option:get_default_value()
             -- between min/max for sliders
             -- first added option for dropdowns
 
-        local wrapped = self:get_wrapped_type()
+        --local wrapped = self:get_wrapped_type()
 
-        wrapped:set_default()
+        self:set_default()
     end
 
     return self._default_setting
@@ -555,7 +561,7 @@ function mct_option:ui_select_value(val, is_new_version)
         return false
     end
 
-    self:get_wrapped_type():ui_select_value(val)
+    self:ui_select_value(val)
 
     if not is_new_version then
         self:set_selected_seting(val)
@@ -621,9 +627,9 @@ end
 ---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 --- Use `mct_option:set_uic_locked()` for the external version of this.
 --- @see mct_option:set_uic_locked
-function mct_option:ui_change_state()
-    self:get_wrapped_type():ui_change_state()
-end
+--[[function mct_option:ui_change_state()
+
+end]]
 
 function mct_option:get_lock_reason()
     local locked = self:get_uic_locked()

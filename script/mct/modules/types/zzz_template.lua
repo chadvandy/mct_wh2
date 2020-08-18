@@ -5,57 +5,12 @@ local mct = mct
 
 local template_type = {}
 
---[[function template_type:__index(attempt)
-    mct:log("start")
-    mct:log("calling: "..attempt)
-    --mct:log("key: "..self:get_key())
-    --mct:log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
-    local retval = nil
+function template_type:new()
+    local self = {}
+    setmetatable(self, template_type)
 
-    if type(field) == "nil" then
-        mct:log("not found, checking mct_option")
-        local wrapped = rawget(self, "option")
-
-        field = wrapped and wrapped[attempt]
-
-        if type(field) == "function" then
-            mct:log("func found")
-            retval = function(obj, ...)
-                return field(wrapped, ...)
-            end
-        else
-            mct:log("non-func found")
-            retval = field
-        end
-    else
-        if type(field) == "function" then
-            retval = function(obj, ...)
-                return field(self, ...)
-            end
-        else
-            retval = field
-        end
-    end
-    
-    return retval
-end]]
-
-function template_type:get_key()
-    return self:get_option():get_key()
+    return self
 end
-
-function template_type:get_mod()
-    return self:get_option():get_mod()
-end
-
-function template_type:get_option()
-    return self.option
-end
-
---[[function template_type:get_type()
-    return self.type
-end]]
 
 function template_type:override_error(function_name)
     mct:error(function_name .. "() called on mct_option ["..self:get_key().."] with type ["..self:get_type().."], but the function wasn't overriden! Investigate!")

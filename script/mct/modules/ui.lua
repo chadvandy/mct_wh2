@@ -1740,8 +1740,9 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             self:uic_SetTooltipText(option_text, option_obj:get_tooltip_text(), true)
 
             -- create the interactive option
-            option_obj:set_uics(option_text)
             local new_option = option_obj:ui_create_option(dummy_option)
+
+            option_obj:set_uics(option_text)
 
             -- resize the text so it takes up the space of the dummy column that is not used by the option
             local n_w = new_option:Width()
