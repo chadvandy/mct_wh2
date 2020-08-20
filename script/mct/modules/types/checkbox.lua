@@ -2,25 +2,82 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
+local lua_type = type
 local type = {}
 
-function type:new()
-    local tt = template_type:new()
+function type:new(option_obj)
     local self = {}
 
-    for k,v in pairs(getmetatable(tt)) do
+    --[[for k,v in pairs(getmetatable(tt)) do
         mct:log("assigning ["..k.."] to checkbox_type from template_type.")
         self[k] = v
     end
-
+]]
     setmetatable(self, type)
 
-    for k,v in pairs(type) do
+    --[[for k,v in pairs(type) do
         mct:log("assigning ["..k.."] to checkbox_type from self!")
         self[k] = v
-    end
+    end]]
+
+    self.option = option_obj
+
+    local tt = template_type:new(option_obj)
+
+    self.template_type = tt
 
     return self
+end
+
+function type:__index(attempt)
+    --mct:log("start check in type:__index")
+    --mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
+
+    if lua_type(field) == "nil" then
+        --mct:log("not found, check mct_option")
+        -- not found in mct_option, check template_type!
+        local wrapped_boi = rawget(self, "option")
+
+        field = wrapped_boi and wrapped_boi[attempt]
+
+        if lua_type(field) == "nil" then
+            --mct:log("not found in wrapped_type or mct_option, check in template_type!")
+            -- not found in mct_option or wrapped_type, check in template_type
+            local wrapped_boi_boi = rawget(self, "template_type")
+            
+            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi_boi, ...)
+                end
+            else
+                retval = field
+            end
+        else
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
+            end
+        end
+    else
+        --mct:log("found in wrapped_type")
+        if lua_type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
+    
+    return retval
 end
 
 
@@ -38,7 +95,7 @@ end
 function type:set_default()
 
     -- if there's no default, set it to false.
-    self._default_setting = false
+    self:set_default_value(false)
 end
 
 function type:ui_select_value(val)

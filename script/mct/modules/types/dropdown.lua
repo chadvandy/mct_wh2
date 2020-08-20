@@ -2,25 +2,82 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
+local lua_type = type
 local type = {}
 
-function type:new()
-    local tt = template_type:new()
+function type:new(option_obj)
     local self = {}
 
-    for k,v in pairs(getmetatable(tt)) do
-        mct:log("assigning ["..k.."] to dropdown from template_type.")
+    --[[for k,v in pairs(getmetatable(tt)) do
+        mct:log("assigning ["..k.."] to checkbox_type from template_type.")
         self[k] = v
     end
-
+]]
     setmetatable(self, type)
 
-    for k,v in pairs(type) do
-        mct:log("assigning ["..k.."] to dropdown from self!")
+    --[[for k,v in pairs(type) do
+        mct:log("assigning ["..k.."] to checkbox_type from self!")
         self[k] = v
-    end
+    end]]
+
+    self.option = option_obj
+
+    local tt = template_type:new(option_obj)
+
+    self.template_type = tt
 
     return self
+end
+
+function type:__index(attempt)
+    --mct:log("start check in type:__index")
+    --mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
+
+    if lua_type(field) == "nil" then
+        --mct:log("not found, check mct_option")
+        -- not found in mct_option, check template_type!
+        local wrapped_boi = rawget(self, "option")
+
+        field = wrapped_boi and wrapped_boi[attempt]
+
+        if lua_type(field) == "nil" then
+            --mct:log("not found in wrapped_type or mct_option, check in template_type!")
+            -- not found in mct_option or wrapped_type, check in template_type
+            local wrapped_boi_boi = rawget(self, "template_type")
+            
+            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi_boi, ...)
+                end
+            else
+                retval = field
+            end
+        else
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
+            end
+        end
+    else
+        --mct:log("found in wrapped_type")
+        if lua_type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
+    
+    return retval
 end
 
 --------- OVERRIDEN SECTION -------------
@@ -50,15 +107,20 @@ function type:set_default()
 
     local values = self:get_values()
     -- set the default value as the first added dropdown option
-    self._default_setting = values[1]
+    self:set_default_value(values[1])
 end
 
 function type:ui_select_value(val)
+    mct:log("ui_select_value dropdown")
+
+    local ok, err = pcall(function()
     local dropdown_box_uic = self:get_uic_with_key("mct_dropdown_box")
     if not is_uicomponent(dropdown_box_uic) then
         mct:error("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no dropdown_box_uic was found internally. Aborting!")
         return false
     end
+
+    mct:log("ui_select_value dropdown 1")
 
     -- ditto
     local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
@@ -67,12 +129,16 @@ function type:ui_select_value(val)
 
     local currently_selected_uic = nil
 
+    mct:log("ui_select_value dropdown 2")
+
     for i = 0, popup_list:ChildCount() - 1 do
         local child = UIComponent(popup_list:Find(i))
         if child:CurrentState() == "selected" then
             currently_selected_uic = child
         end
     end
+    
+    mct:log("ui_select_value dropdown 3")
 
     -- unselected the currently-selected dropdown option
     if is_uicomponent(currently_selected_uic) then
@@ -82,9 +148,13 @@ function type:ui_select_value(val)
         --return false
     end
 
+    mct:log("ui_select_value dropdown 4")
+
     -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
     mct.ui:uic_SetState(new_selected_uic, "selected")
     --self:set_selected_setting(val)
+    
+    mct:log("ui_select_value dropdown 5")
 
     -- set the state text of the dropdown box to be the state text of the row
     local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
@@ -93,14 +163,19 @@ function type:ui_select_value(val)
 
     mct.ui:uic_SetStateText(tx, t)
     mct.ui:uic_SetTooltipText(dropdown_box_uic, tt, true)
+    
+    mct:log("ui_select_value dropdown 6")
 
     -- set the menu invisible and unclick the box
     if dropdown_box_uic:CurrentState() == "selected" then
         mct.ui:uic_SetState(dropdown_box_uic, "active")
     end
+    
+    mct:log("ui_select_value dropdown 7")
 
     popup_menu:SetVisible(false)
     popup_menu:RemoveTopMost()
+end) if not ok then mct:error(err) end
 end
 
 function type:ui_change_state()
@@ -209,10 +284,12 @@ function type:add_dropdown_value(key, text, tt, is_default)
         tt = tt
     }
 
-    self._values[#self._values+1] = val
+    local option = self:get_option()
+
+    option._values[#option._values+1] = val
 
     -- check if it's the first value being assigned to the dropdown, to give at least one default value
-    if #self._values == 1 then
+    if #option._values == 1 then
         self:set_default_value(key)
     end
 
@@ -367,6 +444,7 @@ core:add_listener(
         return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box"
     end,
     function(context)
+        mct:log("mct_dropdown_box_option_selected")
         core:remove_listener("mct_dropdown_box_close")
 
         local uic = UIComponent(context.component)

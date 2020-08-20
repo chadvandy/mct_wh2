@@ -2,25 +2,82 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
+local lua_type = type
 local type = {}
 
-function type:new()
-    local tt = template_type:new()
+function type:new(option_obj)
     local self = {}
 
-    for k,v in pairs(getmetatable(tt)) do
-        mct:log("assigning ["..k.."] to text_input from template_type.")
+    --[[for k,v in pairs(getmetatable(tt)) do
+        mct:log("assigning ["..k.."] to checkbox_type from template_type.")
         self[k] = v
     end
-
+]]
     setmetatable(self, type)
 
-    for k,v in pairs(type) do
-        mct:log("assigning ["..k.."] to text_input from self!")
+    --[[for k,v in pairs(type) do
+        mct:log("assigning ["..k.."] to checkbox_type from self!")
         self[k] = v
-    end
+    end]]
+
+    self.option = option_obj
+
+    local tt = template_type:new(option_obj)
+
+    self.template_type = tt
 
     return self
+end
+
+function type:__index(attempt)
+    --mct:log("start check in type:__index")
+    --mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
+
+    if lua_type(field) == "nil" then
+        --mct:log("not found, check mct_option")
+        -- not found in mct_option, check template_type!
+        local wrapped_boi = rawget(self, "option")
+
+        field = wrapped_boi and wrapped_boi[attempt]
+
+        if lua_type(field) == "nil" then
+            --mct:log("not found in wrapped_type or mct_option, check in template_type!")
+            -- not found in mct_option or wrapped_type, check in template_type
+            local wrapped_boi_boi = rawget(self, "template_type")
+            
+            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi_boi, ...)
+                end
+            else
+                retval = field
+            end
+        else
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
+            end
+        end
+    else
+        --mct:log("found in wrapped_type")
+        if lua_type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
+    
+    return retval
 end
 
 --------- OVERRIDEN SECTION -------------
@@ -39,7 +96,8 @@ end
 function type:set_default()
 
     -- TODO do this better mebs?
-    self._default_setting = ""
+    self:set_default_value("")
+    --self._default_setting = ""
 end
 
 function type:ui_select_value(val)
@@ -76,7 +134,7 @@ function type:ui_create_option(dummy_parent)
     local new_uic = core:get_or_create_component("mct_text_input", text_input_template, dummy_parent)
     new_uic:SetVisible(true)
     new_uic:SetCanResizeWidth(true) new_uic:SetCanResizeHeight(true)
-    new_uic:Resize(dummy_parent:Width() * 0.4, dummy_parent:Height() * 0.95)
+    new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
 
     new_uic:SetInteractive(true)
 
@@ -100,12 +158,15 @@ core:add_listener(
         return context.string == "mct_text_input"
     end,
     function(context)
+        mct:log("mct_text_input_clickeded")
         core:remove_listener("mct_text_input_unselected")
 
         local uic = UIComponent(context.component)
 
         -- will tell us the name of the option
         local parent_id = UIComponent(uic:Parent()):Id()
+
+        mct:log("Parent id: "..parent_id)
 
         local mod_obj = mct:get_selected_mod()
         local option_obj = mod_obj:get_option_by_key(parent_id)

@@ -5,11 +5,43 @@ local mct = mct
 
 local template_type = {}
 
-function template_type:new()
-    local self = {}
-    setmetatable(self, template_type)
+function template_type:new(option_obj)
+    local tt = {}
+    setmetatable(tt, template_type)
 
-    return self
+    tt.option_obj = option_obj
+    tt.key = option_obj:get_key()
+    tt.type = option_obj:get_type()
+
+    return tt
+end
+
+function template_type:__index(key)
+    --mct:log("checking template_type:__index")
+    local field = rawget(getmetatable(self), key)
+    local retval = nil
+
+    if type(field) == "function" then
+        retval = function(obj, ...)
+            return field(self, ...)
+        end
+    else
+        retval = field
+    end
+    
+    return retval
+end
+
+function template_type:get_key()
+    return self.key
+end
+
+function template_type:get_type()
+    return self.type
+end
+
+function template_type:get_option()
+    return self.option_obj
 end
 
 function template_type:override_error(function_name)

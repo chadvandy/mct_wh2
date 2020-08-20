@@ -213,7 +213,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
                 end
 
                 local key = context.string
-                local text = effect.get_localised_string("mct_new_settings_created_start")
+                local text = effect.get_localised_string("mct_new_settings_created_start") .. "\n\n" .. effect.get_localised_string("mct_new_settings_created_mid") .. "\n"
 
                 for i = 1, #mod_keys do
                     local mod_obj = self:get_mod_by_key(mod_keys[i])
@@ -232,7 +232,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
                 end
 
-                text = text .. effect.get_localised_string("mct_new_settings_created_end")
+                text = text .. "\n" .. effect.get_localised_string("mct_new_settings_created_end")
 
                 self.ui:create_popup(
                     key,

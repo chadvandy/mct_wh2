@@ -2,25 +2,82 @@ local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
+local lua_type = type
 local type = {}
 
-function type:new()
-    local tt = template_type:new()
+function type:new(option_obj)
     local self = {}
 
-    for k,v in pairs(getmetatable(tt)) do
-        mct:log("assigning ["..k.."] to slider from template_type.")
+    --[[for k,v in pairs(getmetatable(tt)) do
+        mct:log("assigning ["..k.."] to checkbox_type from template_type.")
         self[k] = v
     end
-
+]]
     setmetatable(self, type)
 
-    for k,v in pairs(type) do
-        mct:log("assigning ["..k.."] to slider from self!")
+    --[[for k,v in pairs(type) do
+        mct:log("assigning ["..k.."] to checkbox_type from self!")
         self[k] = v
-    end
+    end]]
+
+    self.option = option_obj
+
+    local tt = template_type:new(option_obj)
+
+    self.template_type = tt
 
     return self
+end
+
+function type:__index(attempt)
+    --mct:log("start check in type:__index")
+    --mct:log("calling: "..attempt)
+    --mct:log("key: "..self:get_key())
+    --mct:log("calling "..attempt.." on mct option "..self:get_key())
+    local field = rawget(getmetatable(self), attempt)
+    local retval = nil
+
+    if lua_type(field) == "nil" then
+        --mct:log("not found, check mct_option")
+        -- not found in mct_option, check template_type!
+        local wrapped_boi = rawget(self, "option")
+
+        field = wrapped_boi and wrapped_boi[attempt]
+
+        if lua_type(field) == "nil" then
+            --mct:log("not found in wrapped_type or mct_option, check in template_type!")
+            -- not found in mct_option or wrapped_type, check in template_type
+            local wrapped_boi_boi = rawget(self, "template_type")
+            
+            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi_boi, ...)
+                end
+            else
+                retval = field
+            end
+        else
+            if lua_type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
+            end
+        end
+    else
+        --mct:log("found in wrapped_type")
+        if lua_type(field) == "function" then
+            retval = function(obj, ...)
+                return field(self, ...)
+            end
+        else
+            retval = field
+        end
+    end
+    
+    return retval
 end
 
 --------- OVERRIDEN SECTION -------------
@@ -45,7 +102,7 @@ function type:set_default()
 
     -- get the "average" of the two numbers, (min+max)/2
     -- TODO set this with respect for the step sizes, precision, etc
-    self._default_setting = (min+max)/2
+    self:set_default_value((min+max)/2)
 end
 
 function type:ui_select_value(val)
@@ -55,7 +112,7 @@ function type:ui_select_value(val)
         return false
     end
 
-    print_all_uicomponent_children(option_uic)
+    --print_all_uicomponent_children(option_uic)
 
     local right_button = find_uicomponent(option_uic, "right_button")
     local left_button = find_uicomponent(option_uic, "left_button")
@@ -237,8 +294,10 @@ function type:slider_set_step_size(step_size, step_size_precision)
         return false
     end
 
-    self._values.step_size = step_size
-    self._values.step_size_precision = step_size_precision
+    local option = self:get_option()
+
+    option._values.step_size = step_size
+    option._values.step_size_precision = step_size_precision
 end
 
 ---- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
@@ -255,7 +314,9 @@ function type:slider_set_precision(precision)
         return false
     end
 
-    self._values.precision = precision
+    local option = self:get_option()
+
+    option._values.precision = precision
 end
 
 ---- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
@@ -283,8 +344,10 @@ function type:slider_set_min_max(min, max)
         return false
     end]]
 
-    self._values.min = min
-    self._values.max = max
+    local option = self:get_option()
+
+    option._values.min = min
+    option._values.max = max
 
     -- if the UI exists, change the buttons and set the value if it's above the max/below the min
     local uic = self:get_uics()[1]

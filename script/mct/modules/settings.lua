@@ -292,6 +292,79 @@ function settings:add_profile_with_key(key)
     return true
 end
 
+--- Check the cached_settings object for a specific mod key, and a single (or multiple) option.
+-- Will return a table of settings keys in the order the option keys were presented. Nil if none are found.
+function settings:get_cached_settings(mod_key, option_keys)
+    if not is_string(mod_key) then
+        -- errmsg
+        return nil
+    end
+
+    if is_string(option_keys) then
+        option_keys = {option_keys}
+    end
+
+    if not is_table(option_keys) then
+        -- return the entire cached mod
+        return self.cached_settings[mod_key]
+    end
+
+    local test_mod = self.cached_settings[mod_key]
+
+    -- no mod with this key was found in cached settings
+    if is_nil(test_mod) then
+        return nil
+    end
+
+    local retval = {}
+
+    for i = 1, #option_keys do
+        local option_key = option_keys[i]
+        local test = test_mod[option_key]
+
+        if not is_nil(test) then
+            retval[option_key] = test
+        end
+    end
+
+    return retval
+end
+
+--- Remove any cached settings within the mod-key provided with the option keys provided. 
+-- If no option keys are provided, the entire mod's cached settings will be axed.
+function settings:remove_cached_setting(mod_key, option_keys)
+    if not is_string(mod_key) then
+        -- errmsg
+        return false
+    end
+
+    if is_string(option_keys) then
+        option_keys = {option_keys}
+    end
+
+    -- no "option_keys" were passed - just remove the mod from memory!
+    if is_nil(option_keys) then
+        self.cached_settings[mod_key] = nil
+        return
+    end
+
+    -- check if the mod is cached in memory
+    local test_mod = self.cached_settings[mod_key]
+
+    if is_nil(test_mod) then
+        -- this mod was already removed from cached settings - cancel!
+        return false
+    end
+
+    -- loop through all option keys, and remove them from the cached settings
+    for i = 1, #option_keys do
+        local option_key = option_keys[i]
+
+        -- kill the cached setting for this option key
+        test_mod[option_key] = nil
+    end
+end
+
 function settings:save_mct_settings()
     local file = io.open(self.settings_file, "w+")
 
@@ -325,8 +398,8 @@ function settings:save_mct_settings()
                 elseif is_boolean(saved_setting) then
                     t = t .. tostring(saved_setting) .. ",\n"
                 else
-                    mct:log("not a string number or boolean?")
-                    mct:log(tostring(saved_setting))
+                    --mct:log("not a string number or boolean?")
+                    --mct:log(tostring(saved_setting))
                     t = t .. "nil" .. ",\n"
                 end
 
@@ -583,6 +656,7 @@ function settings:load()
                     setting = option_obj:get_finalized_setting()
                 end
 
+                --- TODO Make this ignore the "read_only" status
                 -- set the finalized setting and read only stuffs
                 option_obj:set_finalized_setting(setting, true)
 
@@ -623,7 +697,7 @@ function settings:load()
                 end
 
                 local key = "mct_new_settings"
-                local text = effect.get_localised_string("mct_new_settings_start")
+                local text = effect.get_localised_string("mct_new_settings_start") .. "\n\n" .. effect.get_localised_string("mct_new_settings_mid")
 
                 for i = 1, #mod_keys do
                     local mod_obj = mct:get_mod_by_key(mod_keys[i])
@@ -641,7 +715,7 @@ function settings:load()
                     end
                 end
 
-                text = text .. effect.get_localised_string("mct_new_settings_end")
+                text = text .. "\n" .. effect.get_localised_string("mct_new_settings_end")
 
                 mct.ui:create_popup(
                     key,

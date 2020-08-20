@@ -29,18 +29,16 @@ local mct_option = {
 function mct_option.new(mod, option_key, type)
     local new_option = {}
 
-    -- create the wrapped type
-    --new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
-
-    local wrapped_type = mct._MCT_TYPES[type]:new()
-
     -- adopt all methods from the wrapped type!
-    for k,v in pairs(wrapped_type) do
+    --[[for k,v in pairs(wrapped_type) do
         mct:log("assigning ["..k.."] from wrapped type ["..type.."] to mct_option ["..option_key.."].")
         new_option[k] = v
-    end
+    end]]
 
-    setmetatable(new_option, {__index = mct_option, __tostring = function() return "MCT_OPTION" end})
+    setmetatable(
+        new_option, 
+        {__index = mct_option, __tostring = function() return "MCT_OPTION" end} --new_option
+    )
 
     new_option._mod = mod
     new_option._key = option_key
@@ -49,6 +47,10 @@ function mct_option.new(mod, option_key, type)
     --self._tooltip_text = tooltip_text or ""
     new_option._values = {}
 
+    -- create the wrapped type
+    --new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
+
+    new_option._wrapped_type = mct._MCT_TYPES[type]:new(new_option)
 
     if type == "slider" then
         new_option._values = {
@@ -101,32 +103,35 @@ function mct_option.new(mod, option_key, type)
     return new_option
 end
 
--- if there are any calls on mct_option that don't exist, check if they exist
--- in the `wrapped` type object.
---[[function mct_option:__index(attempt)
-    mct:log("start")
-    mct:log("calling: "..attempt)
+--[[function mct_option:__index(key)
+    mct:log("start check in mct_option:__index")
+    mct:log("calling: "..key)
     --mct:log("key: "..self:get_key())
     --mct:log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
+    local field = rawget(getmetatable(self), key)
     local retval = nil
 
     if type(field) == "nil" then
-        mct:log("not found, checking wrapped type")
-        local wrapped = rawget(self, "_wrapped_type")
+        mct:log("not found, check wrapped type!")
+        -- not found in mct_option, check template_type!
+        local wrapped_boi = rawget(self, "_wrapped_type")
+        --if is_function(wrapped_boi) then
+            --wrapped_boi = wrapped_boi()
 
-        field = wrapped and wrapped[attempt]
+            field = wrapped_boi and wrapped_boi[key]
 
-        if type(field) == "function" then
-            mct:log("func found")
-            retval = function(obj, ...)
-                return field(wrapped, ...)
+            if type(field) == "function" then
+                retval = function(obj, ...)
+                    return field(wrapped_boi, ...)
+                end
+            else
+                retval = field
             end
-        else
-            mct:log("non-func found")
-            retval = field
-        end
+        --else
+        --    mct:log("type:get_option() not found, fucker")
+        --end
     else
+        mct:log("found in mct_option")
         if type(field) == "function" then
             retval = function(obj, ...)
                 return field(self, ...)
@@ -137,6 +142,10 @@ end
     end
     
     return retval
+end
+
+function mct_option:__tostring()
+    return "MCT_OPTION"
 end]]
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
@@ -429,17 +438,88 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
---[[function mct_option:get_wrapped_type()
+function mct_option:get_wrapped_type()
     return self._wrapped_type
-end]]
+end
 
 --- Internal checker to see if the values passed through mct_option methods are valid.
 --- @tparam any val Value being tested for type.
 function mct_option:is_val_valid_for_type(val)
-    --local wrapped = self:get_wrapped_type()
+    local wrapped = self:get_wrapped_type()
 
-    return self:check_validity(val)
+    return wrapped:check_validity(val)
 end
+
+function mct_option:check_validity(val)
+    return self:get_wrapped_type():check_validity(val)
+end
+
+function mct_option:set_default()
+    return self:get_wrapped_type():set_default()
+end
+
+---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
+--- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
+--- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
+function mct_option:ui_select_value(val, is_new_version)
+    if not self:is_val_valid_for_type(val) then
+        mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+        return false
+    end
+
+    local option_uic = self:get_uics()[1]
+
+    if not is_uicomponent(option_uic) then
+        mct:error("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
+        return false
+    end
+
+    self:get_wrapped_type():ui_select_value(val)
+
+    if not is_new_version then
+        self:set_selected_seting(val)
+    end
+
+    mct.ui:set_actions_states()
+end
+
+function mct_option:ui_change_state()
+    return self:get_wrapped_type():ui_change_state()
+end
+
+function mct_option:ui_create_option(dummy_parent)
+    return self:get_wrapped_type():ui_create_option(dummy_parent)
+end
+
+-- type-specifics
+function mct_option:slider_get_precise_value()
+    return self:get_wrapped_type():slider_get_precise_value()
+end
+
+function mct_option:slider_set_step_size(...)
+    return self:get_wrapped_type():slider_set_step_size(...)
+end
+
+function mct_option:slider_set_precision(...)
+    return self:get_wrapped_type():slider_set_precision(...)
+end
+
+function mct_option:slider_set_min_max(...)
+    return self:get_wrapped_type():slider_set_min_max(...)
+end
+
+function mct_option:add_dropdown_values(...)
+    return self:get_wrapped_type():add_dropdown_values(...)
+end
+
+function mct_option:add_dropdown_value(...)
+    return self:get_wrapped_type():add_dropdown_value(...)
+end
+
+function mct_option:refresh_dropdown_box()
+    return self:get_wrapped_type():refresh_dropdown_box()
+end
+
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
@@ -460,6 +540,7 @@ function mct_option:get_finalized_setting()
     return self._finalized_setting
 end
 
+-- TODO hookup is_event_free // decide on using it
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 --- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_event_free Set to true to skip MctOptionSettingFinalized. Used by save/load version.
@@ -524,6 +605,11 @@ end
 --- @local
 function mct_option:set_selected_setting(val, is_creation)
     if self:is_val_valid_for_type(val) then
+        -- make sure nothing happens if the new val is the current setting
+        if self:get_selected_setting() == val then
+            return
+        end
+
         -- save the val as the currently selected setting, used for UI and finalization
         self._selected_setting = val
 
@@ -543,31 +629,6 @@ function mct_option:set_selected_setting(val, is_creation)
             self:process_callback()
         end]]
     end
-end
-
----- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
---- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
---- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
-function mct_option:ui_select_value(val, is_new_version)
-    if not self:is_val_valid_for_type(val) then
-        mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
-        return false
-    end
-
-    local option_uic = self:get_uics()[1]
-
-    if not is_uicomponent(option_uic) then
-        mct:error("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
-        return false
-    end
-
-    self:ui_select_value(val)
-
-    if not is_new_version then
-        self:set_selected_seting(val)
-    end
-
-    mct.ui:set_actions_states()
 end
 
 ---- Getter for whether this UIC is currently locked.
