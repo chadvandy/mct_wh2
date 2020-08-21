@@ -88,5 +88,23 @@ mct6:set_default_value(true)
 mct6:set_mp_disabled(true)
 
 local mct8 = mct_mod:add_new_option("mct8", "text_input")
-mct8:set_text("Text Input")
+mct8:set_text("Text Input - Can't Be 'boyo'")
+mct8:set_tooltip_text("I mean it. You cannot put the word 'boyo' as the option here. Don't try.")
 mct8:set_default_value("My Text")
+
+mct8:text_input_add_validity_test(
+    function(text) 
+        if text == "boyo" then
+            return "I don't want the string 'boyo' in my mod."
+        end
+
+        return true    
+    end
+)
+
+local mct9 = mct_mod:add_new_option("mct9", "slider")
+mct9:set_text("2-precision slider")
+mct9:slider_set_min_max(0, 10)
+mct9:slider_set_step_size(0.01, 2)
+mct9:slider_set_precision(2)
+mct9:set_default_value(0)
