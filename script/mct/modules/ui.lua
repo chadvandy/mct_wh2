@@ -1035,6 +1035,7 @@ function ui_obj:close_frame()
     --core:remove_listener("left_or_right_pressed")
     core:remove_listener("MctRowClicked")
     core:remove_listener("MCT_SectionHeaderPressed")
+    core:remove_listener("mct_highlight_finalized_any_pressed")
 
     -- clear saved vars
     self.panel = nil
@@ -1518,7 +1519,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
     for _, section_key in ipairs(ordered_section_keys) do
         local section_obj = mod_obj:get_section_by_key(section_key);
 
-        if section_obj._options == nil then
+        if not section_obj or section_obj._options == nil then
             -- skip
         else
             -- make sure the dummy rows table is clear before doing anything
@@ -2257,16 +2258,28 @@ core:add_listener(
 
             local actions_panel = ui_obj.actions_panel
 
-            local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
-            local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+
 
             -- highlight the finalize buttons!
-            button_mct_finalize_settings:StartPulseHighlight(2, "active")
-            mct_finalize_settings_on_mod:StartPulseHighlight(2, "active")
-
             local function func()
-                button_mct_finalize_settings:StopPulseHighlight()
-                mct_finalize_settings_on_mod:StopPulseHighlight()
+                local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
+                local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+                
+                button_mct_finalize_settings:StartPulseHighlight(2, "active")
+                mct_finalize_settings_on_mod:StartPulseHighlight(2, "active")
+
+                core:add_listener(
+                    "mct_highlight_finalized_any_pressed",
+                    "ComponentLClickUp",
+                    function(context)
+                        return context.string == "button_mct_finalize_settings" or context.string == "mct_finalize_settings_on_mod"
+                    end,
+                    function(context)
+                        button_mct_finalize_settings:StopPulseHighlight()
+                        mct_finalize_settings_on_mod:StopPulseHighlight()
+                    end,
+                    false
+                )
             end
 
             ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() func() end, function() func() end)
