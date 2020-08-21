@@ -254,48 +254,67 @@ end
 
 
 ---- Internal use only. Set UICs through the uic_obj
+--- k/v table of key=uic
 --- @local
 function mct_option:set_uics(uic_obj)
     -- check if it's a table of UIC's
     if is_table(uic_obj) then
-        for i = 1, #uic_obj do
-            local uic = uic_obj[i]
-            if is_uicomponent(uic) then
-                self._uics[#self._uics+1] = uic
+        for key,uic in pairs(uic_obj) do
+            if is_uicomponent(uic) and is_string(key) then
+                self._uics[key] = uic
+            else
+                -- errmsg
             end
         end
         return
     end
+end
 
-    -- check if it's just one UIC
-    if not is_uicomponent(uic_obj) then
-        mct:error("set_uics() called for mct_option with key ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the uic_obj supplied was neither a UIC or a table of UICs! Returning false.")
+---- Add a UIC to this mct_option with supplied key (doesn't have to be the UIC ID)
+--- Easily grab the UIC with get_uic_with_key.
+--- @tparam string key The key to save this UIC as
+--- @tparam uicomponent uic The UIC to save locally.
+--- @tparam boolean force_override Whether this function will override an existing UIC with this key or skip it.
+function mct_option:set_uic_with_key(key, uic, force_override)
+    if not is_string(key) then
+        -- errmsg
         return false
     end
 
-    self._uics[#self._uics+1] = uic_obj
+    if not is_uicomponent(uic) then
+        -- errmsg
+        return false
+    end
+
+    if self._uics[key] and not force_override then
+        -- errmsg; there's already a UIC with this key in the table!
+        return false
+    end
+
+    self._uics[key] = uic
 end
 
----- Internal use only. Grab a UIC by a key
---- @local
 function mct_option:get_uic_with_key(key)
-    if self._uics == nil or self._uics == {} or self._uics[1] == nil then
+    if self._uics == {} then
         mct:error("get_uic_with_key() called for mct_option with key ["..self:get_key().."] but no uics are found! Returning false.")
         return false
     end
 
     local uic_table = self._uics
-    
-    for i = 1, #uic_table do
-        local uic = uic_table[i]
-        if is_uicomponent(uic) then
-            if uic:Id() == key then
-                return uic
-            end
-        end
+
+    local uic = uic_table[key]
+
+    if not uic then
+        -- errmsg; none found
+        return false
     end
 
-    return false
+    if not is_uicomponent(uic) then
+        -- errmsg; not a UIC
+        return false
+    end
+
+    return uic
 end
 
 ---- Internal use only. Get all UICs.
@@ -305,10 +324,9 @@ function mct_option:get_uics()
     local copy = {}
 
     -- first, loop through the table of UICs to make sure they're all still valid; if any are, add them to a copy table
-    for i = 1, #uic_table do
-        local uic = uic_table[i]
+    for key, uic in pairs(uic_table) do
         if is_uicomponent(uic) then
-            copy[#copy+1] = uic
+            copy[key] = uic
         end
     end
 
@@ -347,11 +365,10 @@ function mct_option:set_uic_visibility(visibility, keep_in_ui)
     -- if the UIC exists, set it to the new visibility!
     local uic_table = self:get_uics()
     --mct:log("DOING THIS")
-    for i = 1, #uic_table do
-        local uic = uic_table[i]
+    for _, uic in pairs(uic_table) do
         if is_uicomponent(uic) then
             --mct:log("Setting component to the thing! ["..tostring(self:get_uic_visibility()).."].")
-            mct.ui:uic_SetVisible(uic, self:get_uic_visibility())
+            mct.ui:SetVisible(uic, self:get_uic_visibility())
         end
     end
 end
@@ -467,7 +484,7 @@ function mct_option:ui_select_value(val, is_new_version)
         return false
     end
 
-    local option_uic = self:get_uics()[1]
+    local option_uic = self:get_uic_with_key("option")
 
     if not is_uicomponent(option_uic) then
         mct:error("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
@@ -492,8 +509,10 @@ function mct_option:ui_create_option(dummy_parent)
 end
 
 -- type-specifics
-function mct_option:slider_get_precise_value()
-    return self:get_wrapped_type():slider_get_precise_value()
+
+---- sliders ----
+function mct_option:slider_get_precise_value(...)
+    return self:get_wrapped_type():slider_get_precise_value(...)
 end
 
 function mct_option:slider_set_step_size(...)
@@ -508,6 +527,7 @@ function mct_option:slider_set_min_max(...)
     return self:get_wrapped_type():slider_set_min_max(...)
 end
 
+---- dropdowns ----
 function mct_option:add_dropdown_values(...)
     return self:get_wrapped_type():add_dropdown_values(...)
 end
@@ -518,6 +538,11 @@ end
 
 function mct_option:refresh_dropdown_box()
     return self:get_wrapped_type():refresh_dropdown_box()
+end
+
+---- text-input ----
+function mct_option:text_input_add_validity_test(...)
+    return self:get_wrapped_type():add_validity_test(...)
 end
 
 
@@ -620,7 +645,7 @@ function mct_option:set_selected_setting(val, is_creation)
         end
 
         -- call ui_select_value if the UI exists
-        if is_uicomponent(self:get_uics()[1]) then
+        if is_uicomponent(self:get_uic_with_key("option")) then
             self:ui_select_value(val, true)
         end
 
@@ -680,7 +705,7 @@ function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     self._uic_locked = should_lock
 
     -- if the option already exists in UI, update its state
-    if is_uicomponent(self:get_uics()[1]) then
+    if is_uicomponent(self:get_uic_with_key("option")) then
         self:ui_change_state()
     end
 end

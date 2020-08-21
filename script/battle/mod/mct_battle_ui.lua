@@ -47,11 +47,11 @@ core:add_listener(
         if is_uicomponent(mod_settings_panel) then
             local finalize_button = UIComponent(mod_settings_panel:Find("button_mct_finalize_settings"))
             if is_uicomponent(finalize_button) then
-                ui_obj:uic_SetState(finalize_button, "inactive")
-                ui_obj:uic_SetTooltipText(finalize_button, effect.get_localised_string("mct_button_finalize_settings_battle"), true)
+                ui_obj:SetState(finalize_button, "inactive")
+                ui_obj:SetTooltipText(finalize_button, effect.get_localised_string("mct_button_finalize_settings_battle"), true)
 
                 local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
-                ui_obj:uic_SetStateText(finalize_button_txt, "[[col:red]]" .. effect.get_localised_string("mct_button_finalize_setting") .. "[[/col]]")
+                ui_obj:SetStateText(finalize_button_txt, "[[col:red]]" .. effect.get_localised_string("mct_button_finalize_setting") .. "[[/col]]")
             end
         end
     end,

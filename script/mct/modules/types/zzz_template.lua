@@ -107,4 +107,9 @@ function template_type:refresh_dropdown_box()
     return self:type_error("refresh_dropdown_box", "dropdown")
 end
 
+---- Text Input ----
+function template_type:add_validity_test()
+    return self:type_error("add_validity_test", "text_input")
+end
+
 return template_type

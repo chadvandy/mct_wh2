@@ -276,16 +276,16 @@ function mct_section:uic_visibility_change(event_free)
             attached_rows[i] = nil
         else
             local row = attached_rows[i]
-            mct.ui:uic_SetVisible(row, visibility)
+            mct.ui:SetVisible(row, visibility)
         end
     end
 
     -- also change the state of the UI header
     if visibility then
-        mct.ui:uic_SetState(self._header, "selected")
+        mct.ui:SetState(self._header, "selected")
         -- set to selected
     else
-        mct.ui:uic_SetState(self._header, "active")
+        mct.ui:SetState(self._header, "active")
         -- set to active
     end
 
