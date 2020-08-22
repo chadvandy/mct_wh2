@@ -116,17 +116,22 @@ end
 function wrapped_type:ui_change_state()
     local option_uic = self:get_uic_with_key("text_input")
     local text_uic = self:get_uic_with_key("text")
+    local edit_button = self:get_uic_with_key("edit_button")
 
     local locked = self:get_uic_locked()
     local lock_reason = self:get_lock_reason()
 
     local tt = self:get_tooltip_text()
 
+    local state = "active"
+
     if locked then
+        state = "inactive"
         tt = lock_reason .. "\n" .. tt
     end
 
     option_uic:SetInteractive(not locked)
+    mct.ui:SetState(edit_button, state)
     mct.ui:SetTooltipText(text_uic, tt, true)
 end
 

@@ -168,6 +168,7 @@ function wrapped_type:ui_change_state()
 
     local left_button = self:get_uic_with_key("left_button")
     local right_button = self:get_uic_with_key("right_button")
+    local edit_button = self:get_uic_with_key("edit_button")
     --local text_input = self:get_uic_with_key("text_input")
 
     local state = "active"
@@ -178,6 +179,7 @@ function wrapped_type:ui_change_state()
     end
 
     --mct.ui:SetInteractive(text_input, not locked)
+    mct.ui:SetState(edit_button, state)
     mct.ui:SetState(left_button, state)
     mct.ui:SetState(right_button, state)
     mct.ui:SetTooltipText(text_uic, tt, true)
