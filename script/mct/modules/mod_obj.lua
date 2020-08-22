@@ -317,9 +317,69 @@ function mct_mod:sort_sections_by_index()
     return ret
 end
 
+---- One of the default sort-option functions.
+--- Sort the section by their localised text - from "Awesome Options" to "Zoidberg Goes Woop Woop Woop"
+function mct_mod:sort_sections_by_localised_text()
+    -- return table, which will be the sorted sections from top to bottom
+    local ret = {}
+
+    -- texts is the sorted list of section texts
+    local texts = {}
+
+    -- table linking localised text to a table of section keys. If multiple section have the same localised text, it will be `["Localised Text"] = {"section_key_a", "section_key_b"}`
+    -- else, it's just `["Localised Text"] = {"section_key"}`
+    local text_to_section_key = {}
+
+    -- all sections
+    local sections = self:get_sections()
+
+    for section_key, section_obj in pairs(sections) do
+        -- grab this section's localised text
+        local localised_text = section_obj:get_localised_text()
+        
+        -- toss it into the texts table, and link it to the section key
+        texts[#texts+1] = localised_text
+
+        -- check if this localised text was already linked to something
+        local test = text_to_section_key[localised_text]
+
+        if is_nil(text_to_section_key[localised_text]) then
+            -- if not, set it equal to the key
+            text_to_section_key[localised_text] = {section_key}
+        else
+            if is_table(test) then
+                -- this is ugly, I'm sorry.
+                text_to_section_key[localised_text][#text_to_section_key[localised_text]+1] = section_key
+            end
+        end
+    end
+
+    -- sort the texts alphanumerically.
+    table.sort(texts)
+
+    -- loop through texts, grab the relevant section key, and then add that section key to ret
+    -- if multiple section keys are linked to this text, add them in order added, whatever
+    for i = 1, #texts do
+        -- grab the localised text at this index
+        local text = texts[i]
+
+        -- grab attached sections
+        local attached_sections = text_to_section_key[text]
+
+        -- loop through attached section keys (will only be 1 usually) and then add them to the ret table
+        for j = 1, #attached_sections do
+            local section_key = attached_sections[j]
+            ret[#ret+1] = section_key
+        end
+    end
+
+    return ret
+end
+
 --- Set the section-sort-function for this mod's sections.
 --- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}.
 --- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}.
+--- You can pass "text_sort" for @{mct_mod:sort_sections_by_localised_text}.
 --- You can also pass a full function, see usage below.
 --- @usage    mct_mod:set_sections_sort_function(
 ---      function()
@@ -336,13 +396,15 @@ end
 ---          table.sort(ordered_sections, function(a,b) return a > b end)
 ---      end
 ---     )
---- @tparam function|"key_sort"|"index_sort" sort_func The sort function provided. Either use one of the two strings above, or a custom function like the below example.
+--- @tparam function|"key_sort"|"index_sort"|"text_sort" sort_func The sort function provided. Either use one of the two strings above, or a custom function like the below example.
 function mct_mod:set_section_sort_function(sort_func)
     if is_string(sort_func) then
         if sort_func == "key_sort" then
             self._section_sort_order_function = self.sort_sections_by_key
         elseif sort_func == "index_sort" then
             self._section_sort_order_function = self.sort_sections_by_index
+        elseif sort_func == "text_sort" then
+            self._section_sort_order_function = self.sort_sections_by_localised_text
         else
             mct:error("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
             return false
