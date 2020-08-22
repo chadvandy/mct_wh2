@@ -268,7 +268,7 @@ end
 
 function wrapped_type:slider_get_precise_value(value, as_string, override_precision)
     if not is_number(value) then
-        -- errmsg
+        mct:error("slider_get_precise_value() called on mct_option ["..self:get_key().."], but the value provided is not a number!")
         return false
     end
 
@@ -277,7 +277,7 @@ function wrapped_type:slider_get_precise_value(value, as_string, override_precis
     end
 
     if not is_boolean(as_string) then
-        -- errmsg
+        mct:error("slider_get_precise_value() called on mct_option ["..self:get_key().."], but the as_string argument provided is not a boolean or nil!")
         return false
     end
 
@@ -409,7 +409,6 @@ end
 function wrapped_type:test_text(text)
     text = tonumber(text)
     if not is_number(text) then
-        -- errmsg
         return "Not a valid number!"
     end
 

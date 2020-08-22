@@ -176,7 +176,7 @@ end
 -- TODO put an example here
 function wrapped_type:add_validity_test(callback)
     if not is_function(callback) then
-        -- errmsg
+        mct:error("add_validity_test() called on mct_option ["..self:get_key().."], but the callback provided is not a valid function!")
         return false
     end
 
@@ -188,7 +188,6 @@ end
 -- loops through every validity 
 function wrapped_type:test_text(text)
     if not is_string(text) then
-        -- errmsg
         return "Not a valid string"
     end
 

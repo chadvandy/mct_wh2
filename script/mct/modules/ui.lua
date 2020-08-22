@@ -49,12 +49,12 @@ end
 --- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
 function ui_obj:set_changed_setting(mod_key, option_key, new_value)
     if not is_string(mod_key) then
-        -- errmsg
+        mct:error("set_changed_setting() called, but the mod_key provided ["..tostring(mod_key).."] is not a valid string!")
         return false
     end
 
     if not is_string(option_key) then
-        -- errmsg
+        mct:error("set_changed_setting() called for mod_key ["..mod_key.."], but the option_key provided ["..tostring(option_key).."] is not a valid string!")
         return false
     end
 
@@ -435,7 +435,7 @@ end
 function ui_obj:set_actions_states()
     local actions_panel = self.actions_panel
     if not is_uicomponent(actions_panel) then
-        -- errmsg
+        mct:error("set_actions_states() called, but the actions panel UIC is not found!")
         return false
     end
 
@@ -501,7 +501,7 @@ end
 function ui_obj:populate_profiles_dropdown_box()
     local actions_panel = self.actions_panel
     if not is_uicomponent(actions_panel) then
-        -- errmsg
+        mct:error("populate_profiles_dropdown_box() called, but the actions_panel UIC is not found!")
         return false
     end
 

@@ -263,7 +263,13 @@ function mct_option:set_uics(uic_obj)
             if is_uicomponent(uic) and is_string(key) then
                 self._uics[key] = uic
             else
-                -- errmsg
+                if not is_uicomponent(uic) then
+                    mct:error("set_uics() called for mct_option ["..self:get_key().."], but the UIC provided is not a valid UIComponent!")
+                end
+                
+                if not is_string(key) then
+                    mct:error("set_uics() called for mct_option ["..self:get_key().."], but the key provided is not a valid string!")
+                end
             end
         end
         return
@@ -277,17 +283,17 @@ end
 --- @tparam boolean force_override Whether this function will override an existing UIC with this key or skip it.
 function mct_option:set_uic_with_key(key, uic, force_override)
     if not is_string(key) then
-        -- errmsg
+        mct:error("set_uic_with_key() called on mct_option ["..self:get_key().."], but the key provided is not a string!")
         return false
     end
 
     if not is_uicomponent(uic) then
-        -- errmsg
+        mct:error("set_uic_with_key() called on mct_option ["..self:get_key().."], but the UIC provided is not a UIComponent!")
         return false
     end
 
     if self._uics[key] and not force_override then
-        -- errmsg; there's already a UIC with this key in the table!
+        mct:error("set_uic_with_key() called on mct_option ["..self:get_key().."], but there is already a UIC saved with key ["..key.."]. Call `set_uic_with_key(key, uic, true)` to force an override.")
         return false
     end
 
@@ -300,17 +306,22 @@ function mct_option:get_uic_with_key(key)
         return false
     end
 
+    if not is_string(key) then
+        mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but the key supplied is not a string!")
+        return false
+    end
+
     local uic_table = self._uics
 
     local uic = uic_table[key]
 
     if not uic then
-        -- errmsg; none found
+        mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but there was no UIC found with key ["..key.."].")
         return false
     end
 
     if not is_uicomponent(uic) then
-        -- errmsg; not a UIC
+        mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but the UIC found with key ["..key.."] is not a valid UIComponent! Returning false.")
         return false
     end
 
@@ -704,11 +715,11 @@ function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     -- only care about localisation if it's being locked!
     if should_lock then
         if is_nil(lock_reason) then
-            -- default lock_reason
+            lock_reason = "Locked."
         end
 
         if not is_string(lock_reason) then
-            -- errmsg
+            mct:error("set_uic_locked() called for mct_option ["..self:get_key().."], but the lock_reason passed is not a string or nil! Returning false.")
             return false
         end
 
@@ -717,7 +728,7 @@ function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
         end
 
         if not is_boolean(is_localised) then
-            -- errmsg
+            mct:error("set_uic_locked() called for mct_option ["..self:get_key().."], but the is_localised passed is not a boolean or nil! Returning false.")
             return false
         end
 

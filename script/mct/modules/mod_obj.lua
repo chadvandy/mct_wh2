@@ -625,16 +625,16 @@ function mct_mod:finalize_settings()
         local option_obj = self:get_option_by_key(option_key)
 
         if not mct:is_mct_option(option_obj) then
-            -- errmsg
-            return false
+            mct:warn("Trying to finalize settings for mct_mod ["..self:get_key().."], but there's no option with the key ["..option_key.."].")
+            --return false
+        else
+            local new_setting = option_data.new_value
+            local old_setting = option_data.old_value
+    
+            mct:log("Finalizing setting for option ["..option_key.."], changing ["..tostring(old_setting).."] to ["..tostring(new_setting).."].")
+    
+            option_obj:set_finalized_setting(new_setting)
         end
-
-        local new_setting = option_data.new_value
-        local old_setting = option_data.old_value
-
-        mct:log("Finalizing setting for option ["..option_key.."], changing ["..tostring(old_setting).."] to ["..tostring(new_setting).."].")
-
-        option_obj:set_finalized_setting(new_setting)
     end
 
     mct.ui.changed_settings[self:get_key()] = nil
@@ -867,13 +867,13 @@ end
 --- @tparam string option_key The option that's being disgustingly destroyed, how dare you?
 function mct_mod:delete_option(option_key)
     if not is_string(option_key) then
-        -- errmsg
+        mct:error("delete_option() called on mct_mod ["..self:get_key().."], but the option_key provided ["..tostring(option_key).."] is not a string! Returning false.")
         return false
     end
 
     local option = self:get_option_by_key(option_key)
     if not mct:is_mct_option(option) then
-        -- errmsg
+        mct:error("delete_option() called on mct_mod ["..self:get_key().."], but there's no mct_option with the key ["..option_key.."] found!")
         return false
     end
 

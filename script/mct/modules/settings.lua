@@ -31,12 +31,12 @@ end
 
 function settings:delete_profile_with_key(key)
     if not is_string(key) then
-        -- errmsg
+        mct:error("delete_profile_with_key() called, but the key provided ["..tostring(key).."] is not a string!")
         return false
     end
 
     if not self.profiles[key] then
-        -- errmsg
+        mct:error("delete_profile_with_key() called, but the profile with key ["..key.."] doesn't exist!")
         return false
     end
 
@@ -49,12 +49,12 @@ end
 
 function settings:set_selected_profile(key)
     if not is_string(key) then
-        -- errmsg
+        mct:error("set_selected_profile() called, but the key provided ["..tostring(key).."] is not a string!")
         return false
     end
 
     if not self.profiles[key] then
-        -- errmsg, doesn't exist
+        mct:error("set_selected_profile() called, but there's not profile found with the key ["..key.."]")
         return false
     end
 
@@ -94,7 +94,7 @@ function settings:read_profiles_file()
     local content = loadfile(self.profiles_file)
     
     if not content then
-        -- errmsg
+        mct:error("read_profiles_file() called, but there is no valid profiles found in the profiles_file!")
         return false
     end
 
@@ -121,7 +121,7 @@ function settings:save_profiles_file()
     local file = io.open(self.profiles_file, "w")
 
     if not file then
-        -- errmsg
+        mct:error("save_profiles_file() called, but there's no profiles_file found!")
         return false
     end
 
@@ -169,12 +169,10 @@ end
 -- not erasing the tables makes cached settings work
 function settings:save_profile_with_key(key)
     if not is_string(key) then
-        -- errmsg
         return "bad_key"
     end
 
     if not self.profiles[key] then
-        -- errmsg
         return "none_found"
     end
 
@@ -206,12 +204,10 @@ end
 
 function settings:apply_profile_with_key(key)
     if not is_string(key) then
-        -- errmsg
         return "bad_key"
     end
 
     if not self.profiles[key] then
-        -- errmsg
         return "none_found"
     end
 
@@ -237,12 +233,10 @@ end
 
 function settings:test_profile_with_key(key)
     if not is_string(key) then
-        -- errmsg
         return "bad_key"
     end
 
     if key == "" then
-        -- errmsg
         return "blank_key"
     end
 
@@ -251,8 +245,6 @@ function settings:test_profile_with_key(key)
 
     -- test if one exists already
     if self.profiles[key] ~= nil then
-        -- errmsg
-        -- return error to the popup
         return "exists"
     end
 
@@ -298,7 +290,7 @@ end
 -- Will return a table of settings keys in the order the option keys were presented. Nil if none are found.
 function settings:get_cached_settings(mod_key, option_keys)
     if not is_string(mod_key) then
-        -- errmsg
+        mct:error("get_cached_settings() called, but the mod_key provided ["..tostring(mod_key).."] is not a string!")
         return nil
     end
 
@@ -306,9 +298,14 @@ function settings:get_cached_settings(mod_key, option_keys)
         option_keys = {option_keys}
     end
 
-    if not is_table(option_keys) then
+    if is_nil(option_keys) then
         -- return the entire cached mod
         return self.cached_settings[mod_key]
+    end
+
+    if not is_table(option_keys) then
+        mct:error("get_cached_settings() called for mod_key ["..mod_key.."], but the option_keys arg provided wasn't a single option key, a table of option keys, or nil. Returning nil!")
+        return nil
     end
 
     local test_mod = self.cached_settings[mod_key]
@@ -336,7 +333,7 @@ end
 -- If no option keys are provided, the entire mod's cached settings will be axed.
 function settings:remove_cached_setting(mod_key, option_keys)
     if not is_string(mod_key) then
-        -- errmsg
+        mct:error("remove_cached_setting() called but the mod_key provided ["..tostring(mod_key).."] is not a string.")
         return false
     end
 
@@ -348,6 +345,11 @@ function settings:remove_cached_setting(mod_key, option_keys)
     if is_nil(option_keys) then
         self.cached_settings[mod_key] = nil
         return
+    end
+
+    if not is_table(option_keys) then
+        mct:error("remove_cached_settings() called for mod_key ["..mod_key.."], but the option_keys argument provided is not a single option key, a table of option keys, or nil. Returning false!")
+        return false
     end
 
     -- check if the mod is cached in memory
