@@ -362,7 +362,7 @@ function mod_configuration_tool:warn(text)
 
     local file = io.open(self._logpath, "a+")
     file:write("WARNING: " .. text .. "\n")
-    file:write(debug.traceback("", 2) .. "\n")
+    --file:write(debug.traceback("", 2) .. "\n")
     file:close()
 end
 

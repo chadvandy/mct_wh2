@@ -1529,7 +1529,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
     for _, section_key in ipairs(ordered_section_keys) do
         local section_obj = mod_obj:get_section_by_key(section_key);
 
-        if not section_obj or section_obj._options == nil then
+        if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
             -- make sure the dummy rows table is clear before doing anything
