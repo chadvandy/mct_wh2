@@ -349,6 +349,23 @@ function mod_configuration_tool:log(text)
     file:close()
 end
 
+--- Basic warning logging function for outputting text into the MCT log file.
+--- @tparam string text The string used for output
+function mod_configuration_tool:warn(text)
+    if not is_string(text) and not is_number(text) then
+        return false
+    end
+
+    if not self.write_to_log then
+        return false
+    end
+
+    local file = io.open(self._logpath, "a+")
+    file:write("WARNING: " .. text .. "\n")
+    file:write(debug.traceback("", 2) .. "\n")
+    file:close()
+end
+
 --- Basic error logging function for outputting text into the MCT log file.
 --- @tparam string text The string used for output
 function mod_configuration_tool:error(text)
@@ -402,7 +419,7 @@ function mod_configuration_tool:load_mod(filename, filename_for_out)
         local require_result, require_error = pcall(require, filename)
 
         if require_result then
-            self:log("\tWARNING: require() seemed to be able to load file [" .. filename .. "] with filename [" .. filename_for_out .. "], where loadfile failed? Maybe the mod is loaded, maybe it isn't - proceed with caution!")
+            self:warn("require() seemed to be able to load file [" .. filename .. "] with filename [" .. filename_for_out .. "], where loadfile failed? Maybe the mod is loaded, maybe it isn't - proceed with caution!")
             --return true
         else
             -- strip tab and newline characters from error string
@@ -601,7 +618,7 @@ function mod_configuration_tool:get_mod_by_key(mod_name)
     
     local test = self._registered_mods[mod_name]
     if type(test) == "nil" then
-        self:error("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
+        self:warn("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
         return nil
     end
         
