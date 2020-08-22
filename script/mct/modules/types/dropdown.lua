@@ -110,7 +110,6 @@ function wrapped_type:set_default()
 end
 
 function wrapped_type:ui_select_value(val)
-    mct:log("ui_select_value dropdown")
 
     local ok, err = pcall(function()
     local dropdown_box_uic = self:get_uic_with_key("option")
@@ -119,8 +118,6 @@ function wrapped_type:ui_select_value(val)
         return false
     end
 
-    mct:log("ui_select_value dropdown 1")
-
     -- ditto
     local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
     local popup_list = UIComponent(popup_menu:Find("popup_list"))
@@ -128,16 +125,12 @@ function wrapped_type:ui_select_value(val)
 
     local currently_selected_uic = nil
 
-    mct:log("ui_select_value dropdown 2")
-
     for i = 0, popup_list:ChildCount() - 1 do
         local child = UIComponent(popup_list:Find(i))
         if child:CurrentState() == "selected" then
             currently_selected_uic = child
         end
     end
-    
-    mct:log("ui_select_value dropdown 3")
 
     -- unselected the currently-selected dropdown option
     if is_uicomponent(currently_selected_uic) then
@@ -147,13 +140,9 @@ function wrapped_type:ui_select_value(val)
         --return false
     end
 
-    mct:log("ui_select_value dropdown 4")
-
     -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
     mct.ui:SetState(new_selected_uic, "selected")
     --self:set_selected_setting(val)
-    
-    mct:log("ui_select_value dropdown 5")
 
     -- set the state text of the dropdown box to be the state text of the row
     local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
@@ -162,15 +151,11 @@ function wrapped_type:ui_select_value(val)
 
     mct.ui:SetStateText(tx, t)
     mct.ui:SetTooltipText(dropdown_box_uic, tt, true)
-    
-    mct:log("ui_select_value dropdown 6")
 
     -- set the menu invisible and unclick the box
     if dropdown_box_uic:CurrentState() == "selected" then
         mct.ui:SetState(dropdown_box_uic, "active")
     end
-    
-    mct:log("ui_select_value dropdown 7")
 
     popup_menu:SetVisible(false)
     popup_menu:RemoveTopMost()
