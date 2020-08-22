@@ -223,11 +223,13 @@ function settings:apply_profile_with_key(key)
         mct:log("in mct_mod ["..mod_key.."]")
         local mod_obj = mct:get_mod_by_key(mod_key)
 
-        for option_key, selected_setting in pairs(mod_data) do
-            local option_obj = mod_obj:get_option_by_key(option_key)
+        if mod_obj then
+            for option_key, selected_setting in pairs(mod_data) do
+                local option_obj = mod_obj:get_option_by_key(option_key)
 
-            if selected_setting ~= option_obj:get_finalized_setting() then
-                option_obj:set_selected_setting(selected_setting)
+                if selected_setting ~= option_obj:get_finalized_setting() then
+                    option_obj:set_selected_setting(selected_setting)
+                end
             end
         end
     end
