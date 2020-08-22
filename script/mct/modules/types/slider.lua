@@ -224,14 +224,14 @@ function wrapped_type:ui_create_option(dummy_parent)
 
 
     text_input:SetCanResizeWidth(true)
-    text_input:Resize(text_input:Width() * 0.3, text_input:Height())
+    text_input:Resize(text_input:Width() * 0.4, text_input:Height())
     text_input:SetCanResizeWidth(false)
 
-    left_button:SetDockingPoint(5)
+    left_button:SetDockingPoint(4)
     text_input:SetDockingPoint(5)
-    right_button:SetDockingPoint(5)
+    right_button:SetDockingPoint(6)
 
-    left_button:SetDockOffset(-(text_input:Width()/2),0)
+    left_button:SetDockOffset(0,0)
     right_button:SetDockOffset(0,0)
 
     self:set_uic_with_key("option", new_uic, true)
