@@ -430,7 +430,7 @@ function mod_configuration_tool:load_mod(filename, filename_for_out)
 
     -- finalize all mods found in this module
     local mods = self:get_mods_from_file(filename_for_out)
-    for key, mod in pairs(mods) do
+    for _, mod in pairs(mods) do
         mod:finalize()
     end
 end
