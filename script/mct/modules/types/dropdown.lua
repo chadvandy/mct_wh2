@@ -90,16 +90,17 @@ function wrapped_type:check_validity(val)
     local values = self:get_values()
     
     -- check if this key exists as a dropdown option
-    local valid = false
     for i = 1, #values do
         local test = values[i].key
 
         if val == test then
-            valid = true
+            return true
         end
     end
 
-    return valid
+    -- TODO catch if values is empty?
+    -- return the first dropdown key if it's not valid.
+    return false, values[1].key
 end
 
 function wrapped_type:set_default()

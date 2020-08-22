@@ -85,7 +85,7 @@ end
 
 function wrapped_type:check_validity(value)
     if not is_boolean(value) then
-        return false
+        return false, false
     end
 
     return true

@@ -87,10 +87,26 @@ function wrapped_type:check_validity(value)
         return false
     end
 
-    -- TODO check min/max
-    -- TODO check precision
+    local values = self:get_values()
 
-    return true
+    local min = values.min
+    local max = values.max
+    local precision = values.precision
+
+    if value > max then
+        return false, max
+    elseif value < min then
+        return false, min
+    end
+
+    local test = self:slider_get_precise_value(value, false)
+    
+    if test ~= value then
+        -- not precise!
+        return false, test
+    end
+
+    return true, value
 end
 
 function wrapped_type:set_default()
@@ -101,7 +117,9 @@ function wrapped_type:set_default()
 
     -- get the "average" of the two numbers, (min+max)/2
     -- TODO set this with respect for the step sizes, precision, etc
-    self:set_default_value((min+max)/2)
+    local mid = (min+max)/2
+    mid = self:slider_get_precise_value(mid, false)
+    self:set_default_value(mid)
 end
 
 function wrapped_type:ui_select_value(val)

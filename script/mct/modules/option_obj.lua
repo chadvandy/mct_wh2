@@ -479,10 +479,17 @@ end
 --- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function mct_option:ui_select_value(val, is_new_version)
-    if not self:is_val_valid_for_type(val) then
-        mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
-        return false
+    local valid, new_value = self:is_val_valid_for_type(val)
+    if not valid then
+        if new_value ~= nil then
+            mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
+            val = new_value
+        else
+            mct:error("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+            return false
+        end
     end
+
 
     local option_uic = self:get_uic_with_key("option")
 
@@ -571,28 +578,36 @@ end
 --- @tparam boolean is_event_free Set to true to skip MctOptionSettingFinalized. Used by save/load version.
 --- @local
 function mct_option:set_finalized_setting(val, is_event_free)
-    if self:is_val_valid_for_type(val) then
-        if self:get_read_only() and __game_mode == __lib_type_campaign then
-            -- can't change finalized setting for read onlys! Error!
-            mct:error("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is read only! This REALLY shouldn't happen, investigate.")
+    local valid, new_value = self:is_val_valid_for_type(val)
+    if not valid then
+        if new_value ~= nil then
+            mct:log("set_finalized_setting() called for option with key ["..self:get_key().."], but the val provided ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
+            val = new_value
+        else
+            mct:error("set_finalized_setting() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
             return false
         end
-
-        -- save locally
-        self._finalized_setting = val
-
-
-        -- save on the mct_mod attached, too
-        local mod = self:get_mod()
-        mod._finalized_settings[self:get_key()] = val
-
-        if self:get_selected_setting() ~= val then
-            self:set_selected_setting(val)
-        end
-
-        -- trigger an event to listen for externally
-        core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
     end
+
+    if self:get_read_only() and __game_mode == __lib_type_campaign then
+        -- can't change finalized setting for read onlys! Error!
+        mct:error("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is read only! This REALLY shouldn't happen, investigate.")
+        return false
+    end
+
+    -- save locally
+    self._finalized_setting = val
+
+    -- save on the mct_mod attached, too
+    local mod = self:get_mod()
+    mod._finalized_settings[self:get_key()] = val
+
+    if self:get_selected_setting() ~= val then
+        self:set_selected_setting(val)
+    end
+
+    -- trigger an event to listen for externally
+    core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
 end
 
 --- Set the default setting when the mct_mod is first created and loaded. Also used for the "Revert to Defaults" option.
@@ -629,31 +644,40 @@ end
 --- @tparam boolean is_creation Whether this is being set on the option's UI creation, or being set somewhere else.
 --- @local
 function mct_option:set_selected_setting(val, is_creation)
-    if self:is_val_valid_for_type(val) then
-        -- make sure nothing happens if the new val is the current setting
-        if self:get_selected_setting() == val then
-            return
+    local valid, new_value = self:is_val_valid_for_type(val)
+    if not valid then
+        if new_value ~= nil then
+            mct:log("set_selected_setting() called for option with key ["..self:get_key().."], but the val provided ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
+            val = new_value
+        else
+            mct:error("set_selected_setting() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+            return false
         end
-
-        -- save the val as the currently selected setting, used for UI and finalization
-        self._selected_setting = val
-
-        core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
-
-        if not is_creation then
-            mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
-        end
-
-        -- call ui_select_value if the UI exists
-        if is_uicomponent(self:get_uic_with_key("option")) then
-            self:ui_select_value(val, true)
-        end
-
-        --[[if not event_free then
-            -- run the callback, passing the mct_option along as an arg
-            self:process_callback()
-        end]]
     end
+
+    -- make sure nothing happens if the new val is the current setting
+    if self:get_selected_setting() == val then
+        return
+    end
+
+    -- save the val as the currently selected setting, used for UI and finalization
+    self._selected_setting = val
+
+    core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
+
+    if not is_creation then
+        mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
+    end
+
+    -- call ui_select_value if the UI exists
+    if is_uicomponent(self:get_uic_with_key("option")) then
+        self:ui_select_value(val, true)
+    end
+
+    --[[if not event_free then
+        -- run the callback, passing the mct_option along as an arg
+        self:process_callback()
+    end]]
 end
 
 ---- Getter for whether this UIC is currently locked.

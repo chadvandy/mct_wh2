@@ -88,9 +88,8 @@ end
 -- TODO this
 function wrapped_type:check_validity(value)
     if not is_string(value) then
-        return false
+        return false, ""
     end
-
 
     return true
 end
