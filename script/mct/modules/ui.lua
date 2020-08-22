@@ -452,6 +452,9 @@ function ui_obj:set_actions_states()
     local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
     local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
 
+    -- profiles_new is always allowed!
+    self:SetState(profiles_new, "active")
+
     -- check if there is any selected profile - if not, lock!
     local test = mct.settings:get_selected_profile()
     if not test or test == "" then
@@ -459,7 +462,11 @@ function ui_obj:set_actions_states()
         self:SetState(profiles_save, "inactive")
         self:SetState(profiles_apply, "inactive")
     else
+        -- there is a current profile; enable delete
         self:SetState(profiles_delete, "active")
+
+        -- TODO check if any selected settings are different from profile settings, to enable/disable Save/Apply
+        -- probably will be a hefty chunk of checking, so figure out an optimized way of doing it
         self:SetState(profiles_save, "active")
         self:SetState(profiles_apply, "active")
     end
@@ -710,6 +717,9 @@ function ui_obj:create_actions_panel()
 
     profiles_text:ResizeTextResizingComponentToInitialSize(w, h)
     self:SetStateText(profiles_text, "[[col:fe_white]]Profiles[[/col]]")
+
+    profiles_title:SetTooltipText("{{tt:mct_profiles_tooltip}}", true)
+    profiles_text:SetTooltipText("{{tt:mct_profiles_tooltip}}", true)
 
     -- create "Profiles" dropdown
     local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/vandy_lib/dropdown_button_no_event", actions_panel)
@@ -1886,7 +1896,7 @@ function ui_obj:new_mod_row(mod_obj)
     end
 end
 
-function ui_obj:add_finalize_settings_popup()
+function ui_obj:add_finalize_settings_popup(selected_mod)
     local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/common ui/dialogue_box")
     local tx = find_uicomponent(popup, "DY_text")
     tx:SetVisible(false)
@@ -1949,7 +1959,7 @@ function ui_obj:add_finalize_settings_popup()
     local old_value_header = core:get_or_create_component("old_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
     local new_value_header = core:get_or_create_component("new_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
 
-    top_row:Resize(npw, mod_header:Height() * 1.5)
+    top_row:Resize(npw, mod_header:Height() * 1.2)
 
     mod_header:SetCanResizeWidth(true) mod_header:SetCanResizeHeight(true)
     old_value_header:SetCanResizeWidth(true) old_value_header:SetCanResizeHeight(true)
@@ -1979,7 +1989,7 @@ function ui_obj:add_finalize_settings_popup()
 
     nph = nph - top_row:Height() - 10
     mct:log("h offset: " ..tostring(h_offset))
-    h_offset = h_offset + top_row:Height() + 10
+    h_offset = h_offset + top_row:Height()
     mct:log("h offset after: " ..tostring(h_offset))
 
     -- create the listview on the parchment
@@ -2024,170 +2034,191 @@ function ui_obj:add_finalize_settings_popup()
     end
 
     for mod_key, mod_data in pairs(changed_settings) do
-        mct:log("IN MOD KEY "..mod_key)
-        -- add text row with the mod key
-        local mod_display = core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
+        if selected_mod and mod_key ~= selected_mod then
+            -- skip
+        else
+            mct:log("IN MOD KEY "..mod_key)
+            -- add text row with the mod key
+            local mod_display = core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
 
-        local mod_obj = mct:get_mod_by_key(mod_key)
-        self:SetStateText(mod_display, mod_obj:get_title())
+            local mod_obj = mct:get_mod_by_key(mod_key)
+            self:SetStateText(mod_display, mod_obj:get_title())
 
-        mod_display:SetDockOffset(10, 0)
+            mod_display:SetDockOffset(10, 0)
 
-        reverted_options[mod_key] = {}
+            reverted_options[mod_key] = {}
 
-        -- loop through all changed options and display them!
-        for option_key, option_data in pairs(mod_data) do
-            -- add a full row to put everything within!
-            local option_row = core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
+            -- loop through all changed options and display them!
+            for option_key, option_data in pairs(mod_data) do
+                -- add a full row to put everything within!
+                local option_row = core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
 
-            option_row:Resize(npw, nph * 0.10)
+                option_row:Resize(npw, nph * 0.10)
 
-            local option_obj = mod_obj:get_option_by_key(option_key)
+                local option_obj = mod_obj:get_option_by_key(option_key)
 
-            local option_display = core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
+                local option_display = core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
 
-            self:SetStateText(option_display, option_obj:get_text())
-            option_display:SetDockingPoint(4)
-            option_display:SetDockOffset(20, 0)
+                self:SetStateText(option_display, option_obj:get_text())
+                option_display:SetDockingPoint(4)
+                option_display:SetDockOffset(20, 0)
 
-            local old_value = option_data.old_value
-            local new_value = option_data.new_value
+                local old_value = option_data.old_value
+                local new_value = option_data.new_value
 
-            local old_value_txt = tostring(old_value)
-            local new_value_txt = tostring(new_value)
+                local old_value_txt = tostring(old_value)
+                local new_value_txt = tostring(new_value)
 
-            local option_type = option_obj:get_type()
-            local values = option_obj:get_values()
+                local option_type = option_obj:get_type()
+                local values = option_obj:get_values()
 
-            if option_type == "dropdown" then
-                for i = 1, #values do
-                    local value = values[i]
-                    if value.key == old_value then
-                        old_value_txt = value.text
-                    elseif value.key == new_value then
-                        new_value_txt = value.text
+                if option_type == "dropdown" then
+                    mct:log("looking for keys "..old_value.." and "..new_value.." in dropdown box ["..option_obj:get_key().."].")
+                    for i = 1, #values do
+                        local value = values[i]
+                        mct:log("in key "..value.key)
+                        if value.key == old_value then
+                            local text = value.text
+
+                            local test_text = effect.get_localised_string(text)
+                            if test_text ~= "" then
+                                text = test_text
+                            end
+
+                            mct:log(old_value.. " found, text is "..text)
+                            old_value_txt = text
+                        elseif value.key == new_value then
+                            local text = value.text
+
+                            local test_text = effect.get_localised_string(text)
+                            if test_text ~= "" then
+                                text = test_text
+                            end
+
+                            mct:log(new_value.. " found, text is "..text)
+                            new_value_txt = text
+                        end
                     end
+                elseif option_type == "slider" then
+                    old_value_txt = option_obj:slider_get_precise_value(old_value, true)
+                    new_value_txt = option_obj:slider_get_precise_value(new_value, true)
                 end
-            elseif option_type == "slider" then
-                old_value_txt = option_obj:slider_get_precise_value(old_value, true)
-                new_value_txt = option_obj:slider_get_precise_value(new_value, true)
-            end
 
 
-            local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda", option_row)
-            self:SetStateText(old_value_uic, old_value_txt)
-            old_value_uic:SetDockingPoint(5)
-            old_value_uic:SetDockOffset(-20, 0)
+                local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda", option_row)
+                self:SetStateText(old_value_uic, old_value_txt)
+                old_value_uic:SetDockingPoint(5)
+                old_value_uic:SetDockOffset(-20, 0)
 
-            local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-            old_value_checkbox:SetState("active")
-            old_value_checkbox:SetDockingPoint(5)
-            old_value_checkbox:SetDockOffset(-5, 0)
+                local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+                old_value_checkbox:SetState("active")
+                old_value_checkbox:SetDockingPoint(5)
+                old_value_checkbox:SetDockOffset(-5, 0)
 
-            local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda", option_row)
-            self:SetStateText(new_value_uic, new_value_txt)
-            new_value_uic:SetDockingPoint(6)
-            new_value_uic:SetDockOffset(-60, 0)
+                local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda", option_row)
+                self:SetStateText(new_value_uic, new_value_txt)
+                new_value_uic:SetDockingPoint(6)
+                new_value_uic:SetDockOffset(-60, 0)
 
-            local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-            new_value_checkbox:SetState("selected")
-            new_value_checkbox:SetDockingPoint(6)
-            new_value_checkbox:SetDockOffset(-45, 0)
+                local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+                new_value_checkbox:SetState("selected")
+                new_value_checkbox:SetDockingPoint(6)
+                new_value_checkbox:SetDockOffset(-60, 0)
 
-            local is_new_value = true
+                local is_new_value = true
 
-            core:add_listener(
-                "mct_checkbox_ticked",
-                "ComponentLClickUp",
-                function(context)
-                    local uic = UIComponent(context.component)
-                    return uic == old_value_checkbox or uic == new_value_checkbox
-                end,
-                function(context)
-                    mct:log("mct checkbox ticked in the finalize settings popup!")
-                    local uic = UIComponent(context.component)
-        
-                    local mod_key = mod_key
-                    local option_key = option_key
-                    local status = context.string
-        
-                    local opposite_uic = nil
-                    local value = nil
+                core:add_listener(
+                    "mct_checkbox_ticked",
+                    "ComponentLClickUp",
+                    function(context)
+                        local uic = UIComponent(context.component)
+                        return uic == old_value_checkbox or uic == new_value_checkbox
+                    end,
+                    function(context)
+                        mct:log("mct checkbox ticked in the finalize settings popup!")
+                        local uic = UIComponent(context.component)
+            
+                        local mod_key = mod_key
+                        local option_key = option_key
+                        local status = context.string
+            
+                        local opposite_uic = nil
+                        local value = nil
 
-        
-                    is_new_value = not is_new_value
+            
+                        is_new_value = not is_new_value
 
-                    if is_new_value then
-                        value = new_value
-                        new_value_checkbox:SetState("selected")
-                        old_value_checkbox:SetState("active")
-                        reverted_options[mod_key][option_key] = nil
-                    else
-                        reverted_options[mod_key][option_key] = true
-                        value = old_value
-                        new_value_checkbox:SetState("active")
-                        old_value_checkbox:SetState("selected")
-                    end
+                        if is_new_value then
+                            value = new_value
+                            new_value_checkbox:SetState("selected")
+                            old_value_checkbox:SetState("active")
+                            reverted_options[mod_key][option_key] = nil
+                        else
+                            reverted_options[mod_key][option_key] = true
+                            value = old_value
+                            new_value_checkbox:SetState("active")
+                            old_value_checkbox:SetState("selected")
+                        end
 
-                    local ok, err = pcall(function()
+                        local ok, err = pcall(function()
 
-                    local mod_obj = mct:get_mod_by_key(mod_key)
-                    local option_obj = mod_obj:get_option_by_key(option_key)
-
-                    -- TODO don't change the background UI
-                    self:set_changed_setting(mod_key, option_key, value)
-                    --option_obj:set_selected_setting(value)
-                    end) if not ok then mct:error(err) end
-                end,
-                true
-            )
-        end
-    end
-
-    core:add_listener(
-        "closed_box",
-        "ComponentLClickUp",
-        function(context)
-            local button = UIComponent(context.component)
-            return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
-        end,
-        function(context)
-            core:remove_listener("mct_checkbox_ticked")
-
-            -- if accepted, Finalize!
-            if context.string == "button_tick" then
-                -- loop through reverted-options to refresh their UI
-                --[[mct:log("checking reverted options")
-                for mod_key, data in pairs(reverted_options) do
-                    mct:log("checking mod "..mod_key)
-                    local mod_obj = mct:get_mod_by_key(mod_key)
-
-                    for option_key, _ in pairs(data) do
-                        mct:log("checking option "..option_key)
+                        local mod_obj = mct:get_mod_by_key(mod_key)
                         local option_obj = mod_obj:get_option_by_key(option_key)
 
-                        local option_data = self.changed_settings[mod_key][option_key]
-                        mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
-                        option_obj:set_selected_setting(option_data.old_value)
-                    end
-                end ]]
-
-                mct:finalize()
-                ui_obj:set_actions_states()
-            else
-                -- nada
+                        -- TODO don't change the background UI
+                        self:set_changed_setting(mod_key, option_key, value)
+                        --option_obj:set_selected_setting(value)
+                        end) if not ok then mct:error(err) end
+                    end,
+                    true
+                )
             end
+        end
 
-        end,
-        false
-    )
+        core:add_listener(
+            "closed_box",
+            "ComponentLClickUp",
+            function(context)
+                local button = UIComponent(context.component)
+                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
+            end,
+            function(context)
+                core:remove_listener("mct_checkbox_ticked")
 
-    list_box:Layout()
+                -- if accepted, Finalize!
+                if context.string == "button_tick" then
+                    -- loop through reverted-options to refresh their UI
+                    --[[mct:log("checking reverted options")
+                    for mod_key, data in pairs(reverted_options) do
+                        mct:log("checking mod "..mod_key)
+                        local mod_obj = mct:get_mod_by_key(mod_key)
 
-    list_box:SetCanResizeHeight(true)
-    list_box:Resize(list_box:Width(), list_box:Height() + 100)
-    list_box:SetCanResizeHeight(false)
+                        for option_key, _ in pairs(data) do
+                            mct:log("checking option "..option_key)
+                            local option_obj = mod_obj:get_option_by_key(option_key)
 
+                            local option_data = self.changed_settings[mod_key][option_key]
+                            mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
+                            option_obj:set_selected_setting(option_data.old_value)
+                        end
+                    end ]]
+
+                    mct:finalize()
+                    ui_obj:set_actions_states()
+                else
+                    -- nada
+                end
+
+            end,
+            false
+        )
+
+        list_box:Layout()
+
+        list_box:SetCanResizeHeight(true)
+        list_box:Resize(list_box:Width(), list_box:Height() + 100)
+        list_box:SetCanResizeHeight(false)
+    end
 end) if not ok then mct:error(err) end
 end
 
@@ -2214,8 +2245,9 @@ core:add_listener(
         return context.string == "mct_finalize_settings_on_mod"
     end,
     function(context)
-        mct:finalize(mct:get_selected_mod_name())
-        ui_obj:set_actions_states()
+        if ui_obj:get_locally_edited() then
+            ui_obj:add_finalize_settings_popup(mct:get_selected_mod_name())
+        end
     end,
     true
 )
@@ -2252,13 +2284,12 @@ core:add_listener(
         if not ui_obj:get_locally_edited() then
             ui_obj:close_frame()
         else
+            local ok, err = pcall(function()
             -- trigger a popup to either close with unsaved changes, or cancel the close procedure
             local key = "mct_unsaved"
             local text = "[[col:red]]WARNING: Unsaved Changes![[/col]]\n\nThere are unsaved changes in the Mod Configuration Tool!\nIf you would like to close anyway, press accept. If you want to go back and save your changes, press cancel and use Finalize Settings!"
 
             local actions_panel = ui_obj.actions_panel
-
-
 
             -- highlight the finalize buttons!
             local function func()
@@ -2283,6 +2314,10 @@ core:add_listener(
             end
 
             ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() func() end, function() func() end)
+
+            end) if not ok then mct:error(err) end
+
+
         end
     end,
     true
