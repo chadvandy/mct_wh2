@@ -315,13 +315,14 @@ function mct_option:get_uic_with_key(key)
 
     local uic = uic_table[key]
 
+    -- TODO swap these errors for warns and 
     if not uic then
-        mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but there was no UIC found with key ["..key.."].")
+        --mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but there was no UIC found with key ["..key.."].")
         return false
     end
 
     if not is_uicomponent(uic) then
-        mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but the UIC found with key ["..key.."] is not a valid UIComponent! Returning false.")
+        --mct:error("get_uic_with_key() called for mct_option ["..self:get_key().."], but the UIC found with key ["..key.."] is not a valid UIComponent! Returning false.")
         return false
     end
 
