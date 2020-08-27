@@ -677,7 +677,7 @@ function settings:load()
             local next = next
 
             -- only clear out this mod from content (from an empty table {} to nil) if it's completely empty from the previous operation
-            if next(content[mod_key]) == nil then
+            if content[mod_key] and next(content[mod_key]) == nil then
                 content[mod_key] = nil
             end
         end
