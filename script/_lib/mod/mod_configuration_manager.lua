@@ -187,9 +187,12 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
     else
         --self:log("frontend?")
         -- read the settings file
+        local ok, err = pcall(function()
+            self:log("LOADING SETTINGS")
         self.settings:load()
+        self:log("END - MctInitializing!")
 
-        trigger(false)
+        trigger(false) end) if not ok then self:error(err) end
     end
 
     self.ui:ui_created()
@@ -546,6 +549,7 @@ end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mod_configuration_tool:finalize(specific_mod)
+    local ok, err = pcall(function()
     if __game_mode == __lib_type_campaign then
         -- check if it's MP!
         if cm.game_interface:model():is_multiplayer() then
@@ -605,6 +609,7 @@ function mod_configuration_tool:finalize(specific_mod)
 
         core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
     end
+     end) if not ok then self:error(err) end
 end
 
 --- Getter for the @{mct_mod} with the supplied key.

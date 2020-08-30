@@ -61,3 +61,16 @@ core:add_listener(
     end,
     true
 )
+
+-- TODO remove
+core:add_listener(
+    "blorp",
+    "MctFinalized",
+    true,
+    function(context)
+        local mct = context:mct()
+        mct:log("Mct Finalized!")
+        out("Mct Finalized!")
+    end,
+    true
+)

@@ -49,3 +49,23 @@ core:add_listener(
     end,
     true
 )
+
+core:add_listener(
+    "bloop",
+    "MctFinalized",
+    true,
+    function(context)
+        context:mct():log("MCT FINALIZED")
+    end,
+    true
+)
+
+core:add_listener(
+    "bloop",
+    "MctInitialized",
+    true,
+    function(context)
+        context:mct():log("MCT INITIALIZED")
+    end,
+    true
+)
