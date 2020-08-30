@@ -87,17 +87,17 @@ function ui_obj:set_changed_setting(mod_key, option_key, new_value)
     end
 
     -- if the new value is the finalized setting, remove it
-    --[[if old == new_value then
+    if old == new_value then
         self.changed_settings[mod_key][option_key] = nil
 
         -- check to see if the mod_key obj needs to be removed too
         if next(self.changed_settings[mod_key]) == nil then
             self.changed_settings[mod_key] = nil
         end
-    else]]
+    else
         self.changed_settings[mod_key][option_key]["old_value"] = old
         self.changed_settings[mod_key][option_key]["new_value"] = new_value
-    --end
+    end
 end
 
 function ui_obj:delete_component(uic)
