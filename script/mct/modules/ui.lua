@@ -91,7 +91,7 @@ function ui_obj:set_changed_setting(mod_key, option_key, new_value)
         self.changed_settings[mod_key][option_key] = nil
 
         -- check to see if the mod_key obj needs to be removed too
-        if next(self.changed_settings[mod_key]) == nil then
+        if self.changed_settings[mod_key] and next(self.changed_settings[mod_key]) == nil then
             self.changed_settings[mod_key] = nil
         end
     else
