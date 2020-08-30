@@ -2039,7 +2039,9 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
         else
             mct:log("IN MOD KEY "..mod_key)
             -- add text row with the mod key
-            local mod_display = core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
+            local mod_display = UIComponent(list_box:CreateComponent(mod_key, "ui/vandy_lib/text/la_gioconda"))
+            
+            --core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
 
             local mod_obj = mct:get_mod_by_key(mod_key)
             self:SetStateText(mod_display, mod_obj:get_title())
@@ -2051,13 +2053,16 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
             -- loop through all changed options and display them!
             for option_key, option_data in pairs(mod_data) do
                 -- add a full row to put everything within!
-                local option_row = core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
+
+                local option_row = UIComponent(list_box:CreateComponent(option_key, "ui/mct/script_dummy"))
+                --core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
 
                 option_row:Resize(npw, nph * 0.10)
 
                 local option_obj = mod_obj:get_option_by_key(option_key)
 
-                local option_display = core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
+                local option_display = UIComponent(option_row:CreateComponent(option_key.."_display", "ui/vandy_lib/text/la_gioconda"))
+                --core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
 
                 self:SetStateText(option_display, option_obj:get_text())
                 option_display:SetDockingPoint(4)
