@@ -1722,7 +1722,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     if option_obj == "MCT_BLANK" then
         -- no need to do anything, skip
     else
-        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/vandy_lib/custom_image_tiled", column)
+        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/mct/script_dummy", column)
 
         do
             -- set to be flush with the column dummy
@@ -1731,15 +1731,35 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             dummy_option:SetCanResizeHeight(false) dummy_option:SetCanResizeWidth(false)
 
             self:SetVisible(dummy_option, true)
-            self:SetState(dummy_option, "custom_state_2")
-
-            dummy_option:SetImagePath("ui/skins/default/panel_back_border.png", 1)
+            
+            --self:SetState(dummy_option, "custom_state_2")
+            --dummy_option:SetImagePath("ui/skins/default/panel_back_border.png", 1)
 
             -- set to dock center
             dummy_option:SetDockingPoint(5)
 
             -- give priority over column
             dummy_option:PropagatePriority(column:Priority() +1)
+
+            local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/custom_image_tiled", dummy_option)
+            dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
+            dummy_border:Resize(w, h)
+            dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
+
+            dummy_border:SetState("custom_state_2")
+
+            local border_path = option_obj:get_border_image_path()
+            local border_visible = option_obj:get_border_visibility()
+
+            if is_string(border_path) and border_path ~= "" then
+                dummy_border:SetImagePath(border_path, 1)
+            else -- some error; default to default
+                dummy_border:SetImagePath("ui/skins/default/panel_back_border.png", 1)
+            end
+
+            dummy_border:SetVisible(border_visible)
+
+            option_obj:set_uic_with_key("border", dummy_border, true)
 
             -- make some text to display deets about the option
             local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda", dummy_option)

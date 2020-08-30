@@ -90,6 +90,10 @@ function mct_option.new(mod, option_key, type)
     new_option._uic_lock_reason = {}
     new_option._uic_in_ui = true
 
+    -- border deets
+    new_option._border_visible = true
+    new_option._border_image_path = "ui/skins/default/panel_back_border.png"
+
     new_option._pos = {
         x = 0,
         y = 0
@@ -390,6 +394,56 @@ end
 --- @within API
 function mct_option:get_uic_visibility()
     return self._uic_visible
+end
+
+---- Getter for the image path for this mct_option's border.
+--- @treturn string border_path The image path for the .png for the border.
+function mct_option:get_border_image_path()
+    return self._border_image_path
+end
+
+---- Setter for the image path. Provide the path from the base structure - ie., "ui/skins/default/panel_back_border.png" is the default image. Make sure to include the directory path and the .png!
+--- @tparam string border_path The image path for the border.
+function mct_option:set_border_image_path(border_path)
+    if not is_string(border_path) then
+        -- errmsg
+        return false
+    end
+
+    -- TODO test if it's a valid path?
+
+    self._border_image_path = border_path
+    
+    local border_uic = self:get_uic_with_key("border")
+    if is_uicomponent(border_uic) then
+        border_uic:SetImagePath(border_path, 1)
+    end
+end
+
+---- Setter for the visibility for this mct_option's border. Set this to false if you want to not have a border img around it!
+--- @tparam boolean is_visible True to set it visible, opposite for opposite.
+function mct_option:set_border_visibility(is_visible)
+    if is_nil(is_visible) then
+        is_visible = true
+    end
+
+    if not is_boolean(is_visible) then
+        -- errmsg
+        return false
+    end
+
+    self._border_visible = is_visible
+
+    local border_uic = self:get_uic_with_key("border")
+    if is_uicomponent(border_uic) then
+        border_uic:SetVisible(self._border_visible)
+    end
+end
+
+---- Get the current visibility for this mct_option's border. Always true unless changed with @{mct_option:set_border_visibility}.
+--- @treturn boolean visibility True for visible, false for the opposite of that.
+function mct_option:get_border_visibility()
+    return self._border_visible
 end
 
 ---- Create a callback triggered whenever this option's setting changes within the MCT UI.
