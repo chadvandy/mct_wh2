@@ -9,6 +9,26 @@ local function check_highlight()
     if first_load then
         uic:Highlight(true, false)
         uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069").."||"..effect.get_localised_string("mct_button_unfinalized"), true)
+
+        -- turn off the highlight when you press da button
+        core:add_listener(
+            "check_for_finalization",
+            "ComponentLClickUp",
+            function(context)
+                return context.string == "button_mct_options"
+            end,
+            function(context)
+                local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
+                if is_uicomponent(uic) then
+
+                    -- turn off highlight!
+                    uic:Highlight(false, false)
+                    -- return tooltip to default
+                    uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
+                end
+            end,
+            false
+        )
     end
 end
 
@@ -62,23 +82,6 @@ core:add_listener(
 )
 
 real_timer.register_singleshot("check_for_da_button", 0)
-
-core:add_listener(
-    "check_for_finalization",
-    "MctFinalized",
-    true,
-    function(context)
-        local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
-        if is_uicomponent(uic) then
-
-            -- turn off highlight!
-            uic:Highlight(false, false)
-            -- return tooltip to default
-            uic:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
-        end
-    end,
-    false
-)
 
 local is_host = false
 

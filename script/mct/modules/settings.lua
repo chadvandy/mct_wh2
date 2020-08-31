@@ -286,6 +286,28 @@ function settings:add_profile_with_key(key)
     return true
 end
 
+--- Add a new cached_settings object for a specific mod key, or adds new option keys if one exists already.
+function settings:add_cached_settings(mod_key, option_data)
+    if not is_string(mod_key) then
+        -- errmsg
+        return nil
+    end
+
+    if not is_table(option_data) then
+        -- errmsg
+        return nil
+    end
+
+    local test_mod = self.cached_settings[mod_key]
+    if is_nil(test_mod) then
+        self.cached_settings[mod_key] = {}
+    end
+
+    for k,v in pairs(option_data) do
+        self.cached_settings[mod_key][k] = v
+    end
+end
+
 --- Check the cached_settings object for a specific mod key, and a single (or multiple) option.
 -- Will return a table of settings keys in the order the option keys were presented. Nil if none are found.
 function settings:get_cached_settings(mod_key, option_keys)
