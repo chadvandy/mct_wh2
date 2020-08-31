@@ -9,7 +9,7 @@ local mct_option = {
     _mod = nil,
     _key = "",
     _type = nil,
-    _text = "No text assigned.",
+    --_text = "No text assigned.",
     _tooltip_text = "No tooltip assigned.",
 
     __templates = {
@@ -43,6 +43,10 @@ function mct_option.new(mod, option_key, type)
     new_option._mod = mod
     new_option._key = option_key
     new_option._type = type or "NULL_TYPE"
+
+    new_option._text = option_key -- default text is the key of the mct_option if none is provided
+
+
     --self._text = text or ""
     --self._tooltip_text = tooltip_text or ""
     new_option._values = {}
@@ -627,10 +631,10 @@ function mct_option:get_finalized_setting()
 
     if is_nil(test) then
         local default_val = self:get_default_value()
-        if default_val ~= nil then
+        if default_val ~= nil or self:get_type() == "dummy" then
             self._finalized_setting = default_val
         else
-            mct:error("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
+            mct:warn("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
             return nil
         end
     end

@@ -82,30 +82,34 @@ function mct_mod:save_mct_settings()
     local all_options = self:get_options()
 
     for option_key, option_obj in pairs(all_options) do
-        retstr = retstr .. "\t\t[\""..option_key.."\"] = {\n"
+        if option_obj:get_type() == "dummy" then
+            -- skip dummy's
+        else
+            retstr = retstr .. "\t\t[\""..option_key.."\"] = {\n"
 
-        retstr = retstr .. "\t\t\t[\"_setting\"] = "
+            retstr = retstr .. "\t\t\t[\"_setting\"] = "
 
-        local v = option_obj:get_finalized_setting()
+            local v = option_obj:get_finalized_setting()
 
-        if is_string(v) then
-            retstr = retstr .. "\"" .. v .. "\"" .. ",\n"
-        elseif is_number(v) then
-            if option_obj:get_type() == "slider" then
-                local precision = option_obj:get_values().precision or 0
+            if is_string(v) then
+                retstr = retstr .. "\"" .. v .. "\"" .. ",\n"
+            elseif is_number(v) then
+                if option_obj:get_type() == "slider" then
+                    local precision = option_obj:get_values().precision or 0
 
-                v = string.format("%."..precision.."f", v)
-                
-                retstr = retstr .. v .. ",\n"
-            else
-                -- issue? what?
+                    v = string.format("%."..precision.."f", v)
+                    
+                    retstr = retstr .. v .. ",\n"
+                else
+                    -- issue? what?
+                    retstr = retstr .. tostring(v) .. ",\n"
+                end            
+            elseif is_boolean(v) then
                 retstr = retstr .. tostring(v) .. ",\n"
-            end            
-        elseif is_boolean(v) then
-            retstr = retstr .. tostring(v) .. ",\n"
+            end
+            
+            retstr = retstr .. "\t\t},\n"
         end
-        
-        retstr = retstr .. "\t\t},\n"
     end
 
     retstr = retstr .. "\t},\n"

@@ -47,6 +47,7 @@ function mod_configuration_tool:init()
         self._MCT_TYPES.checkbox = self:load_module("checkbox", "script/mct/modules/types/")
         self._MCT_TYPES.text_input = self:load_module("text_input", "script/mct/modules/types/")
         --self._MCT_TYPES.multibox = self:load_module("multibox", "script/mct/modules/types/")
+        self._MCT_TYPES.dummy = self:load_module("dummy", "script/mct/modules/types/")
 
 
         -- load MCT object modules
@@ -413,16 +414,16 @@ function mod_configuration_tool:load_mod(filename, filename_for_out)
 
         -- if it didn't work, 
         if not ok then
-            self:error("Failed to execute loaded mod file [" .. filename_for_out .. "], error is: " .. tostring(err))
+            self:error("Failed to execute loaded MCT file [" .. filename_for_out .. "], error is: " .. tostring(err))
             return false
         end
     else          
-        self:error("\tFailed to load mod file [" .. filename_for_out .. "], error is: " .. tostring(load_error) .. ". Will attempt to require() this file to generate a more meaningful error message:")
+        self:error("\tFailed to load MCT file [" .. filename_for_out .. "], error is: " .. tostring(load_error) .. ". Will attempt to require() this file to generate a more meaningful error message:")
 
         local require_result, require_error = pcall(require, filename)
 
         if require_result then
-            self:warn("require() seemed to be able to load file [" .. filename .. "] with filename [" .. filename_for_out .. "], where loadfile failed? Maybe the mod is loaded, maybe it isn't - proceed with caution!")
+            self:warn("require() seemed to be able to load file [" .. filename .. "] with filename [" .. filename_for_out .. "], where loadfile failed? Maybe the file is loaded, maybe it isn't - proceed with caution!")
             --return true
         else
             -- strip tab and newline characters from error string
