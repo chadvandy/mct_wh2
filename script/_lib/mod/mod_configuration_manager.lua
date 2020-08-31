@@ -306,7 +306,7 @@ function mod_configuration_tool:log_init()
     end]]
 
     ModLog("mct:log_init() started")
-    local first_load = core:svr_load_persistent_bool("mct_init") ~= true
+    local first_load = true --core:svr_load_persistent_bool("mct_init") ~= true
 
     if first_load then
         core:svr_save_persistent_bool("mct_init", true)
