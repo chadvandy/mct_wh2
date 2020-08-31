@@ -392,7 +392,12 @@ function settings:remove_cached_setting(mod_key, option_keys)
 end
 
 function settings:save_mct_settings()
-    local file = io.open(self.settings_file, "w+")
+    local file, err = io.open(self.settings_file, "w+")
+
+    if not file then
+        mct:error("Could not load settings file: "..err)
+        return false
+    end
 
     self.tab = 0
 
@@ -605,7 +610,7 @@ end
 -- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
 -- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
 function settings:load()
-    local file = io.open(self.settings_file, "r")
+    local file, err = io.open(self.settings_file, "r")
     if not file then
         -- create a file with all the defaults!
         mct:log("First time load - creating settings file! Using defaults for every option.")
@@ -666,11 +671,13 @@ function settings:load()
                         --mct:log("???")
 
                         -- save the option key in the new_settings table, so we can look back later and see that it's new!
-                        self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
+                        -- skip this process if the option is a dummy!
+                        if option_obj:get_type() ~= "dummy" then
+                            self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
+                            any_added = true
+                        end
 
                         --mct:log("????")
-
-                        any_added = true
 
                         --mct:log("?????")
                     end
