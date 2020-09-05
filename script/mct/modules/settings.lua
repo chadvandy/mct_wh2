@@ -662,24 +662,21 @@ function settings:load()
                         setting = saved_data._setting
                     else -- this is a new setting!
                         --mct:log("New setting found! ["..option_key.."]")
-                        if is_nil(self.new_settings[mod_key]) then
-                            --mct:log("?")
-                            self.new_settings[mod_key] = {}
-                            --mct:log("??")
-                        end
 
                         --mct:log("???")
 
                         -- save the option key in the new_settings table, so we can look back later and see that it's new!
                         -- skip this process if the option is a dummy!
                         if option_obj:get_type() ~= "dummy" then
+                            if is_nil(self.new_settings[mod_key]) then
+                                --mct:log("?")
+                                self.new_settings[mod_key] = {}
+                                --mct:log("??")
+                            end
+
                             self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
                             any_added = true
                         end
-
-                        --mct:log("????")
-
-                        --mct:log("?????")
                     end
                 end
 
@@ -688,8 +685,7 @@ function settings:load()
                     -- this returns the default value
                     setting = option_obj:get_finalized_setting()
                 end
-
-                --- TODO Make this ignore the "read_only" status
+                
                 -- set the finalized setting and read only stuffs
                 option_obj:set_finalized_setting(setting, true)
 
@@ -702,8 +698,6 @@ function settings:load()
             end
             
             mod_obj:load_finalized_settings()
-
-            local next = next
 
             -- only clear out this mod from content (from an empty table {} to nil) if it's completely empty from the previous operation
             if content[mod_key] and next(content[mod_key]) == nil then
@@ -720,7 +714,7 @@ function settings:load()
 
         --self:finalize()
 
-        --mct:log(tostring(any_added))
+        mct:log("Any new settings added?: "..tostring(any_added))
         if any_added then
             --mct:log("does this exist")
             mct.ui:add_ui_created_callback(function()

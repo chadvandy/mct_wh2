@@ -18,6 +18,7 @@ local function create_button()
     --ModLog("end")
 
     mct:load_and_start()
+    mct.ui:set_mct_button(new_button)
 end
 
 bm:repeat_callback(

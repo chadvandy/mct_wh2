@@ -645,9 +645,9 @@ end
 -- TODO hookup is_event_free // decide on using it
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 --- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
---- @tparam boolean is_event_free Set to true to skip MctOptionSettingFinalized. Used by save/load version.
+--- @tparam boolean is_first_load This is set to "true" for the first-load version of this function, when the mct_settings.lua file is loaded.
 --- @local
-function mct_option:set_finalized_setting(val, is_event_free)
+function mct_option:set_finalized_setting(val, is_first_load)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
         if new_value ~= nil then
@@ -659,7 +659,7 @@ function mct_option:set_finalized_setting(val, is_event_free)
         end
     end
 
-    if self:get_read_only() and __game_mode == __lib_type_campaign then
+    if self:get_read_only() and __game_mode == __lib_type_campaign and not is_first_load then
         -- can't change finalized setting for read onlys! Error!
         mct:warn("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is read only! This shouldn't happen, investigate.")
         return false
@@ -676,8 +676,10 @@ function mct_option:set_finalized_setting(val, is_event_free)
         self:set_selected_setting(val)
     end
 
-    -- trigger an event to listen for externally
-    core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
+    -- trigger an event to listen for externally (skip if it's first load)
+    if not is_first_load then
+        core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
+    end
 end
 
 --- Set the default setting when the mct_mod is first created and loaded. Also used for the "Revert to Defaults" option.

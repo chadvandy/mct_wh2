@@ -5,6 +5,9 @@
 local ui_obj = {
     -- UICs
 
+    -- the MCT button
+    mct_button = nil,
+
     -- script dummy
     dummy = nil,
 
@@ -36,18 +39,50 @@ local ui_obj = {
     -- within each mod key table, option keys (only added when that specific option changed)
     -- within each option key table, two field - old_value (for finalized-setting) and new_value (for selected-setting) (option key table removed if new_value is set to old_value)
     changed_settings = {},
+
+    -- stashed popups, stored within this table, enjoy.
+    stashed_popups = {},
+
+    -- if the panel is openeded or closededed
+    opened = false,
+    notify_num = 0,
 }
 
 local mct = mct
 
 mct:mixin(ui_obj)
 
+function ui_obj:get_mct_button()
+    return self.mct_button
+end
+
+function ui_obj:set_mct_button(uic)
+    if not is_uicomponent(uic) then
+        -- errmsg
+        return false
+    end
+
+    self.mct_button = uic
+
+    -- after getting the button, create the label counter, and then set it invisible
+    local label = core:get_or_create_component("label_notify", "ui/vandy_lib/number_label", uic)
+    label:SetStateText("0")
+    label:SetTooltipText("Notifications", true)
+    label:SetDockingPoint(3)
+    label:SetDockOffset(5, -5)
+    label:SetCanResizeWidth(true) label:SetCanResizeHeight(true)
+    label:Resize(label:Width() /2, label:Height() /2)
+    label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
+
+    label:SetVisible(false)
+end
+
 function ui_obj:get_locally_edited()
     return (next(self.changed_settings) ~= nil)
 end
 
 --- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
-function ui_obj:set_changed_setting(mod_key, option_key, new_value)
+function ui_obj:set_changed_setting(mod_key, option_key, new_value, is_popup_open)
     if not is_string(mod_key) then
         mct:error("set_changed_setting() called, but the mod_key provided ["..tostring(mod_key).."] is not a valid string!")
         return false
@@ -86,8 +121,8 @@ function ui_obj:set_changed_setting(mod_key, option_key, new_value)
         old = mct_option:get_finalized_setting()
     end
 
-    -- if the new value is the finalized setting, remove it
-    if old == new_value then
+    -- if the new value is the finalized setting, remove it, UNLESS the popup is open
+    if old == new_value and not is_popup_open then
         self.changed_settings[mod_key][option_key] = nil
 
         -- check to see if the mod_key obj needs to be removed too
@@ -141,150 +176,240 @@ function ui_obj:add_ui_created_callback(callback)
         return false
     end
 
-    self.ui_created_callbacks[#self.ui_created_callbacks+1] = callback
+    if self.game_ui_created then
+        -- trigger immediately
+        callback()
+    else
+        self.ui_created_callbacks[#self.ui_created_callbacks+1] = callback
+    end
 end
 
-function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
-    local function func()
+function ui_obj:notify(str)
+    local mct_button = self:get_mct_button()
+    if not is_uicomponent(mct_button) then
+        mct:error("ui:notify() triggered but the mct button doesn't exist yet?")
+        return false
+    end
 
-        -- verify shit is alright
-        if not is_string(key) then
-            mct:error("create_popup() called, but the key passed is not a string!")
-            return false
-        end
+    if not is_string(str) then
+        -- errmsg
+        --return false
+    end
 
-        if not is_string(text) then
-            mct:error("create_popup() called, but the text passed is not a string!")
-            return false
-        end
+    -- change the counter on the num label to be +1, set it visible if it's not
+    local label = UIComponent(mct_button:Find("label_notify"))
 
-        if not is_boolean(two_buttons) then
-            mct:error("create_popup() called, but the two_buttons arg passed is not a boolean!")
-            return false
-        end
+    label:SetVisible(true)
 
-        if not two_buttons then button_two_callback = nil end
+    self.notify_num = self.notify_num + 1
+    local num = self.notify_num
+
+    label:SetStateText(tostring(num))
+
+    -- highlight the MCT button because people are dolts
+    mct_button:StartPulseHighlight(5)
+end
+
+-- clear notifs
+function ui_obj:clear_notifs()
+    local mct_button = self:get_mct_button()
+    if not is_uicomponent(mct_button) then
+        -- errmsg
+        return false
+    end
+
+    local label = UIComponent(mct_button:Find("label_notify"))
+    label:SetStateText("")
+    label:SetVisible(false)
+
+    mct_button:StopPulseHighlight()
+
+    self.notify_num = 0
+end
+
+-- stash a popup for when MCT is opened
+function ui_obj:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+    -- verify shit is alright
+    if not is_string(key) then
+        mct:error("stash_popup() called, but the key passed is not a string!")
+        return false
+    end
+
+    if not is_string(text) then
+        mct:error("stash_popup() called, but the text passed is not a string!")
+        return false
+    end
+
+    if is_nil(two_buttons) then
+        two_buttons = false
+    end
+
+    if not is_boolean(two_buttons) then
+        mct:error("stash_popup() called, but the two_buttons arg passed is not a boolean!")
+        return false
+    end
+
+    if not two_buttons then button_two_callback = function() end end
+
+    -- save it locally!
+    self.stashed_popups[#self.stashed_popups+1] = {
+        key = key,
+        text = text,
+        two_buttons = two_buttons,
+        button_one_callback = button_one_callback,
+        button_two_callback = button_two_callback,
+    }
+end
+
+-- create the actual popup, yay
+function ui_obj:trigger_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+
+    -- verify shit is alright
+    if not is_string(key) then
+        mct:error("trigger_popup() called, but the key passed is not a string!")
+        return false
+    end
+
+    if not is_string(text) then
+        mct:error("trigger_popup() called, but the text passed is not a string!")
+        return false
+    end
+
+    if not is_boolean(two_buttons) then
+        mct:error("trigger_popup() called, but the two_buttons arg passed is not a boolean!")
+        return false
+    end
+
+    if not two_buttons then button_two_callback = function() end end
 
 
-        -- build the popup panel itself
-        local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
+    -- build the popup panel itself
+    local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
 
-        -- grey out the rest of the world
-        popup:RegisterTopMost()
+    -- grey out the rest of the world
+    popup:RegisterTopMost()
 
-        popup:LockPriority()
+    popup:LockPriority()
 
 
-        -- grab and set the text
-        local tx = find_uicomponent(popup, "DY_text")
-        self:SetStateText(tx, text)
+    -- grab and set the text
+    local tx = find_uicomponent(popup, "DY_text")
+    self:SetStateText(tx, text)
 
-        core:add_listener(
-            key.."_button_pressed",
-            "ComponentLClickUp",
-            function(context)
-                local button = UIComponent(context.component)
-                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == key
-            end,
-            function(context)
-                local button = UIComponent(context.component)
-                local id = context.string
+    core:add_listener(
+        key.."_button_pressed",
+        "ComponentLClickUp",
+        function(context)
+            local button = UIComponent(context.component)
+            return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == key
+        end,
+        function(context)
+            local button = UIComponent(context.component)
+            local id = context.string
 
-                -- close the popup
-                ui_obj:delete_component(popup)
+            -- close the popup
+            ui_obj:delete_component(popup)
 
-                if id == "button_tick" then
-                    button_one_callback()
-                else
-                    button_two_callback()
+            if id == "button_tick" then
+                button_one_callback()
+            else
+                button_two_callback()
+            end
+        end,
+        false
+    )
+end
+
+
+function ui_obj:trigger_stashed_popups()
+    local stashed_popups = self.stashed_popups
+
+    local num_total = #stashed_popups
+
+    if num_total == 0 then 
+        -- do nothing?
+    elseif num_total == 1 then
+        -- just trigger it right away
+        local stashed_popup = stashed_popups[1]
+        self:create_popup(
+            stashed_popup.key, 
+            stashed_popup.text, 
+            stashed_popup.two_buttons,
+            stashed_popup.button_one_callback,
+            stashed_popup.button_two_callback
+        )
+    else
+        -- trigger 1 right away, and trigger the rest consecutively when button one/button two are clicked
+
+        local bloop = {}
+
+        -- backwards loop - start at the end and work backwards. necessary since we need to read entries from "bloop", since index 1 has to create index 2 popup
+        for i = num_total, 1, -1 do
+            local stashed_popup = stashed_popups[i]
+
+            if i == num_total then
+                bloop[i] = stashed_popup
+            else -- edit the "stashed_popup" to trigger the next popup when it's closed
+                local next_popup = bloop[i+1]
+                local create_next_popup = function()
+                    self:create_popup(
+                        next_popup.key,
+                        next_popup.text,
+                        next_popup.two_buttons,
+                        next_popup.button_one_callback,
+                        next_popup.button_two_callback
+                    )
                 end
-            end,
-            false
+
+                local one_callback = stashed_popup.button_one_callback
+                stashed_popup.button_one_callback = function() one_callback() create_next_popup() end
+
+                local two_callback = stashed_popup.button_two_callback
+                stashed_popup.button_two_callback = function() two_callback() create_next_popup() end
+
+                bloop[i] = stashed_popup
+            end
+        end
+
+        -- trigger the first one!
+        local stashed_popup = bloop[1]
+
+        self:create_popup(
+            stashed_popup.key,
+            stashed_popup.text,
+            stashed_popup.two_buttons,
+            stashed_popup.button_one_callback,
+            stashed_popup.button_two_callback
         )
     end
-    -- if the game UI hasn't been created, set this as a callback
-    if not self.game_ui_created then
-        self:add_ui_created_callback(function()
-            local manager = nil
-            local listener = ""
-            local delay = 0
-            if __game_mode == __lib_type_battle then
-                manager = bm
-                listener = "ScriptEventBattleCutsceneEnded"
-                delay = 1000
-            elseif __game_mode == __lib_type_campaign then
-                manager = cm
-                listener = "ScriptEventCampaignCutsceneCompleted"
-                delay = 1
-            end
 
-            core:progress_on_loading_screen_dismissed(function()
-                if manager then
-                    manager:callback(function()
-                        if manager:is_any_cutscene_running() then
-                            core:add_listener(
-                                "cutscene_ended",
-                                listener,
-                                true,
-                                function(context)
-                                    manager:callback(function() func() end, delay)
-                                end,
-                                false
-                            )
-                        else
-                            func()
-                        end
-                    end, delay)
-                else 
-                    func()
-                end
-            end)    
-        end)
+    self.stashed_popups = {}
+end
+
+-- if it's the frontend, trigger popup immediately;
+-- else, add the notify button + highlight
+function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+    -- define the popup callback function - triggered immediately in frontend, and triggered when you open the panel for other modes (or immediately if panel is opened)
+    mct:log("creating popup with key ["..key.."].")
+
+    if __game_mode == __lib_type_frontend then
+        -- create the popup immediately
+        mct:log("triggering immediately because we're in frontend.")
+        self:trigger_popup(key, text, two_buttons, button_one_callback, button_two_callback)
     else
+        -- check if the MCT panel is currently open; if it is, trigger immediately, otherwise stash that ish
 
-        -- make sure no cutscenes are currently playing
-        if __game_mode == __lib_type_campaign then
-            -- if one is, listen for the cutscene ending then trigger popup. else, popup immediately.
-            core:progress_on_loading_screen_dismissed(function()
-                cm:callback(function() 
-                    if cm:is_any_cutscene_running() then
-                        core:add_listener(
-                            "cutscene_ended",
-                            "ScriptEventCampaignCutsceneCompleted",
-                            true,
-                            function(context)
-                                -- trigger 1s after the cutscene ends
-                                cm:callback(function() func() end, 1)
-                            end,
-                            false
-                        )
-                    else
-                        func()
-                    end
-                end, 1)
-            end)
-        elseif __game_mode == __lib_type_battle then
-           core:progress_on_loading_screen_dismissed(function()
-                -- ditto re: above
-                bm:callback(function()
-                    if bm:is_any_cutscene_running() then
-                        core:add_listener(
-                            "cutscene_end",
-                            "ScriptEventBattleCutsceneEnded",
-                            true,
-                            function(context)
-                                -- trigger 1s after the cutscene ends
-                                bm:callback(function() func() end, 1000)
-                            end,
-                            false
-                        )
-                    else
-                        func()
-                    end
-                end, 1000)
-            end)
+        if self.opened then
+            -- ditto, make immejiately
+            mct:log("triggering immediately because the panel is openeded.")
+            self:trigger_popup(key, text, two_buttons, button_one_callback, button_two_callback)
         else
-            func()
+            mct:log("stashing it because we're not in frontend and the panel is closed.")
+
+            -- add the notify, and stash the popup for when the panel is opened.
+            self:notify()
+
+            self:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
         end
     end
 end
@@ -365,6 +490,8 @@ function ui_obj:open_frame()
     self.locally_edited = false
     self.changed_settings = {}
 
+    self.opened = true
+
     -- load up the profiles file
     mct.settings:read_profiles_file()
 
@@ -427,6 +554,10 @@ function ui_obj:open_frame()
     else
         test:SetVisible(true)
     end
+
+    -- clear notifications + trigger any stashed popups
+    self:clear_notifs()
+    self:trigger_stashed_popups()
 
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 end) if not ok then mct:error(err) end
@@ -1058,6 +1189,8 @@ function ui_obj:close_frame()
 
     self.changed_settings = {}
     self.locally_edited = false
+
+    self.opened = false
 
     -- clear uic's attached to mct_options
     local mods = mct:get_mods()
@@ -2191,7 +2324,7 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
                         local option_obj = mod_obj:get_option_by_key(option_key)
 
                         -- TODO don't change the background UI
-                        self:set_changed_setting(mod_key, option_key, value)
+                        self:set_changed_setting(mod_key, option_key, value, true)
                         --option_obj:set_selected_setting(value)
                         end) if not ok then mct:error(err) end
                     end,

@@ -190,10 +190,11 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         -- read the settings file
         local ok, err = pcall(function()
             self:log("LOADING SETTINGS")
-        self.settings:load()
-        self:log("END - MctInitializing!")
+            self.settings:load()
+            self:log("END - MctInitializing!")
 
-        trigger(false) end) if not ok then self:error(err) end
+            trigger(false)
+        end) if not ok then self:error(err) end
     end
 
     self.ui:ui_created()
@@ -256,8 +257,8 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
             false
         )
 
-        -- trigger above listener in 2.5s
-        real_timer.register_singleshot("mct_new_option_created", 2500)
+        -- trigger above listener in 0.1s
+        real_timer.register_singleshot("mct_new_option_created", 100)
     end
 
     self._initialized = true

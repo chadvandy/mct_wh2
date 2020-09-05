@@ -3,6 +3,8 @@ local mct = get_mct()
 local function check_highlight()
     local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")
 
+    mct.ui:set_mct_button(uic)
+
     -- if the mct_settings.lua file doesn't exist, do da highlight
     local first_load = mct._first_load
 

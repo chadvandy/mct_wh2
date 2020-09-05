@@ -13,6 +13,9 @@ local function create_campaign_button()
     -- make sure it's on the button group, and set its z-priority to be as high as its parents
     new_button:PropagatePriority(button_group:Priority())
     button_group:Adopt(new_button:Address())
+
+    local mct = get_mct()
+    mct.ui:set_mct_button(new_button)
 end
 
 core:add_ui_created_callback(function() create_campaign_button() end)
