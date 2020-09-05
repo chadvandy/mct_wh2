@@ -43,6 +43,11 @@
   <li><strong>mct_option</strong></li>
   <li><a href="../classes/mct_section.html">mct_section</a></li>
   <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><a href="../classes/mct_checkbox.html">mct_checkbox</a></li>
+  <li><a href="../classes/mct_dropdown.html">mct_dropdown</a></li>
+  <li><a href="../classes/mct_dummy.html">mct_dummy</a></li>
+  <li><a href="../classes/mct_slider.html">mct_slider</a></li>
+  <li><a href="../classes/mct_text_input.html">mct_text_input</a></li>
   <li><a href="../classes/template_type.html">template_type</a></li>
   <li><a href="../classes/mct_ui.html">mct_ui</a></li>
   <li><a href="../classes/ui_tab.html">ui_tab</a></li>
@@ -111,6 +116,23 @@
 	<td class="summary">Get the <a href="../classes/mct_mod.html#">mct_mod</a> object housing this option.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_option:clear_uics">mct_option:clear_uics (kill_selected)</a></td>
+	<td class="summary">Internal use only.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_uics">mct_option:set_uics (uic_obj)</a></td>
+	<td class="summary">Internal use only.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_uic_with_key">mct_option:set_uic_with_key (key, uic, force_override)</a></td>
+	<td class="summary">Add a UIC to this mct<em>option with supplied key (doesn't have to be the UIC ID)
+ Easily grab the UIC with get</em>uic<em>with</em>key.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_uics">mct_option:get_uics ()</a></td>
+	<td class="summary">Internal use only.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_option:set_uic_visibility">mct_option:set_uic_visibility (visibility, keep_in_ui)</a></td>
 	<td class="summary">Set a UIC as visible or invisible, dynamically.</td>
 	</tr>
@@ -119,16 +141,97 @@
 	<td class="summary">Get the current visibility for this mct_option.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_border_image_path">mct_option:get_border_image_path ()</a></td>
+	<td class="summary">Getter for the image path for this mct_option's border.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_border_image_path">mct_option:set_border_image_path (border_path)</a></td>
+	<td class="summary">Setter for the image path.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_border_visibility">mct_option:set_border_visibility (is_visible)</a></td>
+	<td class="summary">Setter for the visibility for this mct_option's border.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_border_visibility">mct_option:get_border_visibility ()</a></td>
+	<td class="summary">Get the current visibility for this mct_option's border.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_option:add_option_set_callback">mct_option:add_option_set_callback (callback, is_context)</a></td>
 	<td class="summary">Create a callback triggered whenever this option's setting changes within the MCT UI.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_selected_setting">mct_option:set_selected_setting (val, is_creation)</a></td>
+	<td class="summary">Triggered via the UI object.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:override_position">mct_option:override_position (x, y)</a></td>
 	<td class="summary">Manually set the x/y position for this option, within its section.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_position">mct_option:get_position ()</a></td>
+	<td class="summary">Get the x/y coordinates of the mct_option
+ Returns two vals, comma delimited (ie.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_wrapped_type">mct_option:get_wrapped_type ()</a></td>
+	<td class="summary">Returns the underlying "wrapped_type" object.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#mct_option:is_val_valid_for_type">mct_option:is_val_valid_for_type (val)</a></td>
 	<td class="summary">Internal checker to see if the values passed through mct_option methods are valid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:check_validity">mct_option:check_validity (val)</a></td>
+	<td class="summary">Internal checker to see if the values passed through mct_option methods are valid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:set_default">mct_option:set_default ()</a></td>
+	<td class="summary">Sets an automatic default for this mct_option, if a modder didn't.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:ui_select_value">mct_option:ui_select_value (val, is_new_version)</a></td>
+	<td class="summary">Internal function that calls the operation to change an option's selected value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:ui_change_state">mct_option:ui_change_state ()</a></td>
+	<td class="summary">Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:ui_create_option">mct_option:ui_create_option (dummy_parent)</a></td>
+	<td class="summary">Creates the UI component in the UI.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:slider_get_precise_value">mct_option:slider_get_precise_value (...)</a></td>
+	<td class="summary">Slider-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:slider_set_step_size">mct_option:slider_set_step_size (...)</a></td>
+	<td class="summary">Slider-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:slider_set_precision">mct_option:slider_set_precision (...)</a></td>
+	<td class="summary">Slider-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:slider_set_min_max">mct_option:slider_set_min_max (...)</a></td>
+	<td class="summary">Slider-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:add_dropdown_values">mct_option:add_dropdown_values (...)</a></td>
+	<td class="summary">Dropdown-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:add_dropdown_value">mct_option:add_dropdown_value (...)</a></td>
+	<td class="summary">Dropdown-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:refresh_dropdown_box">mct_option:refresh_dropdown_box ()</a></td>
+	<td class="summary">Dropdown-specific function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:text_input_add_validity_test">mct_option:text_input_add_validity_test (...)</a></td>
+	<td class="summary">Text-input-specific function.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_finalized_setting">mct_option:get_finalized_setting ()</a></td>
@@ -143,10 +246,6 @@
 	<td class="summary">Getter for the default setting for this mct_option.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:ui_select_value">mct_option:ui_select_value (val, is_new_version)</a></td>
-	<td class="summary">Internal function that calls the operation to change an option's selected value.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_uic_locked">mct_option:get_uic_locked ()</a></td>
 	<td class="summary">Getter for whether this UIC is currently locked.</td>
 	</tr>
@@ -155,12 +254,20 @@
 	<td class="summary">Set this option as disabled in the UI, so the user can't interact with it.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#mct_option:ui_change_state">mct_option:ui_change_state ()</a></td>
-	<td class="summary">Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_selected_setting">mct_option:get_selected_setting ()</a></td>
 	<td class="summary">Getter for the current selected setting.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_values">mct_option:get_values ()</a></td>
+	<td class="summary">Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_type">mct_option:get_type ()</a></td>
+	<td class="summary">Getter for this mct_option's type; slider, dropdown, checkbox</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mct_option:get_uic_template">mct_option:get_uic_template ()</a></td>
+	<td class="summary">Getter for this option's UIC template for quick reference.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mct_option:get_key">mct_option:get_key ()</a></td>
@@ -409,6 +516,95 @@
 
 </dd>
     <dt>
+    <a name = "mct_option:clear_uics"></a>
+    <strong>mct_option:clear_uics (kill_selected)</strong>
+    </dt>
+    <dd>
+    Internal use only.  Clears all the UIC objects attached to this boy.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">kill_selected</span>
+        self.<em>selected</em>setting = nil
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_uics"></a>
+    <strong>mct_option:set_uics (uic_obj)</strong>
+    </dt>
+    <dd>
+    Internal use only.  Set UICs through the uic_obj
+ k/v table of key=uic
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">uic_obj</span>
+        check if it's a table of UIC's
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_uic_with_key"></a>
+    <strong>mct_option:set_uic_with_key (key, uic, force_override)</strong>
+    </dt>
+    <dd>
+    Add a UIC to this mct<em>option with supplied key (doesn't have to be the UIC ID)
+ Easily grab the UIC with get</em>uic<em>with</em>key.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+            <span class="types"><span class="type">string</span></span>
+         The key to save this UIC as
+        </li>
+        <li><span class="parameter">uic</span>
+            <span class="types"><span class="type">uicomponent</span></span>
+         The UIC to save locally.
+        </li>
+        <li><span class="parameter">force_override</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Whether this function will override an existing UIC with this key or skip it.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_uics"></a>
+    <strong>mct_option:get_uics ()</strong>
+    </dt>
+    <dd>
+    Internal use only.  Get all UICs.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "mct_option:set_uic_visibility"></a>
     <strong>mct_option:set_uic_visibility (visibility, keep_in_ui)</strong>
     </dt>
@@ -449,6 +645,92 @@
 
            <span class="types"><span class="type">boolean</span></span>
         visibility True for visible, false for invisible.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_border_image_path"></a>
+    <strong>mct_option:get_border_image_path ()</strong>
+    </dt>
+    <dd>
+    Getter for the image path for this mct_option's border.
+
+    </ul>
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">string</span></span>
+        border_path The image path for the .png for the border.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_border_image_path"></a>
+    <strong>mct_option:set_border_image_path (border_path)</strong>
+    </dt>
+    <dd>
+    Setter for the image path.  Provide the path from the base structure - ie., "ui/skins/default/panel<em>back</em>border.png" is the default image. Make sure to include the directory path and the .png!
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">border_path</span>
+            <span class="types"><span class="type">string</span></span>
+         The image path for the border.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_border_visibility"></a>
+    <strong>mct_option:set_border_visibility (is_visible)</strong>
+    </dt>
+    <dd>
+    Setter for the visibility for this mct_option's border.  Set this to false if you want to not have a border img around it!
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">is_visible</span>
+            <span class="types"><span class="type">boolean</span></span>
+         True to set it visible, opposite for opposite.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_border_visibility"></a>
+    <strong>mct_option:get_border_visibility ()</strong>
+    </dt>
+    <dd>
+    Get the current visibility for this mct_option's border.  Always true unless changed with <a href="../classes/mct_option.html#mct_option:set_border_visibility">mct_option:set_border_visibility</a>.
+
+    </ul>
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        visibility True for visible, false for the opposite of that.
     </ol>
 
 
@@ -502,6 +784,32 @@ end
 
 </dd>
     <dt>
+    <a name = "mct_option:set_selected_setting"></a>
+    <strong>mct_option:set_selected_setting (val, is_creation)</strong>
+    </dt>
+    <dd>
+    Triggered via the UI object.  Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using <a href="../classes/mct_option.html#mct_option:add_option_set_callback">mct_option:add_option_set_callback</a>.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+            <span class="types"><span class="type">any</span></span>
+         Set the selected setting as the passed value, tested with <a href="../classes/mct_option.html#mct_option:is_val_valid_for_type">mct_option:is_val_valid_for_type</a>
+        </li>
+        <li><span class="parameter">is_creation</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Whether this is being set on the option's UI creation, or being set somewhere else.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "mct_option:override_position"></a>
     <strong>mct_option:override_position (x, y)</strong>
     </dt>
@@ -528,8 +836,77 @@ end
 
 </dd>
     <dt>
+    <a name = "mct_option:get_position"></a>
+    <strong>mct_option:get_position ()</strong>
+    </dt>
+    <dd>
+    Get the x/y coordinates of the mct<em>option
+ Returns two vals, comma delimited (ie.  local x,y = option:get</em>position())
+
+    </ul>
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        x x-coord</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        y y-coord</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_wrapped_type"></a>
+    <strong>mct_option:get_wrapped_type ()</strong>
+    </dt>
+    <dd>
+    Returns the underlying "wrapped_type" object.  Under no circumstances should a modder need to use this. Probably.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "mct_option:is_val_valid_for_type"></a>
     <strong>mct_option:is_val_valid_for_type (val)</strong>
+    </dt>
+    <dd>
+    Internal checker to see if the values passed through mct<em>option methods are valid.
+ This remains because I renamed the function to "check</em>validity" but didn't want to ruin backwards compatibility.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+            <span class="types"><span class="type">any</span></span>
+         Value being tested for type.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">any</span></span>
+        valid Returns true if valid; returns a valid default value if the one passed isn't valid.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:check_validity"></a>
+    <strong>mct_option:check_validity (val)</strong>
     </dt>
     <dd>
     Internal checker to see if the values passed through mct_option methods are valid.
@@ -541,6 +918,272 @@ end
         <li><span class="parameter">val</span>
             <span class="types"><span class="type">any</span></span>
          Value being tested for type.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">any</span></span>
+        valid Returns true if valid; returns a valid default value if the one passed isn't valid.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:set_default"></a>
+    <strong>mct_option:set_default ()</strong>
+    </dt>
+    <dd>
+    Sets an automatic default for this mct<em>option, if a modder didn't.
+ Automatic default depends on the type of the mct</em>option; ie., booleans automatically default to false.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:ui_select_value"></a>
+    <strong>mct_option:ui_select_value (val, is_new_version)</strong>
+    </dt>
+    <dd>
+    Internal function that calls the operation to change an option's selected value.  Exposed here so it can be called through presets and the like.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+            <span class="types"><span class="type">any</span></span>
+         Set the selected setting as the passed value, tested with <a href="../classes/mct_option.html#mct_option:is_val_valid_for_type">mct_option:is_val_valid_for_type</a>
+        </li>
+        <li><span class="parameter">is_new_version</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Set this to true to skip calling mct<em>option:set</em>selected<em>setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui</em>select_value -> set<em>selected</em>setting; the new Order of Operations is the inverse.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:ui_change_state"></a>
+    <strong>mct_option:ui_change_state ()</strong>
+    </dt>
+    <dd>
+    Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
+ Use <code>mct_option:set_uic_locked()</code> for the external version of this; this just reads the uic_locked boolean and changes the UI.
+
+    </ul>
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/mct_option.html#mct_option:set_uic_locked">mct_option:set_uic_locked</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:ui_create_option"></a>
+    <strong>mct_option:ui_create_option (dummy_parent)</strong>
+    </dt>
+    <dd>
+    Creates the UI component in the UI.  Shouldn't be used externally!
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dummy_parent</span>
+            <span class="types"><span class="type">uicomponent</span></span>
+         The parent component for the new option.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:slider_get_precise_value"></a>
+    <strong>mct_option:slider_get_precise_value (...)</strong>
+    </dt>
+    <dd>
+    Slider-specific function.  Calls <a href="../classes/mct_slider.html#wrapped_type:slider_get_precise_value">mct_slider:slider_get_precise_value</a>.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:slider_set_step_size"></a>
+    <strong>mct_option:slider_set_step_size (...)</strong>
+    </dt>
+    <dd>
+    Slider-specific function.  Calls <a href="../classes/mct_slider.html#wrapped_type:slider_set_step_size">mct_slider:slider_set_step_size</a>.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:slider_set_precision"></a>
+    <strong>mct_option:slider_set_precision (...)</strong>
+    </dt>
+    <dd>
+    Slider-specific function.  Calls <a href="../classes/mct_slider.html#wrapped_type:slider_set_precision">mct_slider:slider_set_precision</a>.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:slider_set_min_max"></a>
+    <strong>mct_option:slider_set_min_max (...)</strong>
+    </dt>
+    <dd>
+    Slider-specific function.  Calls <a href="../classes/mct_slider.html#wrapped_type:slider_set_min_max">mct_slider:slider_set_min_max</a>.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:add_dropdown_values"></a>
+    <strong>mct_option:add_dropdown_values (...)</strong>
+    </dt>
+    <dd>
+    Dropdown-specific function.  Calls <a href="../classes/mct_dropdown.html#wrapped_type:add_dropdown_values">mct_dropdown:add_dropdown_values</a>
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:add_dropdown_value"></a>
+    <strong>mct_option:add_dropdown_value (...)</strong>
+    </dt>
+    <dd>
+    Dropdown-specific function.  Calls <a href="../classes/mct_dropdown.html#wrapped_type:add_dropdown_value">mct_dropdown:add_dropdown_value</a>
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:refresh_dropdown_box"></a>
+    <strong>mct_option:refresh_dropdown_box ()</strong>
+    </dt>
+    <dd>
+    Dropdown-specific function.  Calls <a href="../classes/mct_dropdown.html#wrapped_type:refresh_dropdown_box">mct_dropdown:refresh_dropdown_box</a>
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:text_input_add_validity_test"></a>
+    <strong>mct_option:text_input_add_validity_test (...)</strong>
+    </dt>
+    <dd>
+    Text-input-specific function.  Calls <a href="../classes/mct_text_input.html#wrapped_type:add_validity_test">mct_text_input:add_validity_test</a>
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
         </li>
     </ul>
 
@@ -614,31 +1257,6 @@ end
 
 </dd>
     <dt>
-    <a name = "mct_option:ui_select_value"></a>
-    <strong>mct_option:ui_select_value (val, is_new_version)</strong>
-    </dt>
-    <dd>
-    Internal function that calls the operation to change an option's selected value.  Exposed here so it can be called through presets and the like.
-
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">val</span>
-         any Set the selected setting as the passed value, tested with <a href="../classes/mct_option.html#mct_option:is_val_valid_for_type">mct_option:is_val_valid_for_type</a>
-        </li>
-        <li><span class="parameter">is_new_version</span>
-            <span class="types"><span class="type">boolean</span></span>
-         Set this to true to skip calling ??? from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui<em>select</em>value -> set<em>selected</em>setting; the new Order of Operations is the inverse.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "mct_option:get_uic_locked"></a>
     <strong>mct_option:get_uic_locked ()</strong>
     </dt>
@@ -690,26 +1308,6 @@ end
 
 </dd>
     <dt>
-    <a name = "mct_option:ui_change_state"></a>
-    <strong>mct_option:ui_change_state ()</strong>
-    </dt>
-    <dd>
-    Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
- Use <code>mct_option:set_uic_locked()</code> for the external version of this.
-
-    </ul>
-
-
-
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="../classes/mct_option.html#mct_option:set_uic_locked">mct_option:set_uic_locked</a>
-    </ul>
-
-
-</dd>
-    <dt>
     <a name = "mct_option:get_selected_setting"></a>
     <strong>mct_option:get_selected_setting ()</strong>
     </dt>
@@ -726,6 +1324,51 @@ end
            <span class="types"><span class="type">any</span></span>
         val The value set as the selected<em>setting for this mct</em>option.
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_values"></a>
+    <strong>mct_option:get_values ()</strong>
+    </dt>
+    <dd>
+    Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_type"></a>
+    <strong>mct_option:get_type ()</strong>
+    </dt>
+    <dd>
+    Getter for this mct_option's type; slider, dropdown, checkbox
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mct_option:get_uic_template"></a>
+    <strong>mct_option:get_uic_template ()</strong>
+    </dt>
+    <dd>
+    Getter for this option's UIC template for quick reference.
+
+    </ul>
+
+
 
 
 
@@ -843,7 +1486,7 @@ end
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-08-16 16:30:13 </i>
+<i style="float:right;">Last updated 2020-09-05 17:48:11 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

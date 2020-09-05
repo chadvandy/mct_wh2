@@ -1,0 +1,330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Mod Configuration Tool</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>MCT</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/mct.html">mct</a></li>
+  <li><a href="../classes/mct_mod.html">mct_mod</a></li>
+  <li><a href="../classes/mct_option.html">mct_option</a></li>
+  <li><a href="../classes/mct_section.html">mct_section</a></li>
+  <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><a href="../classes/mct_checkbox.html">mct_checkbox</a></li>
+  <li><a href="../classes/mct_dropdown.html">mct_dropdown</a></li>
+  <li><a href="../classes/mct_dummy.html">mct_dummy</a></li>
+  <li><a href="../classes/mct_slider.html">mct_slider</a></li>
+  <li><strong>mct_text_input</strong></li>
+  <li><a href="../classes/template_type.html">template_type</a></li>
+  <li><a href="../classes/mct_ui.html">mct_ui</a></li>
+  <li><a href="../classes/ui_tab.html">ui_tab</a></li>
+</ul>
+<h2>Scripts</h2>
+<ul class="nowrap">
+  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/manual.md.html">manual</a></li>
+  <li><a href="../topics/changenotes.md.html">changenotes</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>mct_text_input</code></h1>
+<p>MCT Text-Input type</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:new">wrapped_type:new (option_obj)</a></td>
+	<td class="summary">Create a new wrapped type within an mct_option.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:check_validity">wrapped_type:check_validity (value)</a></td>
+	<td class="summary">Checks the validity of the value passed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:set_default">wrapped_type:set_default ()</a></td>
+	<td class="summary">Set a default value for this type, if none is set by the modder.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_select_value">wrapped_type:ui_select_value (val)</a></td>
+	<td class="summary">Selects a passed value in UI.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_change_state">wrapped_type:ui_change_state ()</a></td>
+	<td class="summary">Changes the state of the option in UI.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_create_option">wrapped_type:ui_create_option (dummy_parent)</a></td>
+	<td class="summary">Creates the option in UI.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:add_validity_test">wrapped_type:add_validity_test (callback)</a></td>
+	<td class="summary">add a test for validity with several returns.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:test_text">wrapped_type:test_text (text)</a></td>
+	<td class="summary">this is the tester function for supplied text into the string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_create_popup">wrapped_type:ui_create_popup ()</a></td>
+	<td class="summary">Create the popup in UI to edit the text.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "wrapped_type:new"></a>
+    <strong>wrapped_type:new (option_obj)</strong>
+    </dt>
+    <dd>
+    Create a new wrapped type within an mct_option.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option_obj</span>
+            <span class="types"><a class="type" href="../classes/mct.html#">mct_option</a></span>
+         The mct<em>option this wrapped</em>type is being passed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:check_validity"></a>
+    <strong>wrapped_type:check_validity (value)</strong>
+    </dt>
+    <dd>
+    Checks the validity of the value passed.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:set_default"></a>
+    <strong>wrapped_type:set_default ()</strong>
+    </dt>
+    <dd>
+    Set a default value for this type, if none is set by the modder.
+ Defaults to <code>&quot;&quot;</code>
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_select_value"></a>
+    <strong>wrapped_type:ui_select_value (val)</strong>
+    </dt>
+    <dd>
+    Selects a passed value in UI.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_change_state"></a>
+    <strong>wrapped_type:ui_change_state ()</strong>
+    </dt>
+    <dd>
+    Changes the state of the option in UI.
+ Locks the edit button, changes the tooltip, etc.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_create_option"></a>
+    <strong>wrapped_type:ui_create_option (dummy_parent)</strong>
+    </dt>
+    <dd>
+    Creates the option in UI.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dummy_parent</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:add_validity_test"></a>
+    <strong>wrapped_type:add_validity_test (callback)</strong>
+    </dt>
+    <dd>
+    add a test for validity with several returns.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+         The function to pass. Takes the text as a parameter. Return "true" for valid tests, and return a string for invalid. The text will be displayed in the popup to explain to the user why that text is unallowed.
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">wrapped_type:add_validity_test(
+           <span class="keyword">function</span>(text)
+                 <span class="keyword">if</span> text == <span class="string">"bloop"</span> <span class="keyword">then</span>
+                     <span class="keyword">return</span> <span class="string">"Bloop is unallowed."</span>
+                 <span class="keyword">else</span>
+                     <span class="keyword">return</span> <span class="keyword">true</span>
+                 <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        )</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:test_text"></a>
+    <strong>wrapped_type:test_text (text)</strong>
+    </dt>
+    <dd>
+    this is the tester function for supplied text into the string.
+ loops through every validity
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_create_popup"></a>
+    <strong>wrapped_type:ui_create_popup ()</strong>
+    </dt>
+    <dd>
+    Create the popup in UI to edit the text.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-09-05 17:48:11 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

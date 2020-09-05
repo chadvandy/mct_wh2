@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Mod Configuration Tool</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>MCT</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/mct.html">mct</a></li>
+  <li><a href="../classes/mct_mod.html">mct_mod</a></li>
+  <li><a href="../classes/mct_option.html">mct_option</a></li>
+  <li><a href="../classes/mct_section.html">mct_section</a></li>
+  <li><a href="../classes/mct_settings.html">mct_settings</a></li>
+  <li><strong>mct_checkbox</strong></li>
+  <li><a href="../classes/mct_dropdown.html">mct_dropdown</a></li>
+  <li><a href="../classes/mct_dummy.html">mct_dummy</a></li>
+  <li><a href="../classes/mct_slider.html">mct_slider</a></li>
+  <li><a href="../classes/mct_text_input.html">mct_text_input</a></li>
+  <li><a href="../classes/template_type.html">template_type</a></li>
+  <li><a href="../classes/mct_ui.html">mct_ui</a></li>
+  <li><a href="../classes/ui_tab.html">ui_tab</a></li>
+</ul>
+<h2>Scripts</h2>
+<ul class="nowrap">
+  <li><a href="../scripts/mct_uic_mixins.html">mct_uic_mixins</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/manual.md.html">manual</a></li>
+  <li><a href="../topics/changenotes.md.html">changenotes</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>mct_checkbox</code></h1>
+<p>MCT Checkbox Wrapped Type.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:new">wrapped_type:new (option_obj)</a></td>
+	<td class="summary">Create a new wrapped type within an mct_option.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:check_validity">wrapped_type:check_validity (value)</a></td>
+	<td class="summary">Checks the validity of the value passed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:set_default">wrapped_type:set_default ()</a></td>
+	<td class="summary">Sets a default value for this mct_option.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_select_value">wrapped_type:ui_select_value (val)</a></td>
+	<td class="summary">Selects a value in UI for this mct_option.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_change_state">wrapped_type:ui_change_state (val)</a></td>
+	<td class="summary">Changes the state for the mct_option in UI, ie.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_create_option">wrapped_type:ui_create_option (dummy_parent)</a></td>
+	<td class="summary">Creates the mct_option in the UI.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "wrapped_type:new"></a>
+    <strong>wrapped_type:new (option_obj)</strong>
+    </dt>
+    <dd>
+    Create a new wrapped type within an mct_option.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option_obj</span>
+            <span class="types"><a class="type" href="../classes/mct.html#">mct_option</a></span>
+         The mct<em>option this wrapped</em>type is being passed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:check_validity"></a>
+    <strong>wrapped_type:check_validity (value)</strong>
+    </dt>
+    <dd>
+    Checks the validity of the value passed.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+            <span class="types"><span class="type">any</span></span>
+         Tested value.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">boolean</span></span>
+        valid Returns true if the value passed is valid, false otherwise.</li>
+        <li>
+           <span class="types"><span class="type">boolean</span></span>
+        valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:set_default"></a>
+    <strong>wrapped_type:set_default ()</strong>
+    </dt>
+    <dd>
+    Sets a default value for this mct_option.  Defaults to "false" for checkboxes.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_select_value"></a>
+    <strong>wrapped_type:ui_select_value (val)</strong>
+    </dt>
+    <dd>
+    Selects a value in UI for this mct_option.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_change_state"></a>
+    <strong>wrapped_type:ui_change_state (val)</strong>
+    </dt>
+    <dd>
+    Changes the state for the mct_option in UI, ie.  locked/unlocked.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_create_option"></a>
+    <strong>wrapped_type:ui_create_option (dummy_parent)</strong>
+    </dt>
+    <dd>
+    Creates the mct_option in the UI.  Do not call externally.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dummy_parent</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-09-05 17:48:11 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

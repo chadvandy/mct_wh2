@@ -45,11 +45,11 @@
   <li><a href="../classes/mct_settings.html">mct_settings</a></li>
   <li><a href="../classes/mct_checkbox.html">mct_checkbox</a></li>
   <li><a href="../classes/mct_dropdown.html">mct_dropdown</a></li>
-  <li><a href="../classes/mct_dummy.html">mct_dummy</a></li>
+  <li><strong>mct_dummy</strong></li>
   <li><a href="../classes/mct_slider.html">mct_slider</a></li>
   <li><a href="../classes/mct_text_input.html">mct_text_input</a></li>
   <li><a href="../classes/template_type.html">template_type</a></li>
-  <li><strong>mct_ui</strong></li>
+  <li><a href="../classes/mct_ui.html">mct_ui</a></li>
   <li><a href="../classes/ui_tab.html">ui_tab</a></li>
 </ul>
 <h2>Scripts</h2>
@@ -66,16 +66,32 @@
 
 <div id="content">
 
-<h1>Class <code>mct_ui</code></h1>
-<p>MCT UI Object.</p>
-<p> INTERNAL USE ONLY.</p>
+<h1>Class <code>mct_dummy</code></h1>
+<p>MCT dummy type.</p>
+<p> Does nothing on its own; it's just for UI spacing, or text.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#ui_obj:set_changed_setting">ui_obj:set_changed_setting (mod_key, option_key, new_value, is_popup_open)</a></td>
-	<td class="summary">this saves the changed-setting, called whenever <a href="../classes/mct_option.html#mct_option:set_selected_setting">mct_option:set_selected_setting</a> is called (except for creation).</td>
+	<td class="name" nowrap><a href="#wrapped_type:check_validity">wrapped_type:check_validity (val)</a></td>
+	<td class="summary">Check validity of the value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:set_default">wrapped_type:set_default ()</a></td>
+	<td class="summary">Set the default value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_select_value">wrapped_type:ui_select_value (val)</a></td>
+	<td class="summary">Does nothing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_change_state">wrapped_type:ui_change_state ()</a></td>
+	<td class="summary">Does nothing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wrapped_type:ui_create_option">wrapped_type:ui_create_option (dummy_parent)</a></td>
+	<td class="summary">Create the option in UI - just the text!</td>
 	</tr>
 </table>
 
@@ -87,32 +103,92 @@
     Methods
     <dl class="function">
     <dt>
-    <a name = "ui_obj:set_changed_setting"></a>
-    <strong>ui_obj:set_changed_setting (mod_key, option_key, new_value, is_popup_open)</strong>
+    <a name = "wrapped_type:check_validity"></a>
+    <strong>wrapped_type:check_validity (val)</strong>
     </dt>
     <dd>
-    this saves the changed-setting, called whenever <a href="../classes/mct_option.html#mct_option:set_selected_setting">mct_option:set_selected_setting</a> is called (except for creation).
+    Check validity of the value.
+ Only <code>nil</code> is valid!
 
     </ul>
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">mod_key</span>
+        <li><span class="parameter">val</span>
 
 
 
         </li>
-        <li><span class="parameter">option_key</span>
+    </ul>
 
 
 
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:set_default"></a>
+    <strong>wrapped_type:set_default ()</strong>
+    </dt>
+    <dd>
+    Set the default value.  <code>nil</code>.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_select_value"></a>
+    <strong>wrapped_type:ui_select_value (val)</strong>
+    </dt>
+    <dd>
+    Does nothing.
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+        do nothing
         </li>
-        <li><span class="parameter">new_value</span>
+    </ul>
 
 
 
-        </li>
-        <li><span class="parameter">is_popup_open</span>
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_change_state"></a>
+    <strong>wrapped_type:ui_change_state ()</strong>
+    </dt>
+    <dd>
+    Does nothing.
+
+    </ul>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wrapped_type:ui_create_option"></a>
+    <strong>wrapped_type:ui_create_option (dummy_parent)</strong>
+    </dt>
+    <dd>
+    Create the option in UI - just the text!
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dummy_parent</span>
 
 
 

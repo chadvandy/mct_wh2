@@ -1,9 +1,14 @@
+--- MCT Text-Input type
+--- @class mct_text_input
+
 local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
 local wrapped_type = {}
 
+--- Create a new wrapped type within an mct_option.
+--- @tparam mct_option option_obj The mct_option this wrapped_type is being passed.
 function wrapped_type:new(option_obj)
     local self = {}
 
@@ -86,6 +91,8 @@ end
 -- These functions exist for every type, and have to be overriden from the version defined in template_types.
 
 -- TODO this
+
+--- Checks the validity of the value passed.
 function wrapped_type:check_validity(value)
     if not is_string(value) then
         return false, ""
@@ -94,6 +101,8 @@ function wrapped_type:check_validity(value)
     return true
 end
 
+--- Set a default value for this type, if none is set by the modder.
+--- Defaults to `""`
 function wrapped_type:set_default()
 
     -- TODO do this better mebs?
@@ -101,6 +110,7 @@ function wrapped_type:set_default()
     --self._default_setting = ""
 end
 
+--- Selects a passed value in UI.
 function wrapped_type:ui_select_value(val)
     local option_uic = self:get_uic_with_key("text_input")
     if not is_uicomponent(option_uic) then
@@ -112,6 +122,8 @@ function wrapped_type:ui_select_value(val)
     mct.ui:SetStateText(option_uic, val)
 end
 
+--- Changes the state of the option in UI.
+--- Locks the edit button, changes the tooltip, etc.
 function wrapped_type:ui_change_state()
     local option_uic = self:get_uic_with_key("text_input")
     local text_uic = self:get_uic_with_key("text")
@@ -134,6 +146,7 @@ function wrapped_type:ui_change_state()
     mct.ui:SetTooltipText(text_uic, tt, true)
 end
 
+--- Creates the option in UI.
 function wrapped_type:ui_create_option(dummy_parent)
     local text_input_template = "ui/common ui/text_box"
 
@@ -171,9 +184,17 @@ end
 --------- UNIQUE SECTION -----------
 -- These functions are unique for this type only. Be careful calling these!
 
---- add a test for validity with several returns
--- should take a single parameter - "text" - and return `true` for valid, and return a string to display if it's not valid.
--- TODO put an example here
+--- add a test for validity with several returns.
+--- @tparam function callback The function to pass. Takes the text as a parameter. Return "true" for valid tests, and return a string for invalid. The text will be displayed in the popup to explain to the user why that text is unallowed.
+--- @usage    wrapped_type:add_validity_test(
+---               function(text)
+---                     if text == "bloop" then
+---                         return "Bloop is unallowed."
+---                     else
+---                         return true
+---                     end
+---                end
+---            )
 function wrapped_type:add_validity_test(callback)
     if not is_function(callback) then
         mct:error("add_validity_test() called on mct_option ["..self:get_key().."], but the callback provided is not a valid function!")
@@ -185,7 +206,7 @@ function wrapped_type:add_validity_test(callback)
 end
 
 --- this is the tester function for supplied text into the string.
--- loops through every validity 
+--- loops through every validity 
 function wrapped_type:test_text(text)
     if not is_string(text) then
         return "Not a valid string"
@@ -206,6 +227,7 @@ function wrapped_type:test_text(text)
     return true
 end
 
+--- Create the popup in UI to edit the text.
 function wrapped_type:ui_create_popup()
     local popup = core:get_or_create_component("mct_text_input_rename", "ui/common ui/dialogue_box")
 

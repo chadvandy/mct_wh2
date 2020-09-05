@@ -1,9 +1,15 @@
+--- MCT Slider type
+--- @class mct_slider
+
+
 local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
 local wrapped_type = {}
 
+--- Create a new wrapped type within an mct_option.
+--- @tparam mct_option option_obj The mct_option this wrapped_type is being passed.
 function wrapped_type:new(option_obj)
     local self = {}
 
@@ -82,6 +88,10 @@ end
 --------- OVERRIDEN SECTION -------------
 -- These functions exist for every type, and have to be overriden from the version defined in template_types.
 
+--- Checks the validity of the value passed.
+--- @tparam any value Tested value.
+--- @treturn boolean valid Returns true if the value passed is valid, false otherwise.
+--- @treturn boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function wrapped_type:check_validity(value)
     if not is_number(value) then
         return false
@@ -109,6 +119,8 @@ function wrapped_type:check_validity(value)
     return true, value
 end
 
+--- Sets the default value for this mct_option.
+--- Returns the exact median value for this slider, with precision in mind.
 function wrapped_type:set_default()
     local values = self:get_values()
 
@@ -122,6 +134,8 @@ function wrapped_type:set_default()
     self:set_default_value(mid)
 end
 
+--- Selects a value in the UI for this option.
+--- Called from @{mct_option:set_selected_setting}.
 function wrapped_type:ui_select_value(val)
     local option_uic = self:get_uic_with_key("option")
     if not is_uicomponent(option_uic) then
@@ -177,6 +191,8 @@ function wrapped_type:ui_select_value(val)
     text_input:SetInteractive(false)
 end
 
+--- Change the UI state; ie., lock if it's set to lock.
+--- Called from @{mct_option:set_uic_locked}.
 function wrapped_type:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
@@ -209,6 +225,8 @@ end
 -- maxValue
 -- Notify (unused?)
 -- update_frequency (doesn't change anything?)
+
+--- Create the slider in UI.
 function wrapped_type:ui_create_option(dummy_parent)
     local templates = self:get_uic_template()
     --local values = option_obj:get_values()
@@ -266,6 +284,11 @@ end
 --------- UNIQUE SECTION -----------
 -- These functions are unique for this type only. Be careful calling these!
 
+--- Get a precise value for this slider, minding the precision set.
+--- @tparam number value The number to change the precision for.
+--- @tparam boolean as_string Set to true if you want a string returned instead of a number.
+--- @tparam number|nil override_precision A number to change the precision. If not set, it will use the value set in @{mct_slider:slider_set_precision}.
+--- @treturn number|string precise_value The new number with the precision in mind.
 function wrapped_type:slider_get_precise_value(value, as_string, override_precision)
     if not is_number(value) then
         mct:error("slider_get_precise_value() called on mct_option ["..self:get_key().."], but the value provided is not a number!")
@@ -405,7 +428,7 @@ end
 
 
 --- this is the tester function for supplied text into the string.
--- checks if it's a number; if it's valid within precision; if it's valid within min/max
+--- checks if it's a number; if it's valid within precision; if it's valid within min/max
 function wrapped_type:test_text(text)
     text = tonumber(text)
     if not is_number(text) then
@@ -436,6 +459,7 @@ function wrapped_type:test_text(text)
     return true
 end
 
+--- Creates the edit-in-UI popup.
 function wrapped_type:ui_create_popup()
     local popup = core:get_or_create_component("mct_slider_rename", "ui/common ui/dialogue_box")
 
@@ -566,7 +590,6 @@ core:add_listener(
     true
 )
 
----- UI selected listeners & stuff
 core:add_listener(
     "mct_slider_left_or_right_pressed",
     "ComponentLClickUp",

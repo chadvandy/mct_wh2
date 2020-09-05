@@ -1,3 +1,7 @@
+--- MCT dummy type. Does nothing on its own; it's just for UI spacing, or text.
+--- @class mct_dummy
+
+
 local mct = mct
 
 local template_type = mct._MCT_TYPES.template
@@ -79,23 +83,28 @@ function wrapped_type:__index(attempt)
     return retval
 end
 
-
+--- Check validity of the value.
+--- Only `nil` is valid!
 function wrapped_type:check_validity(val)
     return is_nil(val)
 end
 
+--- Set the default value. `nil`.
 function wrapped_type:set_default()
     self:set_default_value(nil)
 end
 
+--- Does nothing.
 function wrapped_type:ui_select_value(val)
     -- do nothing
 end
 
+--- Does nothing.
 function wrapped_type:ui_change_state()
     -- do nothing
 end
 
+--- Create the option in UI - just the text!
 function wrapped_type:ui_create_option(dummy_parent)
     local new_uic = core:get_or_create_component("dummy", "ui/mct/script_dummy", dummy_parent)
     new_uic:Resize(dummy_parent:Width() * 0.0001, dummy_parent:Height() * 0.00001)
@@ -103,7 +112,6 @@ function wrapped_type:ui_create_option(dummy_parent)
     self:set_uic_with_key("option", new_uic, true)
     return new_uic
 end
-
 
 
 return wrapped_type

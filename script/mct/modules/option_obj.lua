@@ -250,7 +250,6 @@ function mct_option:get_mod()
 end
 
 ---- Internal use only. Clears all the UIC objects attached to this boy.
---- @local
 function mct_option:clear_uics(kill_selected)
     --self._selected_setting = nil
     self._uics = {}
@@ -263,7 +262,6 @@ end
 
 ---- Internal use only. Set UICs through the uic_obj
 --- k/v table of key=uic
---- @local
 function mct_option:set_uics(uic_obj)
     -- check if it's a table of UIC's
     if is_table(uic_obj) then
@@ -338,7 +336,6 @@ function mct_option:get_uic_with_key(key)
 end
 
 ---- Internal use only. Get all UICs.
---- @local
 function mct_option:get_uics()
     local uic_table = self._uics
     local copy = {}
@@ -357,7 +354,6 @@ end
 ---- Set a UIC as visible or invisible, dynamically. If the UIC isn't created yet, it will get the applied setting when it is created.
 --- @tparam boolean visibility True for visible, false for invisible.
 --- @tparam boolean keep_in_ui This boolean determines whether this mct_option will exist at all in the UI. Tick this to true to make the option invisible but still have a "gap" in the UI where it would be placed. Set this to false to make that spot be taken by the next otion. ONLY AFFECTS INITIAL UI CREATION.
---- @within API
 function mct_option:set_uic_visibility(visibility, keep_in_ui)
     -- default to true if a param isn't provided
     if is_nil(visibility) then
@@ -395,7 +391,6 @@ end
 
 ---- Get the current visibility for this mct_option.
 --- @treturn boolean visibility True for visible, false for invisible.
---- @within API
 function mct_option:get_uic_visibility()
     return self._uic_visible
 end
@@ -472,7 +467,6 @@ end
 ---)
 --- @tparam function callback The callback triggered whenever this option is changed. Callback will be passed one argument - the `context` object for the listener. `context:mct()`, `context:option()`, `context:setting()`, and `context:is_creation()` (for if this was triggered on the UI being created) are the valid methods on context.
 --- @tparam boolean is_context Set this to true if you want to treat this function with the new method of passing a context. If this is false or nil, it will pass the mct_option like before. For backwards compatibility - I'll probably take this out eventually.
---- @within API
 function mct_option:add_option_set_callback(callback, is_context)
     if not is_function(callback) then
         mct:error("Trying `add_option_set_callback()` on option ["..self._key.."], but the supplied callback is not a function. Returning false.")
@@ -496,11 +490,50 @@ function mct_option:add_option_set_callback(callback, is_context)
     )
 end
 
+--- Triggered via the UI object. Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using @{mct_option:add_option_set_callback}.
+--- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
+--- @tparam boolean is_creation Whether this is being set on the option's UI creation, or being set somewhere else.
+function mct_option:set_selected_setting(val, is_creation)
+    local valid, new_value = self:is_val_valid_for_type(val)
+    if not valid then
+        if new_value ~= nil then
+            mct:log("set_selected_setting() called for option with key ["..self:get_key().."], but the val provided ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
+            val = new_value
+        else
+            mct:error("set_selected_setting() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+            return false
+        end
+    end
+
+    -- make sure nothing happens if the new val is the current setting
+    if self:get_selected_setting() == val then
+        return
+    end
+
+    -- save the val as the currently selected setting, used for UI and finalization
+    self._selected_setting = val
+
+    core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
+
+    if not is_creation then
+        mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
+    end
+
+    -- call ui_select_value if the UI exists
+    if is_uicomponent(self:get_uic_with_key("option")) then
+        self:ui_select_value(val, true)
+    end
+
+    --[[if not event_free then
+        -- run the callback, passing the mct_option along as an arg
+        self:process_callback()
+    end]]
+end
+
 ---- Manually set the x/y position for this option, within its section.
 --- @warning Use with caution, this needs an overhaul in the future!
 --- @tparam number x x-coord
 --- @tparam number y y-coord
---- @within API
 function mct_option:override_position(x,y)
     if not is_number(x) or not is_number(y) then
         mct:error("override_position() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the x/y coordinates supplied are not numbers! Returning false")
@@ -520,34 +553,41 @@ end
 --- Returns two vals, comma delimited (ie. local x,y = option:get_position())
 --- @treturn number x x-coord
 --- @treturn number y y-coord
---- @local
 function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
+--- Returns the underlying "wrapped_type" object. Under no circumstances should a modder need to use this. Probably.
 function mct_option:get_wrapped_type()
     return self._wrapped_type
 end
 
 --- Internal checker to see if the values passed through mct_option methods are valid.
+--- This remains because I renamed the function to "check_validity" but didn't want to ruin backwards compatibility.
 --- @tparam any val Value being tested for type.
+--- @treturn any valid Returns true if valid; returns a valid default value if the one passed isn't valid.
 function mct_option:is_val_valid_for_type(val)
     local wrapped = self:get_wrapped_type()
 
     return wrapped:check_validity(val)
 end
 
+--- Internal checker to see if the values passed through mct_option methods are valid.
+--- @tparam any val Value being tested for type.
+--- @treturn any valid Returns true if valid; returns a valid default value if the one passed isn't valid.
 function mct_option:check_validity(val)
     return self:get_wrapped_type():check_validity(val)
 end
 
+--- Sets an automatic default for this mct_option, if a modder didn't.
+--- Automatic default depends on the type of the mct_option; ie., booleans automatically default to false.
 function mct_option:set_default()
     return self:get_wrapped_type():set_default()
 end
 
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
---- @param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
---- @tparam boolean is_new_version Set this to true to skip calling @{mct_option:set_selected_setting} from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
+--- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
+--- @tparam boolean is_new_version Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function mct_option:ui_select_value(val, is_new_version)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
@@ -577,10 +617,15 @@ function mct_option:ui_select_value(val, is_new_version)
     mct.ui:set_actions_states()
 end
 
+---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
+--- Use `mct_option:set_uic_locked()` for the external version of this; this just reads the uic_locked boolean and changes the UI.
+--- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
     return self:get_wrapped_type():ui_change_state()
 end
 
+--- Creates the UI component in the UI. Shouldn't be used externally!
+--- @tparam uicomponent dummy_parent The parent component for the new option.
 function mct_option:ui_create_option(dummy_parent)
     return self:get_wrapped_type():ui_create_option(dummy_parent)
 end
@@ -588,36 +633,47 @@ end
 -- type-specifics
 
 ---- sliders ----
+
+--- Slider-specific function. Calls @{mct_slider:slider_get_precise_value}.
 function mct_option:slider_get_precise_value(...)
     return self:get_wrapped_type():slider_get_precise_value(...)
 end
 
+--- Slider-specific function. Calls @{mct_slider:slider_set_step_size}.
 function mct_option:slider_set_step_size(...)
     return self:get_wrapped_type():slider_set_step_size(...)
 end
 
+--- Slider-specific function. Calls @{mct_slider:slider_set_precision}.
 function mct_option:slider_set_precision(...)
     return self:get_wrapped_type():slider_set_precision(...)
 end
 
+--- Slider-specific function. Calls @{mct_slider:slider_set_min_max}.
 function mct_option:slider_set_min_max(...)
     return self:get_wrapped_type():slider_set_min_max(...)
 end
 
 ---- dropdowns ----
+
+--- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_values}
 function mct_option:add_dropdown_values(...)
     return self:get_wrapped_type():add_dropdown_values(...)
 end
 
+--- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_value}
 function mct_option:add_dropdown_value(...)
     return self:get_wrapped_type():add_dropdown_value(...)
 end
 
+--- Dropdown-specific function. Calls @{mct_dropdown:refresh_dropdown_box}
 function mct_option:refresh_dropdown_box()
     return self:get_wrapped_type():refresh_dropdown_box()
 end
 
 ---- text-input ----
+
+--- Text-input-specific function. Calls @{mct_text_input:add_validity_test}
 function mct_option:text_input_add_validity_test(...)
     return self:get_wrapped_type():add_validity_test(...)
 end
@@ -625,7 +681,6 @@ end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
---- @within API
 function mct_option:get_finalized_setting()
     local test = self._finalized_setting
 
@@ -646,7 +701,6 @@ end
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 --- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_first_load This is set to "true" for the first-load version of this function, when the mct_settings.lua file is loaded.
---- @local
 function mct_option:set_finalized_setting(val, is_first_load)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
@@ -711,47 +765,6 @@ function mct_option:get_default_value()
     return self._default_setting
 end
 
----- Triggered via the UI object. Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using @{mct_option:add_option_set_callback}.
---- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
---- @tparam boolean is_creation Whether this is being set on the option's UI creation, or being set somewhere else.
---- @local
-function mct_option:set_selected_setting(val, is_creation)
-    local valid, new_value = self:is_val_valid_for_type(val)
-    if not valid then
-        if new_value ~= nil then
-            mct:log("set_selected_setting() called for option with key ["..self:get_key().."], but the val provided ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
-            val = new_value
-        else
-            mct:error("set_selected_setting() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
-            return false
-        end
-    end
-
-    -- make sure nothing happens if the new val is the current setting
-    if self:get_selected_setting() == val then
-        return
-    end
-
-    -- save the val as the currently selected setting, used for UI and finalization
-    self._selected_setting = val
-
-    core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
-
-    if not is_creation then
-        mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
-    end
-
-    -- call ui_select_value if the UI exists
-    if is_uicomponent(self:get_uic_with_key("option")) then
-        self:ui_select_value(val, true)
-    end
-
-    --[[if not event_free then
-        -- run the callback, passing the mct_option along as an arg
-        self:process_callback()
-    end]]
-end
-
 ---- Getter for whether this UIC is currently locked.
 --- @return boolean uic_locked Whether the UIC is set as locked.
 function mct_option:get_uic_locked()
@@ -806,13 +819,6 @@ function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     end
 end
 
----- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
---- Use `mct_option:set_uic_locked()` for the external version of this.
---- @see mct_option:set_uic_locked
---[[function mct_option:ui_change_state()
-
-end]]
-
 function mct_option:get_lock_reason()
     local locked = self:get_uic_locked()
 
@@ -836,7 +842,6 @@ end
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
 --- Used when finalizing settings.
 --- @treturn any val The value set as the selected_setting for this mct_option.
---- @within API
 function mct_option:get_selected_setting()
     -- no selected setting found - UI was just created!
     if self._selected_setting == nil then
@@ -855,25 +860,21 @@ function mct_option:get_selected_setting()
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
---- @local
 function mct_option:get_values()
     return self._values
 end
 
 ---- Getter for this mct_option's type; slider, dropdown, checkbox
---- @local
 function mct_option:get_type()
     return self._type
 end
 
 ---- Getter for this option's UIC template for quick reference.
---- @local
 function mct_option:get_uic_template()
     return self._template
 end
 
 ---- Getter for this option's key.
---- @within API
 --- @treturn string key mct_option's unique identifier
 function mct_option:get_key()
     return self._key

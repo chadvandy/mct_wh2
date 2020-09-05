@@ -1,23 +1,19 @@
+---- MCT Checkbox Wrapped Type.
+--- @class mct_checkbox
+
 local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
 local wrapped_type = {}
 
+--- Create a new wrapped type within an mct_option.
+--- @tparam mct_option option_obj The mct_option this wrapped_type is being passed.
 function wrapped_type:new(option_obj)
     local self = {}
 
-    --[[for k,v in pairs(getmetatable(tt)) do
-        mct:log("assigning ["..k.."] to checkbox_type from template_type.")
-        self[k] = v
-    end
-]]
-    setmetatable(self, wrapped_type)
 
-    --[[for k,v in pairs(type) do
-        mct:log("assigning ["..k.."] to checkbox_type from self!")
-        self[k] = v
-    end]]
+    setmetatable(self, wrapped_type)
 
     self.option = option_obj
 
@@ -83,6 +79,10 @@ end
 --------- OVERRIDEN SECTION -------------
 -- These functions exist for every type, and have to be overriden from the version defined in template_types.
 
+--- Checks the validity of the value passed.
+--- @tparam any value Tested value.
+--- @treturn boolean valid Returns true if the value passed is valid, false otherwise.
+--- @treturn boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function wrapped_type:check_validity(value)
     if not is_boolean(value) then
         return false, false
@@ -91,12 +91,14 @@ function wrapped_type:check_validity(value)
     return true
 end
 
+--- Sets a default value for this mct_option. Defaults to "false" for checkboxes.
 function wrapped_type:set_default()
 
     -- if there's no default, set it to false.
     self:set_default_value(false)
 end
 
+--- Selects a value in UI for this mct_option.
 function wrapped_type:ui_select_value(val)
 
     local option_uic = self:get_uic_with_key("option")
@@ -116,6 +118,7 @@ function wrapped_type:ui_select_value(val)
     mct.ui:SetState(option_uic, state)
 end
 
+--- Changes the state for the mct_option in UI, ie. locked/unlocked.
 function wrapped_type:ui_change_state(val)
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
@@ -148,6 +151,7 @@ function wrapped_type:ui_change_state(val)
     mct.ui:SetTooltipText(text_uic, tt, true)
 end
 
+--- Creates the mct_option in the UI. Do not call externally.
 function wrapped_type:ui_create_option(dummy_parent)
     local template = self:get_uic_template()
 

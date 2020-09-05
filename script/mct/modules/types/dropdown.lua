@@ -1,9 +1,14 @@
+---- MCT Dropdown Wrapped Type.
+--- @class mct_dropdown
+
 local mct = mct
 
 local template_type = mct._MCT_TYPES.template
 
 local wrapped_type = {}
 
+--- Create a new wrapped type within an mct_option.
+--- @tparam mct_option option_obj The mct_option this wrapped_type is being passed.
 function wrapped_type:new(option_obj)
     local self = {}
 
@@ -82,6 +87,10 @@ end
 --------- OVERRIDEN SECTION -------------
 -- These functions exist for every type, and have to be overriden from the version defined in template_types.
 
+--- Checks the validity of the value passed.
+--- @tparam any val Tested value.
+--- @treturn boolean valid Returns true if the value passed is valid, false otherwise.
+--- @treturn boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function wrapped_type:check_validity(val)
     if not is_string(val) then
         return false
@@ -103,6 +112,8 @@ function wrapped_type:check_validity(val)
     return false, values[1].key
 end
 
+--- Sets the default value for this dropdown, if none is selected by the modder.
+--- Defaults to the first dropdown value added.
 function wrapped_type:set_default()
 
     local values = self:get_values()
@@ -110,6 +121,7 @@ function wrapped_type:set_default()
     self:set_default_value(values[1])
 end
 
+--- Select a value within the UI; ie., change from the first dropdown value to the second.
 function wrapped_type:ui_select_value(val)
 
     local ok, err = pcall(function()
@@ -163,6 +175,7 @@ function wrapped_type:ui_select_value(val)
 end) if not ok then mct:error(err) end
 end
 
+--- Change the state of the mct_option in UI; ie., lock the option from being used.
 function wrapped_type:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
@@ -183,6 +196,7 @@ function wrapped_type:ui_change_state()
     mct.ui:SetTooltipText(text_uic, tt, true)
 end
 
+--- Create the dropdown option in UI.
 function wrapped_type:ui_create_option(dummy_parent)
     --local templates = option_obj:get_uic_template()
     local box = "ui/vandy_lib/dropdown_button_no_event"
@@ -216,7 +230,6 @@ end
 ---          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
 ---          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
 ---      })
---- @within API
 function wrapped_type:add_dropdown_values(dropdown_table)
     --[[if not self:get_type() == "dropdown" then
         mct:error("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
@@ -290,7 +303,7 @@ end
 
 
 --- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
--- Allows for dynamic dropdowns!
+--- Allows for dynamic dropdowns!
 function wrapped_type:refresh_dropdown_box()
     local uic = self:get_uic_with_key("option")
 
@@ -382,7 +395,7 @@ function wrapped_type:refresh_dropdown_box()
 end
 
 
----- Specific listeners for the UI
+---- Specific listeners for the UI ----
 core:add_listener(
     "mct_dropdown_box",
     "ComponentLClickUp",
