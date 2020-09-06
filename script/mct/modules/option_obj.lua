@@ -213,8 +213,6 @@ function mct_option:set_read_only(enabled)
         enabled = true
     end
 
-    --enabled = enabled or true
-
     if not is_boolean(enabled) then
         -- issue
         return false
@@ -505,6 +503,11 @@ function mct_option:set_selected_setting(val, is_creation)
         end
     end
 
+    -- check if the UI is currently locked for this option; if it is, don't change the selected setting
+    if self:get_uic_locked() then
+        return
+    end
+
     -- make sure nothing happens if the new val is the current setting
     if self:get_selected_setting() == val then
         return
@@ -713,9 +716,9 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
-    if self:get_read_only() and __game_mode == __lib_type_campaign and not is_first_load then
+    if self:get_uic_locked() and not is_first_load then
         -- can't change finalized setting for read onlys! Error!
-        mct:warn("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is read only! This shouldn't happen, investigate.")
+        mct:warn("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is locked! This shouldn't happen, investigate.")
         return false
     end
 
