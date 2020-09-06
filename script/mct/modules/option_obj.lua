@@ -588,7 +588,8 @@ function mct_option:set_default()
     return self:get_wrapped_type():set_default()
 end
 
----- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like.
+---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
+--- @see mct_option:set_selected_setting
 --- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_new_version Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function mct_option:ui_select_value(val, is_new_version)
@@ -700,7 +701,7 @@ function mct_option:get_finalized_setting()
     return self._finalized_setting
 end
 
--- TODO hookup is_event_free // decide on using it
+
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 --- @tparam any val Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_first_load This is set to "true" for the first-load version of this function, when the mct_settings.lua file is loaded.

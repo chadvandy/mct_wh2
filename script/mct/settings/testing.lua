@@ -1,4 +1,4 @@
-
+--[[
 local mct = mct
 
 local mct_mod = mct:register_mod("florp")
@@ -15,3 +15,4 @@ mct:register_mod("bbbb")
 mct:register_mod("ccccc")
 mct:register_mod("a")
 mct:register_mod("zzzzzz")
+]]

@@ -1,7 +1,6 @@
 --- The mct_mod object.
 --- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
 --- @class mct_mod
---- @usage testing here
 
 -- TODO make "Finalize settings" validate all MCT options; if some are invalid, give some UX notifs that they're not valid. esp. for the textboxes.
 

@@ -384,7 +384,6 @@ end
 ---- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
 --- @tparam number min The minimum number the slider value can reach.
 --- @tparam number max The maximum number the slider value can reach.
---- @within API
 function wrapped_type:slider_set_min_max(min, max)
     --[[if not self:get_type() == "slider" then
         mct:error("slider_set_min_max() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a slider! Returning false.")

@@ -309,7 +309,7 @@ function settings:add_cached_settings(mod_key, option_data)
 end
 
 --- Check the cached_settings object for a specific mod key, and a single (or multiple) option.
--- Will return a table of settings keys in the order the option keys were presented. Nil if none are found.
+--- Will return a table of settings keys in the order the option keys were presented. Nil if none are found.
 function settings:get_cached_settings(mod_key, option_keys)
     if not is_string(mod_key) then
         mct:error("get_cached_settings() called, but the mod_key provided ["..tostring(mod_key).."] is not a string!")
@@ -352,7 +352,7 @@ function settings:get_cached_settings(mod_key, option_keys)
 end
 
 --- Remove any cached settings within the mod-key provided with the option keys provided. 
--- If no option keys are provided, the entire mod's cached settings will be axed.
+--- If no option keys are provided, the entire mod's cached settings will be axed.
 function settings:remove_cached_setting(mod_key, option_keys)
     if not is_string(mod_key) then
         mct:error("remove_cached_setting() called but the mod_key provided ["..tostring(mod_key).."] is not a string.")

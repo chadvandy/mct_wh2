@@ -1,4 +1,4 @@
-
+--[[
 local mct = mct
 
 local mct_mod = mct:register_mod("my_cool_mod")
@@ -34,3 +34,5 @@ option_seven:set_border_image_path("ui/skins/warhammer2/panel_back_border.png")
 
 local option_eight = mct_mod:add_new_option("option_8", "dummy")
 option_eight:set_text("This is my testing dummy.")
+
+]]

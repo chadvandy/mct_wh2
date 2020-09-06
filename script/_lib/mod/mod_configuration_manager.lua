@@ -709,14 +709,13 @@ function mod_configuration_tool:get_valid_option_types()
     return retval
 end
 
---- Global functions
---- @section globals
 
 --- This is just `get_mct()`, the documentation program is being stupid.
 --- Global getter for the mct object.
 --- @static
 --- @function get_mct
 --- @treturn mct
+--- @within API
 function get_mct()
     return core:get_static_object("mod_configuration_tool")
     --return mod_configuration_tool
