@@ -1239,9 +1239,9 @@ function ui_obj:create_panels()
     -- create listview
     local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/vandy_lib/vlist", left_panel_bg)
     left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
-    left_panel_listview:Resize(w, h-30) -- -30 to account for the 15px offset below (and the ruffled margin of the image)
+    left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
     left_panel_listview:SetDockingPoint(2)
-    left_panel_listview:SetDockOffset(0, left_panel_title:Height() * 1.1)
+    left_panel_listview:SetDockOffset(0, left_panel_title:Height() -5)
 
     local x,y = left_panel_listview:Position()
     local w,h = left_panel_listview:Bounds()
@@ -1254,7 +1254,7 @@ function ui_obj:create_panels()
     local lbox = find_uicomponent(lclip, "list_box")
     lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
     lbox:MoveTo(x,y)
-    lbox:Resize(w,h)
+    lbox:Resize(w,h+100)
     
     -- save the listview and list box into the obj
     self.mod_row_list_view = left_panel_listview
