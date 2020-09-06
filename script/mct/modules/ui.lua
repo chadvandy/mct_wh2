@@ -207,7 +207,7 @@ function ui_obj:notify(str)
     label:SetStateText(tostring(num))
 
     -- highlight the MCT button because people are dolts
-    mct_button:StartPulseHighlight(5)
+    mct_button:StartPulseHighlight(5, "active")
 end
 
 -- clear notifs
@@ -222,7 +222,7 @@ function ui_obj:clear_notifs()
     label:SetStateText("")
     label:SetVisible(false)
 
-    mct_button:StopPulseHighlight()
+    mct_button:StopPulseHighlight("active")
 
     self.notify_num = 0
 end
@@ -281,7 +281,6 @@ function ui_obj:trigger_popup(key, text, two_buttons, button_one_callback, butto
     end
 
     if not two_buttons then button_two_callback = function() end end
-
 
     -- build the popup panel itself
     local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
@@ -556,8 +555,8 @@ function ui_obj:open_frame()
     end
 
     -- clear notifications + trigger any stashed popups
-    self:clear_notifs()
     self:trigger_stashed_popups()
+    self:clear_notifs()
 
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 end) if not ok then mct:error(err) end
