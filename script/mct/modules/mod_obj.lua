@@ -825,6 +825,11 @@ end
 --- @tparam string option_type The type for the new mct_option.
 function mct_mod:add_new_option(option_key, option_type)
     -- check first to see if an option with this key already exists; if it does, return that one!
+    local test = self:get_option_by_key(option_key)
+    if mct:is_mct_option(test) then
+        mct:warn("Trying `add_new_option` for mod ["..self:get_key().."], but there's already an option with the key ["..option_key.."]. Returning that option!")
+        return test
+    end
 
     --mct:log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
     if not is_string(option_key) then
@@ -850,7 +855,6 @@ function mct_mod:add_new_option(option_key, option_type)
     if option_type == "checkbox" then
         new_option:set_default_value(false)
     end
-
 
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
