@@ -268,6 +268,7 @@ function wrapped_type:ui_create_popup()
     txt:SetStateText("Check Text")
     txt:SetDockingPoint(5)
     txt:SetDockOffset(0,0)
+    txt:SetTooltipText("", true)
 
     local button_tick = find_uicomponent(popup, "both_group", "button_tick")
     button_tick:SetState("inactive")
