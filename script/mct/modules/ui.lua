@@ -159,6 +159,7 @@ function ui_obj:delete_component(uic)
 end
 
 function ui_obj:ui_created()
+    mct:log("UI created!")
     self.game_ui_created = true
 
     for i = 1, #self.ui_created_callbacks do
@@ -390,6 +391,13 @@ end
 function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
     -- define the popup callback function - triggered immediately in frontend, and triggered when you open the panel for other modes (or immediately if panel is opened)
     mct:log("creating popup with key ["..key.."].")
+
+    -- check if the UI has been created; if not, stash it as a ui created callback
+    if not self.game_ui_created then
+        mct:log("UI doesn't exist yet - creating the popup laterer")
+        self:add_ui_created_callback(self:create_popup(key, text, two_buttons, button_one_callback, button_two_callback))
+        return
+    end
 
     if __game_mode == __lib_type_frontend then
         -- create the popup immediately

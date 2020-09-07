@@ -1,6 +1,10 @@
 -- check if the game mode is campaign - if aye, make the button
 -- needed to create the button on the top left corner of the screen
 local function create_campaign_button()
+    local mct = get_mct()
+
+    mct.ui:ui_created()
+
     -- parent for the buttons on the top-left bar
     local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
     local new_button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
@@ -14,7 +18,6 @@ local function create_campaign_button()
     new_button:PropagatePriority(button_group:Priority())
     button_group:Adopt(new_button:Address())
 
-    local mct = get_mct()
     mct.ui:set_mct_button(new_button)
 end
 

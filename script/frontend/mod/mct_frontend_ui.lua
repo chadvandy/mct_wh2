@@ -78,6 +78,8 @@ core:add_listener(
 
         mct:load_and_start()
 
+        mct.ui:ui_created()
+
         check_highlight()
     end,
     false

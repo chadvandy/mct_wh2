@@ -2,6 +2,7 @@ local bm = get_bm()
 local mct = get_mct()
 
 local function create_button()
+    mct.ui:ui_created()
     -- parent for the buttons on the top-left bar
     --ModLog("test 1")
     local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")

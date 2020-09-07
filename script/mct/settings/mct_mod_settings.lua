@@ -102,9 +102,11 @@ mct8:text_input_add_validity_test(
     end
 )
 
-local mct9 = mct_mod:add_new_option("mct9", "slider")
-mct9:set_text("2-precision slider")
-mct9:slider_set_min_max(0, 10)
-mct9:slider_set_step_size(0.01, 2)
-mct9:slider_set_precision(2)
-mct9:set_default_value(0)
+if __game_mode == __lib_type_campaign then
+    local mct9 = mct_mod:add_new_option("mct9", "slider")
+    mct9:set_text("2-precision slider")
+    mct9:slider_set_min_max(0, 10)
+    mct9:slider_set_step_size(0.01, 2)
+    mct9:slider_set_precision(2)
+    mct9:set_default_value(0)
+end

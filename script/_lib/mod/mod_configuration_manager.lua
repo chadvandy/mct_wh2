@@ -197,8 +197,6 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         end) if not ok then self:error(err) end
     end
 
-    self.ui:ui_created()
-
     local new_options_added = {}
     local booly = false
 
@@ -261,6 +259,8 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         real_timer.register_singleshot("mct_new_option_created", 100)
     end
 
+    self:log("check new options post")
+
     self._initialized = true
 
     -- check for new options created after MCT has been started and loaded.
@@ -310,7 +310,7 @@ function mod_configuration_tool:log_init()
     local first_load = true --core:svr_load_persistent_bool("mct_init") ~= true
 
     if first_load then
-        core:svr_save_persistent_bool("mct_init", true)
+        --core:svr_save_persistent_bool("mct_init", true)
 
         local file = io.open(self._logpath, "w+")
         file:write("NEW LOG INITIALIZED \n")
