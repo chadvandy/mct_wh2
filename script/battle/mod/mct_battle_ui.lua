@@ -1,8 +1,8 @@
 local bm = get_bm()
-local mct = get_mct()
 
 local function create_button()
-    mct.ui:ui_created()
+    local mct = get_mct()
+    
     -- parent for the buttons on the top-left bar
     --ModLog("test 1")
     local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
@@ -19,7 +19,10 @@ local function create_button()
     --ModLog("end")
 
     mct:load_and_start()
+
     mct.ui:set_mct_button(new_button)
+
+    mct.ui:ui_created()
 end
 
 bm:repeat_callback(

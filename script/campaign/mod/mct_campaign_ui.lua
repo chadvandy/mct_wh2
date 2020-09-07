@@ -2,9 +2,6 @@
 -- needed to create the button on the top left corner of the screen
 local function create_campaign_button()
     local mct = get_mct()
-
-    mct.ui:ui_created()
-
     -- parent for the buttons on the top-left bar
     local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
     local new_button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
@@ -19,6 +16,8 @@ local function create_campaign_button()
     button_group:Adopt(new_button:Address())
 
     mct.ui:set_mct_button(new_button)
+
+    mct.ui:ui_created()
 end
 
 core:add_ui_created_callback(function() create_campaign_button() end)
