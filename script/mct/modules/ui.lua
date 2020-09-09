@@ -1907,8 +1907,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_text:SetDockingPoint(4)
             option_text:SetDockOffset(15, 0)
 
-            --
-            self:SetTooltipText(option_text, option_obj:get_tooltip_text(), true)
+            -- set the tooltip on the "dummy", and remove anything from the option text
+            dummy_option:SetInteractive(true)
+            option_text:SetInteractive(false)
+            self:SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
 
             -- create the interactive option
             local new_option = option_obj:ui_create_option(dummy_option)
