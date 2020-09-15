@@ -1,5 +1,17 @@
 ## Change Notes
 
+### MCT 2.2.1 - September 15, 2020
+
+A couple hotfixes.
+
+- When you get a "New Settings Found!" popup, the setting will properly be saved instead of trigger every single time you load up the game.
+- Change the tooltip on options to be over everything (besides the actual option buttons), instead of just over the text.
+- Change logging to have timestamps identical to those in script_log_xxxx.txt. This will make it easier to track down any issues and match it up with *where* something happened in MCT.
+- Change popups and UI locking. When MCT is open, you can't interact with anything behind it; when a popup is open, you can't interact with anything behind that, including the MCT panel. This will prevent incredibly rare issues presented by interacting with the background.
+- In a similar vein, popups can no longer be closed by pressing the "Esc" key. This tiny change was, annoying, 90% of the development time for this patch.
+
+Enjoy!
+
 ### MCT 2.2.0 - September 6, 2020
 
 This patch is fairly substantial, and as of this point, I'm consider MCT Reborn **no longer a beta**. It's fairly stable at this point, most major issues and break cases have been resolved (all that I know of!), and from this point forward the main focus is on improving the quality of the mod and making new features, rather than fixing old issues and resolving foundational errors.

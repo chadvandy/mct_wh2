@@ -181,7 +181,48 @@ local function init()
 
                 popped = true
 
-                local popup_uic = core:get_or_create_component("mct_mp_host", "ui/common ui/dialogue_box")
+                local popup_uic = core:get_or_create_component("mct_mp_host", "ui/mct/mct_dialogue")
+
+                local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
+                local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
+                local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+        
+                both_group:SetDockingPoint(8)
+                both_group:SetDockOffset(0, 0)
+        
+                ok_group:SetDockingPoint(8)
+                ok_group:SetDockOffset(0, 0)
+        
+                DY_text:SetVisible(true)
+                DY_text:SetDockingPoint(5)
+                local ow, oh = popup_uic:Width() * 0.9, popup_uic:Height() * 0.8
+                DY_text:Resize(ow, oh)
+                DY_text:SetDockOffset(1, -35)
+        
+                local cancel_img = effect.get_skinned_image_path("icon_cross.png")
+                local tick_img = effect.get_skinned_image_path("icon_check.png")
+        
+                do
+                    local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+                    local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+        
+                    button_tick:SetImagePath(tick_img)
+                    button_tick:SetDockingPoint(8)
+                    button_tick:SetDockOffset(-30, -10)
+        
+                    button_cancel:SetImagePath(cancel_img)
+                    button_cancel:SetDockingPoint(8)
+                    button_cancel:SetDockOffset(30, -10)
+                end
+        
+                do
+                    local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+        
+                    button_tick:SetImagePath(tick_img)
+                    button_tick:SetDockingPoint(8)
+                    button_tick:SetDockOffset(0, -10)
+                end
+
                 popup_uic:LockPriority()
 
                 local str = ""
@@ -196,8 +237,18 @@ local function init()
                     str = effect.get_localised_string("mct_mp_not_host_start") .. player_name .. effect.get_localised_string("mct_mp_not_host_mid") .. "\n\n" .. effect.get_localised_string("mct_mp_not_host_end") .. "\n\n" .. effect.get_localised_string("mct_mp_not_host_end_actually") --"[[col:red]]MCT: Loading "..player_name.."'s Settings[[/col]]\n\nLoading the Host's settings from MCT. Make sure you're cool with the settings they've picked. Do note - you can't see the host's settings until you load into the campaign, so you'll have to discuss it elsewhere.\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF YOU ARE ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN. ALSO REPORT THIS TO VANDY.[[/col]]"
                 end
 
+       
+                -- grab and set the text
                 local tx = find_uicomponent(popup_uic, "DY_text")
+        
+                local w,h = tx:TextDimensionsForText(str)
+                tx:ResizeTextResizingComponentToInitialSize(w,h)
+
                 tx:SetStateText(str)
+        
+                tx:Resize(ow,oh)
+                w,h = tx:TextDimensionsForText(str)
+                tx:ResizeTextResizingComponentToInitialSize(ow,oh)
 
                 find_uicomponent(popup_uic, "both_group"):SetVisible(false)
                 find_uicomponent(popup_uic, "ok_group"):SetVisible(true)

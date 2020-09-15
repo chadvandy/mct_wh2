@@ -635,6 +635,8 @@ function settings:load()
             return
         end
 
+        --self:finalize_first_time()
+
         local any_added = false
 
         --local content = table.load(self.settings_file)
@@ -742,20 +744,39 @@ function settings:load()
                     end
                 end
 
-                text = text .. "\n" .. effect.get_localised_string("mct_new_settings_end")
+                --text = text .. "\n" .. effect.get_localised_string("mct_new_settings_end")
 
                 mct.ui:create_popup(
                     key,
-                    text,
-                    true, -- this uses two buttons
-                    function() -- the "ok" button was triggered - show the MCT panel
-                        mct.ui:open_frame()
+                    function()
+                        if not mct.ui.opened then 
+                            return text .. "\n" .. effect.get_localised_string("mct_new_settings_created_end")
+                        else 
+                            return text
+                        end
                     end,
-                    function()  -- the "cancel" button was triggered - do nuffin, really
+                    function()
+                        if not mct.ui.opened then
+                            return true
+                        else
+                            return false
+                        end
+                    end,
+                    function()
+                        if mct.ui.opened then
+                            -- do nothing
+                        else
+                            mct.ui:open_frame()
+                        end
+                    end,
+                    function()
+                        -- do nothing?
                     end
                 )
             end)
         end
+
+        self:finalize_first_time()
     end
 end
 

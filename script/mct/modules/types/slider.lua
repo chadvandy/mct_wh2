@@ -460,16 +460,77 @@ end
 
 --- Creates the edit-in-UI popup.
 function wrapped_type:ui_create_popup()
-    local popup = core:get_or_create_component("mct_slider_rename", "ui/common ui/dialogue_box")
+    local panel = mct.ui.panel
+    panel:UnLockPriority()
 
-    popup:RegisterTopMost()
+    local popup = core:get_or_create_component("mct_slider_rename", "ui/mct/mct_dialogue", panel)
+
+    local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
+    local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
+    local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+
+    both_group:SetDockingPoint(8)
+    both_group:SetDockOffset(0, 0)
+
+    ok_group:SetDockingPoint(8)
+    ok_group:SetDockOffset(0, 0)
+
+    DY_text:SetVisible(true)
+    DY_text:SetDockingPoint(5)
+    local ow,oh = popup:Width() * 0.9, popup:Height() * 0.4
+    DY_text:Resize(ow, oh)
+    DY_text:SetDockOffset(1, -35)
+
+    local cancel_img = effect.get_skinned_image_path("icon_cross.png")
+    local tick_img = effect.get_skinned_image_path("icon_check.png")
+
+    do
+        local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+        local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+
+        button_tick:SetImagePath(tick_img)
+        button_tick:SetDockingPoint(8)
+        button_tick:SetDockOffset(-30, -10)
+        button_tick:SetCanResizeWidth(false)
+        button_tick:SetCanResizeHeight(false)
+
+        button_cancel:SetImagePath(cancel_img)
+        button_cancel:SetDockingPoint(8)
+        button_cancel:SetDockOffset(30, -10)
+        button_cancel:SetCanResizeWidth(false)
+        button_cancel:SetCanResizeHeight(false)
+    end
+
+    do
+        local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+
+        button_tick:SetImagePath(tick_img)
+        button_tick:SetDockingPoint(8)
+        button_tick:SetDockOffset(0, -10)
+        button_tick:SetCanResizeWidth(false)
+        button_tick:SetCanResizeHeight(false)
+    end
+
+    popup:PropagatePriority(1000)
     popup:LockPriority()
 
     -- TODO plop in a title with the mod key + option key
 
     local tx = UIComponent(popup:Find("DY_text"))
     local default_text = "Choose the number to supply to the option "..self:get_text()
-    mct.ui:SetStateText(tx, default_text)
+
+    local function set_text(str)
+        local w,h = tx:TextDimensionsForText(str)
+        tx:ResizeTextResizingComponentToInitialSize(w,h)
+
+        mct.ui:SetStateText(tx, str)
+
+        tx:Resize(ow,oh)
+        w,h = tx:TextDimensionsForText(default_text)
+        tx:ResizeTextResizingComponentToInitialSize(ow,oh)
+    end
+
+    set_text(default_text)
 
     do
         local x,y = tx:GetDockOffset()
@@ -501,6 +562,9 @@ function wrapped_type:ui_create_popup()
     txt:SetDockOffset(0,0)
     txt:SetTooltipText("", true)
 
+    find_uicomponent(popup, "both_group"):SetVisible(true)
+    find_uicomponent(popup, "ok_group"):PropagateVisibility(false)
+
     local button_tick = find_uicomponent(popup, "both_group", "button_tick")
     button_tick:SetState("inactive")
 
@@ -528,7 +592,7 @@ function wrapped_type:ui_create_popup()
                 button_tick:SetState("active")
 
                 current_num = current_key
-                tx:SetStateText(default_text .. "\nCurrent name: " .. current_key)
+                set_text(default_text .. "\nCurrent name: " .. current_key)
             else
                 button_tick:SetState("inactive")
 
@@ -536,7 +600,7 @@ function wrapped_type:ui_create_popup()
 
                 local invalid_string = test
 
-                tx:SetStateText(default_text .. "\n[[col:red]]"..invalid_string.."[[/col]]")
+                set_text(default_text .. "\n[[col:red]]"..invalid_string.."[[/col]]")
             end
         end) if not ok then mct:error(err) end
         end,
@@ -550,6 +614,11 @@ function wrapped_type:ui_create_popup()
             return context.string == "button_tick" or context.string == "button_cancel"
         end,
         function(context)
+            mct.ui:delete_component(popup)
+
+            local panel = mct.ui.panel
+            panel:LockPriority()
+
             if context.string == "button_tick" then
                 self:set_selected_setting(tonumber(current_num))
             end

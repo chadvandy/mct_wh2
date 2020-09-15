@@ -231,7 +231,7 @@ end
 -- stash a popup for when MCT is opened
 function ui_obj:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
     -- verify shit is alright
-    if not is_string(key) then
+    --[[if not is_string(key) then
         mct:error("stash_popup() called, but the key passed is not a string!")
         return false
     end
@@ -250,7 +250,7 @@ function ui_obj:stash_popup(key, text, two_buttons, button_one_callback, button_
         return false
     end
 
-    if not two_buttons then button_two_callback = function() end end
+    if not two_buttons then button_two_callback = function() end end]]
 
     -- save it locally!
     self.stashed_popups[#self.stashed_popups+1] = {
@@ -271,9 +271,17 @@ function ui_obj:trigger_popup(key, text, two_buttons, button_one_callback, butto
         return false
     end
 
+    if is_function(text) then
+        text = text()
+    end
+
     if not is_string(text) then
         mct:error("trigger_popup() called, but the text passed is not a string!")
         return false
+    end
+
+    if is_function(two_buttons) then
+        two_buttons = two_buttons()
     end
 
     if not is_boolean(two_buttons) then
@@ -284,40 +292,148 @@ function ui_obj:trigger_popup(key, text, two_buttons, button_one_callback, butto
     if not two_buttons then button_two_callback = function() end end
 
     -- build the popup panel itself
-    local popup = core:get_or_create_component(key, "ui/common ui/dialogue_box")
+    local popup_parent = nil
 
-    -- grey out the rest of the world
-    popup:RegisterTopMost()
+    local frame = self.panel
+    if is_uicomponent(frame) then
+        frame:UnLockPriority()
+        popup_parent = frame
+    end
 
-    popup:LockPriority()
+    local popup = core:get_or_create_component(key, "ui/mct/mct_dialogue", popup_parent)
 
+    local function do_stuff()
 
-    -- grab and set the text
-    local tx = find_uicomponent(popup, "DY_text")
-    self:SetStateText(tx, text)
+        local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
+        local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
+        local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+
+        both_group:SetDockingPoint(8)
+        both_group:SetDockOffset(0, 0)
+
+        ok_group:SetDockingPoint(8)
+        ok_group:SetDockOffset(0, 0)
+
+        DY_text:SetDockingPoint(5)
+        local ow, oh = popup:Width() * 0.9, popup:Height() * 0.8
+        DY_text:Resize(ow, oh)
+        DY_text:SetDockOffset(1, -35)
+        DY_text:SetVisible(true)
+
+        local cancel_img = effect.get_skinned_image_path("icon_cross.png")
+        local tick_img = effect.get_skinned_image_path("icon_check.png")
+
+        do
+            local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+            local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+
+            button_tick:SetImagePath(tick_img)
+            button_tick:SetDockingPoint(8)
+            button_tick:SetDockOffset(-30, -10)
+            button_tick:SetCanResizeWidth(false)
+            button_tick:SetCanResizeHeight(false)
+
+            button_cancel:SetImagePath(cancel_img)
+            button_cancel:SetDockingPoint(8)
+            button_cancel:SetDockOffset(30, -10)
+            button_cancel:SetCanResizeWidth(false)
+            button_cancel:SetCanResizeHeight(false)
+        end
+
+        do
+            local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+
+            button_tick:SetImagePath(tick_img)
+            button_tick:SetDockingPoint(8)
+            button_tick:SetDockOffset(0, -10)
+            button_tick:SetCanResizeWidth(false)
+            button_tick:SetCanResizeHeight(false)
+        end
+
+        popup:PropagatePriority(1000)
+
+        popup:LockPriority()
+
+        -- grey out the rest of the world
+        --popup:RegisterTopMost()
+
+        local both_group = find_uicomponent(popup, "both_group")
+        local ok_group = find_uicomponent(popup, "ok_group")
+
+        if two_buttons then
+            both_group:SetVisible(true)
+            ok_group:SetVisible(false)
+        else
+            both_group:SetVisible(false)
+            ok_group:SetVisible(true)
+        end
+
+        -- grab and set the text
+        local tx = find_uicomponent(popup, "DY_text")
+
+        local w,h = tx:TextDimensionsForText(text)
+        tx:ResizeTextResizingComponentToInitialSize(w,h)
+
+        self:SetStateText(tx, text)
+
+        tx:Resize(ow,oh)
+        --w,h = tx:TextDimensionsForText(text)
+        tx:ResizeTextResizingComponentToInitialSize(ow,oh)
+
+        core:add_listener(
+            key.."_button_pressed",
+            "ComponentLClickUp",
+            function(context)
+                local button = UIComponent(context.component)
+                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == key
+            end,
+            function(context)
+                mct:log("button pres'd")
+                local button = UIComponent(context.component)
+                mct:log("button pres'd 1")
+                local id = context.string
+                mct:log("button pres'd 2")
+
+                -- close the popup
+                ui_obj:delete_component(popup)
+
+                mct:log("button pres'd 3")
+
+                local frame = self.panel
+                mct:log("button pres'd 4")
+                if is_uicomponent(frame) then
+                    frame:LockPriority()
+                end
+
+                mct:log("button pres'd 5")
+
+                if id == "button_tick" then
+                    mct:log("button pres'd 6")
+                    button_one_callback()
+                    mct:log("button pres'd 7")
+                else
+                    mct:log("button pres'd 6")
+                    button_two_callback()
+                    mct:log("button pres'd 7")
+                end
+            end,
+            false
+        )
+    end
 
     core:add_listener(
-        key.."_button_pressed",
-        "ComponentLClickUp",
+        "do_stuff",
+        "RealTimeTrigger",
         function(context)
-            local button = UIComponent(context.component)
-            return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == key
+            return context.string == "do_stuff"
         end,
         function(context)
-            local button = UIComponent(context.component)
-            local id = context.string
-
-            -- close the popup
-            ui_obj:delete_component(popup)
-
-            if id == "button_tick" then
-                button_one_callback()
-            else
-                button_two_callback()
-            end
+            do_stuff()
         end,
         false
     )
+
+    real_timer.register_singleshot("do_stuff", 5)
 end
 
 
@@ -508,9 +624,19 @@ function ui_obj:open_frame()
         local new_frame = core:get_or_create_component("mct_options", "ui/mct/mct_frame")
         self:SetVisible(new_frame, true)
 
+        new_frame:PropagatePriority(500)
+
+        --new_frame:RegisterTopMost()
+
+        new_frame:LockPriority()
+
         -- resize the panel
         new_frame:SetCanResizeWidth(true) new_frame:SetCanResizeHeight(true)
+
         new_frame:Resize(new_frame:Width() * 4, new_frame:Height() * 2.5)
+
+        --local sw, sh = core:get_screen_resolution()
+        --new_frame:Resize(sw*0.99, sh*0.99)
 
         -- edit the name
         local title_plaque = find_uicomponent(new_frame, "title_plaque")
@@ -844,7 +970,7 @@ function ui_obj:create_actions_panel()
     profiles_title:SetDockingPoint(2)
     profiles_title:SetDockOffset(0, profiles_title:Height() * 0.1)
 
-    local profiles_text = core:get_or_create_component("mct_profiles_title_text", "ui/vandy_lib/text/la_gioconda", profiles_title)
+    local profiles_text = core:get_or_create_component("mct_profiles_title_text", "ui/vandy_lib/text/la_gioconda/center", profiles_title)
     profiles_text:SetVisible(true)
 
     profiles_text:SetDockingPoint(5)
@@ -911,15 +1037,77 @@ function ui_obj:create_actions_panel()
                 end
 
                 -- build the popup panel itself
-                local popup = core:get_or_create_component("mct_profiles_new_popup", "ui/common ui/dialogue_box")
+                local popup = core:get_or_create_component("mct_profiles_new_popup", "ui/mct/mct_dialogue", panel)
+
+                local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
+                local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
+                local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+        
+                both_group:SetDockingPoint(8)
+                both_group:SetDockOffset(0, 0)
+        
+                ok_group:SetDockingPoint(8)
+                ok_group:SetDockOffset(0, 0)
+        
+                DY_text:SetVisible(true)
+                DY_text:SetDockingPoint(5)
+                local ow,oh = popup:Width() * 0.9, popup:Height() * 0.8
+                DY_text:Resize(ow, oh)
+                DY_text:SetDockOffset(1, -35)
+        
+                local cancel_img = effect.get_skinned_image_path("icon_cross.png")
+                local tick_img = effect.get_skinned_image_path("icon_check.png")
+        
+                do
+                    local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+                    local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+        
+                    button_tick:SetImagePath(tick_img)
+                    button_tick:SetDockingPoint(8)
+                    button_tick:SetDockOffset(-30, -10)
+                    button_tick:SetCanResizeWidth(false)
+                    button_tick:SetCanResizeHeight(false)
+        
+                    button_cancel:SetImagePath(cancel_img)
+                    button_cancel:SetDockingPoint(8)
+                    button_cancel:SetDockOffset(30, -10)
+                    button_cancel:SetCanResizeWidth(false)
+                    button_cancel:SetCanResizeHeight(false)
+                end
+        
+                do
+                    local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+        
+                    button_tick:SetImagePath(tick_img)
+                    button_tick:SetDockingPoint(8)
+                    button_tick:SetDockOffset(0, -10)
+                    button_tick:SetCanResizeWidth(false)
+                    button_tick:SetCanResizeHeight(false)
+                end
+                
+                panel:UnLockPriority()
+
                 -- grey out the rest of the world
-                popup:RegisterTopMost()
+                popup:PropagatePriority(1000)
 
                 popup:LockPriority()
 
                 -- TODO plop in a pretty title
+                local default_text = "Hi! Type in your desired profile key below."
+
                 local tx = find_uicomponent(popup, "DY_text")
-                self:SetStateText(tx, "Hi! Type in your desired profile key below.")
+        
+                local function set_text(str)
+                    local w,h = tx:TextDimensionsForText(str)
+                    tx:ResizeTextResizingComponentToInitialSize(w,h)
+
+                    self:SetStateText(tx, str)
+            
+                    tx:Resize(ow,oh)
+                    tx:ResizeTextResizingComponentToInitialSize(ow,oh)
+                end
+
+                set_text(default_text)
 
                 local xx,yy = tx:GetDockOffset()
                 yy = yy - 40
@@ -947,6 +1135,9 @@ function ui_obj:create_actions_panel()
                 txt:SetDockingPoint(5)
                 txt:SetDockOffset(0,0)
 
+                find_uicomponent(popup, "both_group"):SetVisible(true)
+                find_uicomponent(popup, "ok_group"):SetVisible(false)
+
                 local button_tick = find_uicomponent(popup, "both_group", "button_tick")
                 self:SetState(button_tick, "inactive")
 
@@ -973,18 +1164,18 @@ function ui_obj:create_actions_panel()
                             self:SetState(button_tick, "active")
 
                             current_name = current_key
-                            self:SetStateText(tx, "Hi! Type in your desired profile key below.\nCurrent name: " .. current_name)
+                            set_text("Hi! Type in your desired profile key below.\nCurrent name: " .. current_name)
                         else
                             self:SetState(button_tick, "inactive")
 
                             current_name = ""
 
                             if test == "bad_key" then
-                                self:SetStateText(tx, "Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - not a valid string![[/col]]")
+                                set_text("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - not a valid string![[/col]]")
                             elseif test == "exists" then
-                                self:SetStateText(tx, "Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]")
+                                set_text("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]")
                             elseif test == "blank_key" then
-                                self:SetStateText(tx, "Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - you have to insert a string![[/col]]")
+                                set_text("Hi! Type in your desired profile key below.\n[[col:red]]Invalid key - you have to insert a string![[/col]]")
                             end
                         end
                     end) if not ok then mct:error(err) end
@@ -999,6 +1190,13 @@ function ui_obj:create_actions_panel()
                         return context.string == "button_tick" or context.string == "button_cancel"
                     end,
                     function(context)
+                        self:delete_component(popup)
+
+                        local panel = self.panel
+                        if is_uicomponent(panel) then
+                            panel:LockPriority()
+                        end
+
                         if context.string == "button_tick" then
                             --local current_key = input:GetStateText()
                             
@@ -1309,8 +1507,8 @@ function ui_obj:create_panels()
     mod_details_lbox:Resize(w,h)]]
 
     local mod_title = core:get_or_create_component("mod_title", "ui/templates/panel_subtitle", right_panel)
-    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
-    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
+    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
+    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
     
 
@@ -1452,8 +1650,8 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     local mod_title_txt = self.mod_title_txt
 
     -- set up the mod details - name of selected mod, display author, and whatever blurb of text they want
-    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
-    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda", mod_details_panel)
+    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
+    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
 
     local title, author, desc = selected_mod:get_localised_texts()
@@ -1639,15 +1837,26 @@ function ui_obj:do_log_list_view()
 
     for line_num, line_txt in pairs(lines) do
         local ok, err = pcall(function()
-        local text_component = core:get_or_create_component("line_text_"..tostring(line_num), "ui/vandy_lib/text/la_gioconda", logging_list_box)
+        local text_component = core:get_or_create_component("line_text_"..tostring(line_num), "ui/vandy_lib/text/la_gioconda/unaligned", logging_list_box)
 
-        text_component:Resize(text_component:Width()*4, text_component:Height())
+        local ow,oh = logging_list_box:Width() * 0.7, text_component:Height()
+        text_component:Resize(ow, oh)
+
+        local str = tostring(line_num) .. ": " .. line_txt
+
+        local w,h = text_component:TextDimensionsForText(str)
+        text_component:ResizeTextResizingComponentToInitialSize(w,h)
+
+        self:SetStateText(text_component, str)
+
+        text_component:Resize(ow,oh)
+        text_component:ResizeTextResizingComponentToInitialSize(ow,oh)
+
 
         --local w,h,num = text_component:TextDimensionsForText(tostring(line_num) .. ": " .. line_txt)
 
         text_component:SetDockingPoint(1)
         text_component:SetDockOffset(10, 10)
-        self:SetStateText(text_component, tostring(line_num) .. ": " .. line_txt)
 
         self:SetVisible(text_component, true)
         end) if not ok then mct:error(err) end
@@ -1902,7 +2111,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uic_with_key("border", dummy_border, true)
 
             -- make some text to display deets about the option
-            local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda", dummy_option)
+            local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda/unaligned", dummy_option)
             self:SetVisible(option_text, true)
             option_text:SetDockingPoint(4)
             option_text:SetDockOffset(15, 0)
@@ -2059,334 +2268,419 @@ function ui_obj:new_mod_row(mod_obj)
 end
 
 function ui_obj:add_finalize_settings_popup(selected_mod)
-    local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/common ui/dialogue_box")
+    local frame = self.panel
+    if is_uicomponent(frame) then
+        frame:UnLockPriority()
+    end
+
+    local popup = core:get_or_create_component("mct_finalize_settings_popup", "ui/mct/mct_dialogue", frame)
+
+    local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
+    local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
+    local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+
+    both_group:SetDockingPoint(8)
+    both_group:SetDockOffset(0, 0)
+
+    ok_group:SetDockingPoint(8)
+    ok_group:SetDockOffset(0, 0)
+
+    DY_text:SetDockingPoint(5)
+    local ow, oh = popup:Width() * 0.9, popup:Height() * 0.8
+    DY_text:Resize(ow, oh)
+    DY_text:SetVisible(true)
+    DY_text:SetDockOffset(1, -35)
+
+    local cancel_img = effect.get_skinned_image_path("icon_cross.png")
+    local tick_img = effect.get_skinned_image_path("icon_check.png")
+
+    do
+        local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+        local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+
+        button_tick:SetImagePath(tick_img)
+        button_tick:SetDockingPoint(8)
+        button_tick:SetDockOffset(-30, -10)
+        button_tick:SetCanResizeWidth(false)
+        button_tick:SetCanResizeHeight(false)
+
+        button_cancel:SetImagePath(cancel_img)
+        button_cancel:SetDockingPoint(8)
+        button_cancel:SetDockOffset(30, -10)
+        button_cancel:SetCanResizeWidth(false)
+        button_cancel:SetCanResizeHeight(false)
+    end
+
+    do
+        local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+
+        button_tick:SetImagePath(tick_img)
+        button_tick:SetDockingPoint(8)
+        button_tick:SetDockOffset(0, -10)
+        button_tick:SetCanResizeWidth(false)
+        button_tick:SetCanResizeHeight(false)
+    end
+
     local tx = find_uicomponent(popup, "DY_text")
     tx:SetVisible(false)
 
     popup:SetCanResizeWidth(true)
     popup:SetCanResizeHeight(true)
 
-    -- grey out the rest of the world
-    popup:RegisterTopMost()
+    find_uicomponent(popup, "both_group"):SetVisible(false)
+    find_uicomponent(popup, "ok_group"):SetVisible(true)
 
-    popup:LockPriority()
+    local function do_stuff()
 
-    -- this is the width/height of the parchment image
-    local pw, ph = popup:GetCurrentStateImageDimensions(3)
+        -- grey out the rest of the world
+        popup:PropagatePriority(1000)
 
-    -- this is the width/height of the bottom bar image
-    local bw, bh = popup:GetCurrentStateImageDimensions(2)
+        popup:LockPriority()
 
-    local popup_width = popup:Width() * 2
-    local popup_height = popup:Height() * 2
+        -- this is the width/height of the parchment image
+        local pw, ph = popup:GetCurrentStateImageDimensions(3)
 
-    --local sx, sy = core:get_screen_resolution()
-    popup:Resize(popup_width, popup_height)
+        -- this is the width/height of the bottom bar image
+        local bw, bh = popup:GetCurrentStateImageDimensions(2)
 
-    popup:SetCanResizeWidth(false)
-    popup:SetCanResizeHeight(false)
+        local popup_width = popup:Width() * 2
+        local popup_height = popup:Height() * 2
 
+        --local sx, sy = core:get_screen_resolution()
+        popup:Resize(popup_width, popup_height)
 
-    -- resize the parchment and bottom bar to prevent ugly stretching
-    local nbw, nbh = popup:GetCurrentStateImageDimensions(2)
-    local height_gap = nbh-bh -- this is the height different in px between the stretched bottom bar and the old bottom bar
+        popup:SetCanResizeWidth(false)
+        popup:SetCanResizeHeight(false)
 
-    -- set the bottom bar to exactly what it was before (but keep the width, dumbo)
-    popup:ResizeCurrentStateImage(2, nbw, bh)
 
-    -- set the parchment to the bottom bar's height gap
-    local npw, nph = popup:GetCurrentStateImageDimensions(3)
-    nph = nph + height_gap - 10
-    popup:ResizeCurrentStateImage(3, npw, nph)
+        -- resize the parchment and bottom bar to prevent ugly stretching
+        local nbw, nbh = popup:GetCurrentStateImageDimensions(2)
+        local height_gap = nbh-bh -- this is the height different in px between the stretched bottom bar and the old bottom bar
 
-    -- position/dimensions of the entire popup
-    local tx, ty = popup:Position()
-    local tw, th = popup:Dimensions()
+        -- set the bottom bar to exactly what it was before (but keep the width, dumbo)
+        popup:ResizeCurrentStateImage(2, nbw, bh)
 
-    -- get the proper x/y position of the parchment
-    local w_offset = (tw - npw) / 2
-    local h_offset = ((th - bh) - nph) / 2
+        -- set the parchment to the bottom bar's height gap
+        local npw, nph = popup:GetCurrentStateImageDimensions(3)
+        nph = nph + height_gap - 10
+        popup:ResizeCurrentStateImage(3, npw, nph)
 
-    local x,y = tx+w_offset, ty+h_offset
+        -- position/dimensions of the entire popup
+        local tx, ty = popup:Position()
+        local tw, th = popup:Dimensions()
 
-    local top_row = core:get_or_create_component("header", "ui/mct/script_dummy", popup)
+        -- get the proper x/y position of the parchment
+        local w_offset = (tw - npw) / 2
+        local h_offset = ((th - bh) - nph) / 2
 
-    top_row:SetDockingPoint(2)
-    top_row:SetDockOffset(0,h_offset)
-    top_row:SetCanResizeWidth(true) top_row:SetCanResizeHeight(true)
+        local x,y = tx+w_offset, ty+h_offset
 
-    --top_row:Resize(npw, top_row:Height())
-    
-    local mod_header = core:get_or_create_component("mod_header", "ui/vandy_lib/text/la_gioconda", top_row)
-    local old_value_header = core:get_or_create_component("old_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
-    local new_value_header = core:get_or_create_component("new_value_header", "ui/vandy_lib/text/la_gioconda", top_row)
+        local top_row = core:get_or_create_component("header", "ui/mct/script_dummy", popup)
 
-    top_row:Resize(npw, mod_header:Height() * 1.2)
+        top_row:SetDockingPoint(2)
+        top_row:SetDockOffset(0,h_offset)
+        top_row:SetCanResizeWidth(true) top_row:SetCanResizeHeight(true)
 
-    mod_header:SetCanResizeWidth(true) mod_header:SetCanResizeHeight(true)
-    old_value_header:SetCanResizeWidth(true) old_value_header:SetCanResizeHeight(true)
-    new_value_header:SetCanResizeWidth(true) new_value_header:SetCanResizeHeight(true)
+        --top_row:Resize(npw, top_row:Height())
+        
+        local mod_header = core:get_or_create_component("mod_header", "ui/vandy_lib/text/la_gioconda/unaligned", top_row)
+        local old_value_header = core:get_or_create_component("old_value_header", "ui/vandy_lib/text/la_gioconda/unaligned", top_row)
+        local new_value_header = core:get_or_create_component("new_value_header", "ui/vandy_lib/text/la_gioconda/unaligned", top_row)
 
-    mod_header:Resize(npw * 0.25, mod_header:Height())
-    old_value_header:Resize(npw*0.25, old_value_header:Height())
-    new_value_header:Resize(npw*0.25, new_value_header:Height())
+        top_row:Resize(npw, mod_header:Height() * 1.2)
 
-    top_row:SetCanResizeWidth(false) top_row:SetCanResizeHeight(false)
+        mod_header:SetCanResizeWidth(true) mod_header:SetCanResizeHeight(true)
+        old_value_header:SetCanResizeWidth(true) old_value_header:SetCanResizeHeight(true)
+        new_value_header:SetCanResizeWidth(true) new_value_header:SetCanResizeHeight(true)
 
-    local mod_header_text = effect.get_localised_string("mct_finalize_settings_popup_mod_header")
-    local old_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_old_value_header")
-    local new_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_new_value_header")
+        mod_header:SetVisible(true)
+        old_value_header:SetVisible(true)
+        new_value_header:SetVisible(true)
 
-    mod_header:SetDockingPoint(4)
-    mod_header:SetDockOffset(20, 0)
-    self:SetStateText(mod_header, mod_header_text)
+        mod_header:Resize(npw * 0.25, mod_header:Height())
+        old_value_header:Resize(npw*0.25, old_value_header:Height())
+        new_value_header:Resize(npw*0.25, new_value_header:Height())
 
-    old_value_header:SetDockingPoint(5)
-    old_value_header:SetDockOffset(-20, 0)
-    self:SetStateText(old_value_header, old_value_header_text)
+        top_row:SetCanResizeWidth(false) top_row:SetCanResizeHeight(false)
 
-    new_value_header:SetDockingPoint(6)
-    new_value_header:SetDockOffset(-60, 0)
-    self:SetStateText(new_value_header, new_value_header_text)
+        local mod_header_text = effect.get_localised_string("mct_finalize_settings_popup_mod_header")
+        local old_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_old_value_header")
+        local new_value_header_text = effect.get_localised_string("mct_finalize_settings_popup_new_value_header")
 
-    nph = nph - top_row:Height() - 10
-    mct:log("h offset: " ..tostring(h_offset))
-    h_offset = h_offset + top_row:Height()
-    mct:log("h offset after: " ..tostring(h_offset))
+        mod_header:SetDockingPoint(4)
+        mod_header:SetDockOffset(20, 0)
+        self:SetStateText(mod_header, mod_header_text)
 
-    -- create the listview on the parchment
-    local list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", popup)
-    list_view:SetDockingPoint(2)
-    list_view:SetDockOffset(0, h_offset)
-    list_view:SetCanResizeHeight(true) list_view:SetCanResizeWidth(true)
-    list_view:Resize(npw,nph)
-    list_view:SetCanResizeHeight(false) list_view:SetCanResizeWidth(false)
+        old_value_header:SetDockingPoint(5)
+        old_value_header:SetDockOffset(-20, 0)
+        self:SetStateText(old_value_header, old_value_header_text)
 
-    local list_clip = find_uicomponent(list_view, "list_clip")
-    list_clip:SetDockingPoint(0)
-    list_clip:SetDockOffset(0,10)
-    list_clip:SetCanResizeHeight(true) list_clip:SetCanResizeWidth(true)
-    list_clip:Resize(npw,nph-20)
-    list_clip:SetCanResizeHeight(false) list_clip:SetCanResizeWidth(false)
-
-    local list_box = find_uicomponent(list_clip, "list_box")
-    list_box:SetDockingPoint(0)
-    list_box:SetDockOffset(0,0)
-    list_box:SetCanResizeHeight(true)
-    list_box:Resize(npw,nph+100)
-    list_box:SetCanResizeHeight(false) list_box:SetCanResizeWidth(false)
-
-    local vslider = find_uicomponent(list_view, "vslider")
-    vslider:SetDockingPoint(6)
-    vslider:SetDockOffset(-w_offset, 0)
-
-    vslider:SetVisible(true)
-
-    local ok, err = pcall(function()
-
-
-    -- loop through all changed settings mod-keys and display them!
-    local changed_settings = self.changed_settings
-    
-    local reverted_options = {}
-
-    if not self:get_locally_edited() then
-        -- do nothing! close the popup?
-        return false
-    end
+        new_value_header:SetDockingPoint(6)
+        new_value_header:SetDockOffset(-60, 0)
+        self:SetStateText(new_value_header, new_value_header_text)
 
-    for mod_key, mod_data in pairs(changed_settings) do
-        if selected_mod and mod_key ~= selected_mod then
-            -- skip
-        else
-            mct:log("IN MOD KEY "..mod_key)
-            -- add text row with the mod key
-            local mod_display = UIComponent(list_box:CreateComponent(mod_key, "ui/vandy_lib/text/la_gioconda"))
-            
-            --core:get_or_create_component(mod_key, "ui/vandy_lib/text/la_gioconda", list_box)
-
-            local mod_obj = mct:get_mod_by_key(mod_key)
-            self:SetStateText(mod_display, mod_obj:get_title())
-
-            mod_display:SetDockOffset(10, 0)
-
-            reverted_options[mod_key] = {}
-
-            -- loop through all changed options and display them!
-            for option_key, option_data in pairs(mod_data) do
-                -- add a full row to put everything within!
-
-                local option_row = UIComponent(list_box:CreateComponent(option_key, "ui/mct/script_dummy"))
-                --core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
-
-                option_row:Resize(npw, nph * 0.10)
-
-                local option_obj = mod_obj:get_option_by_key(option_key)
-
-                local option_display = UIComponent(option_row:CreateComponent(option_key.."_display", "ui/vandy_lib/text/la_gioconda"))
-                --core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
-
-                self:SetStateText(option_display, option_obj:get_text())
-                option_display:SetDockingPoint(4)
-                option_display:SetDockOffset(20, 0)
-
-                local old_value = option_data.old_value
-                local new_value = option_data.new_value
-
-                local old_value_txt = tostring(old_value)
-                local new_value_txt = tostring(new_value)
-
-                local option_type = option_obj:get_type()
-                local values = option_obj:get_values()
-
-                if option_type == "dropdown" then
-                    mct:log("looking for keys "..old_value.." and "..new_value.." in dropdown box ["..option_obj:get_key().."].")
-                    for i = 1, #values do
-                        local value = values[i]
-                        mct:log("in key "..value.key)
-                        if value.key == old_value then
-                            local text = value.text
-
-                            local test_text = effect.get_localised_string(text)
-                            if test_text ~= "" then
-                                text = test_text
-                            end
-
-                            mct:log(old_value.. " found, text is "..text)
-                            old_value_txt = text
-                        elseif value.key == new_value then
-                            local text = value.text
-
-                            local test_text = effect.get_localised_string(text)
-                            if test_text ~= "" then
-                                text = test_text
-                            end
-
-                            mct:log(new_value.. " found, text is "..text)
-                            new_value_txt = text
-                        end
-                    end
-                elseif option_type == "slider" then
-                    old_value_txt = option_obj:slider_get_precise_value(old_value, true)
-                    new_value_txt = option_obj:slider_get_precise_value(new_value, true)
-                end
-
-
-                local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda", option_row)
-                self:SetStateText(old_value_uic, old_value_txt)
-                old_value_uic:SetDockingPoint(5)
-                old_value_uic:SetDockOffset(-20, 0)
-
-                local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-                old_value_checkbox:SetState("active")
-                old_value_checkbox:SetDockingPoint(5)
-                old_value_checkbox:SetDockOffset(-5, 0)
-
-                local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda", option_row)
-                self:SetStateText(new_value_uic, new_value_txt)
-                new_value_uic:SetDockingPoint(6)
-                new_value_uic:SetDockOffset(-60, 0)
-
-                local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
-                new_value_checkbox:SetState("selected")
-                new_value_checkbox:SetDockingPoint(6)
-                new_value_checkbox:SetDockOffset(-60, 0)
-
-                local is_new_value = true
-
-                core:add_listener(
-                    "mct_checkbox_ticked",
-                    "ComponentLClickUp",
-                    function(context)
-                        local uic = UIComponent(context.component)
-                        return uic == old_value_checkbox or uic == new_value_checkbox
-                    end,
-                    function(context)
-                        mct:log("mct checkbox ticked in the finalize settings popup!")
-                        local uic = UIComponent(context.component)
-            
-                        local mod_key = mod_key
-                        local option_key = option_key
-                        local status = context.string
-            
-                        local opposite_uic = nil
-                        local value = nil
-
-            
-                        is_new_value = not is_new_value
-
-                        if is_new_value then
-                            value = new_value
-                            new_value_checkbox:SetState("selected")
-                            old_value_checkbox:SetState("active")
-                            reverted_options[mod_key][option_key] = nil
-                        else
-                            reverted_options[mod_key][option_key] = true
-                            value = old_value
-                            new_value_checkbox:SetState("active")
-                            old_value_checkbox:SetState("selected")
-                        end
-
-                        local ok, err = pcall(function()
-
-                        local mod_obj = mct:get_mod_by_key(mod_key)
-                        local option_obj = mod_obj:get_option_by_key(option_key)
-
-                        -- TODO don't change the background UI
-                        self:set_changed_setting(mod_key, option_key, value, true)
-                        --option_obj:set_selected_setting(value)
-                        end) if not ok then mct:error(err) end
-                    end,
-                    true
-                )
-            end
+        nph = nph - top_row:Height() - 10
+        mct:log("h offset: " ..tostring(h_offset))
+        h_offset = h_offset + top_row:Height()
+        mct:log("h offset after: " ..tostring(h_offset))
+
+        -- create the listview on the parchment
+        local list_view = core:get_or_create_component("list_view", "ui/vandy_lib/vlist", popup)
+        list_view:SetDockingPoint(2)
+        list_view:SetDockOffset(0, h_offset)
+        list_view:SetCanResizeHeight(true) list_view:SetCanResizeWidth(true)
+        list_view:Resize(npw,nph)
+        list_view:SetCanResizeHeight(false) list_view:SetCanResizeWidth(false)
+
+        local list_clip = find_uicomponent(list_view, "list_clip")
+        list_clip:SetDockingPoint(0)
+        list_clip:SetDockOffset(0,10)
+        list_clip:SetCanResizeHeight(true) list_clip:SetCanResizeWidth(true)
+        list_clip:Resize(npw,nph-20)
+        list_clip:SetCanResizeHeight(false) list_clip:SetCanResizeWidth(false)
+
+        local list_box = find_uicomponent(list_clip, "list_box")
+        list_box:SetDockingPoint(0)
+        list_box:SetDockOffset(0,0)
+        list_box:SetCanResizeHeight(true)
+        list_box:Resize(npw,nph+100)
+        list_box:SetCanResizeHeight(false) list_box:SetCanResizeWidth(false)
+
+        local vslider = find_uicomponent(list_view, "vslider")
+        vslider:SetDockingPoint(6)
+        vslider:SetDockOffset(-w_offset, 0)
+
+        vslider:SetVisible(true)
+
+        local ok, err = pcall(function()
+
+
+        -- loop through all changed settings mod-keys and display them!
+        local changed_settings = self.changed_settings
+        
+        local reverted_options = {}
+
+        if not self:get_locally_edited() then
+            -- do nothing! close the popup?
+            return false
         end
 
-        core:add_listener(
-            "closed_box",
-            "ComponentLClickUp",
-            function(context)
-                local button = UIComponent(context.component)
-                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
-            end,
-            function(context)
-                core:remove_listener("mct_checkbox_ticked")
+        for mod_key, mod_data in pairs(changed_settings) do
+            if selected_mod and mod_key ~= selected_mod then
+                -- skip
+            else
+                mct:log("IN MOD KEY "..mod_key)
+                -- add text row with the mod key
+                local mod_display = UIComponent(list_box:CreateComponent(mod_key, "ui/vandy_lib/text/la_gioconda/unaligned"))
+            
 
-                -- if accepted, Finalize!
-                if context.string == "button_tick" then
-                    -- loop through reverted-options to refresh their UI
-                    --[[mct:log("checking reverted options")
-                    for mod_key, data in pairs(reverted_options) do
-                        mct:log("checking mod "..mod_key)
-                        local mod_obj = mct:get_mod_by_key(mod_key)
+                local mod_obj = mct:get_mod_by_key(mod_key)
+                self:SetStateText(mod_display, mod_obj:get_title())
 
-                        for option_key, _ in pairs(data) do
-                            mct:log("checking option "..option_key)
+                mod_display:SetVisible(true)
+                mod_display:SetDockOffset(10, 0)
+
+                reverted_options[mod_key] = {}
+
+                -- loop through all changed options and display them!
+                for option_key, option_data in pairs(mod_data) do
+                    -- add a full row to put everything within!
+
+                    local option_row = UIComponent(list_box:CreateComponent(option_key, "ui/mct/script_dummy"))
+                    --core:get_or_create_component(option_key, "ui/mct/script_dummy", list_box)
+
+                    option_row:Resize(npw, nph * 0.10)
+
+                    local option_obj = mod_obj:get_option_by_key(option_key)
+
+                    local option_display = UIComponent(option_row:CreateComponent(option_key.."_display", "ui/vandy_lib/text/la_gioconda/unaligned"))
+                    --core:get_or_create_component(option_key.."_display", "ui/vandy_lib/text/la_gioconda", option_row)
+
+                    option_display:SetVisible(true)
+                    self:SetStateText(option_display, option_obj:get_text())
+                    option_display:SetDockingPoint(4)
+                    option_display:SetDockOffset(20, 0)
+
+                    local old_value = option_data.old_value
+                    local new_value = option_data.new_value
+
+                    local old_value_txt = tostring(old_value)
+                    local new_value_txt = tostring(new_value)
+
+                    local option_type = option_obj:get_type()
+                    local values = option_obj:get_values()
+
+                    if option_type == "dropdown" then
+                        mct:log("looking for keys "..old_value.." and "..new_value.." in dropdown box ["..option_obj:get_key().."].")
+                        for i = 1, #values do
+                            local value = values[i]
+                            mct:log("in key "..value.key)
+                            if value.key == old_value then
+                                local text = value.text
+
+                                local test_text = effect.get_localised_string(text)
+                                if test_text ~= "" then
+                                    text = test_text
+                                end
+
+                                mct:log(old_value.. " found, text is "..text)
+                                old_value_txt = text
+                            elseif value.key == new_value then
+                                local text = value.text
+
+                                local test_text = effect.get_localised_string(text)
+                                if test_text ~= "" then
+                                    text = test_text
+                                end
+
+                                mct:log(new_value.. " found, text is "..text)
+                                new_value_txt = text
+                            end
+                        end
+                    elseif option_type == "slider" then
+                        old_value_txt = option_obj:slider_get_precise_value(old_value, true)
+                        new_value_txt = option_obj:slider_get_precise_value(new_value, true)
+                    end
+
+
+                    local old_value_uic = core:get_or_create_component("old_value", "ui/vandy_lib/text/la_gioconda/unaligned", option_row)
+                    self:SetStateText(old_value_uic, old_value_txt)
+                    old_value_uic:SetDockingPoint(5)
+                    old_value_uic:SetDockOffset(-20, 0)
+                    old_value_uic:SetVisible(true)
+
+                    local old_value_checkbox = core:get_or_create_component("old_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+                    old_value_checkbox:SetState("active")
+                    old_value_checkbox:SetDockingPoint(5)
+                    old_value_checkbox:SetDockOffset(-5, 0)
+
+                    local new_value_uic = core:get_or_create_component("new_value", "ui/vandy_lib/text/la_gioconda/unaligned", option_row)
+                    self:SetStateText(new_value_uic, new_value_txt)
+                    new_value_uic:SetDockingPoint(6)
+                    new_value_uic:SetDockOffset(-60, 0)
+                    new_value_uic:SetVisible(true)
+
+                    local new_value_checkbox = core:get_or_create_component("new_value_checkbox", "ui/templates/checkbox_toggle", option_row)
+                    new_value_checkbox:SetState("selected")
+                    new_value_checkbox:SetDockingPoint(6)
+                    new_value_checkbox:SetDockOffset(-60, 0)
+
+                    local is_new_value = true
+
+                    core:add_listener(
+                        "mct_checkbox_ticked",
+                        "ComponentLClickUp",
+                        function(context)
+                            local uic = UIComponent(context.component)
+                            return uic == old_value_checkbox or uic == new_value_checkbox
+                        end,
+                        function(context)
+                            mct:log("mct checkbox ticked in the finalize settings popup!")
+                            local uic = UIComponent(context.component)
+                
+                            local mod_key = mod_key
+                            local option_key = option_key
+                            local status = context.string
+                
+                            local opposite_uic = nil
+                            local value = nil
+
+                
+                            is_new_value = not is_new_value
+
+                            if is_new_value then
+                                value = new_value
+                                new_value_checkbox:SetState("selected")
+                                old_value_checkbox:SetState("active")
+                                reverted_options[mod_key][option_key] = nil
+                            else
+                                reverted_options[mod_key][option_key] = true
+                                value = old_value
+                                new_value_checkbox:SetState("active")
+                                old_value_checkbox:SetState("selected")
+                            end
+
+                            local ok, err = pcall(function()
+
+                            local mod_obj = mct:get_mod_by_key(mod_key)
                             local option_obj = mod_obj:get_option_by_key(option_key)
 
-                            local option_data = self.changed_settings[mod_key][option_key]
-                            mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
-                            option_obj:set_selected_setting(option_data.old_value)
-                        end
-                    end ]]
-
-                    mct:finalize()
-                    ui_obj:set_actions_states()
-                else
-                    -- nada
+                            -- TODO don't change the background UI
+                            self:set_changed_setting(mod_key, option_key, value, true)
+                            --option_obj:set_selected_setting(value)
+                            end) if not ok then mct:error(err) end
+                        end,
+                        true
+                    )
                 end
+            end
 
-            end,
-            false
-        )
+            core:add_listener(
+                "closed_box",
+                "ComponentLClickUp",
+                function(context)
+                    local button = UIComponent(context.component)
+                    return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
+                end,
+                function(context)
+                    core:remove_listener("mct_checkbox_ticked")
 
-        list_box:Layout()
+                    local panel = self.panel
+                    panel:LockPriority()
 
-        list_box:SetCanResizeHeight(true)
-        list_box:Resize(list_box:Width(), list_box:Height() + 100)
-        list_box:SetCanResizeHeight(false)
+                    self:delete_component(popup)
+
+                    -- if accepted, Finalize!
+                    if context.string == "button_tick" then
+                        -- loop through reverted-options to refresh their UI
+                        --[[mct:log("checking reverted options")
+                        for mod_key, data in pairs(reverted_options) do
+                            mct:log("checking mod "..mod_key)
+                            local mod_obj = mct:get_mod_by_key(mod_key)
+
+                            for option_key, _ in pairs(data) do
+                                mct:log("checking option "..option_key)
+                                local option_obj = mod_obj:get_option_by_key(option_key)
+
+                                local option_data = self.changed_settings[mod_key][option_key]
+                                mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
+                                option_obj:set_selected_setting(option_data.old_value)
+                            end
+                        end ]]
+
+                        mct:finalize()
+                        ui_obj:set_actions_states()
+                    else
+                        -- nada
+                    end
+
+                end,
+                false
+            )
+
+            list_box:Layout()
+
+            list_box:SetCanResizeHeight(true)
+            list_box:Resize(list_box:Width(), list_box:Height() + 100)
+            list_box:SetCanResizeHeight(false)
+        end
+    end) if not ok then mct:error(err) end
+
     end
-end) if not ok then mct:error(err) end
+
+    core:add_listener(
+        "do_stuff",
+        "RealTimeTrigger",
+        function(context)
+            return context.string == "do_stuff"
+        end,
+        function(context)
+            do_stuff()
+        end,
+        false
+    )
+
+    real_timer.register_singleshot("do_stuff", 5)
 end
 
 -- Finalize settings/print to settings file
@@ -2480,7 +2774,7 @@ core:add_listener(
                 )
             end
 
-            ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() func() end, function() func() end)
+            ui_obj:create_popup(key, text, true, function() ui_obj:close_frame() --[[func()]] end, function() func() end)
 
             end) if not ok then mct:error(err) end
 

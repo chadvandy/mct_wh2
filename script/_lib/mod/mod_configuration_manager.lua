@@ -30,7 +30,9 @@ function mod_configuration_tool:init()
 
     -- load modules!
     --local ok, err = pcall(function()
-        self:log("********\nLOADING INTERNAL MODULES\n********")
+        self:log("********")
+        self:log("LOADING INTERNAL MODULES")
+        self:log("********")
 
         -- add the modules and modules/extern/ paths to the Lua field
         local path = "script/mct/modules/?.lua;"
@@ -235,14 +237,28 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
                 end
 
-                text = text .. "\n" .. effect.get_localised_string("mct_new_settings_created_end")
-
                 self.ui:create_popup(
                     key,
-                    text,
-                    true,
                     function()
-                        self.ui:open_frame()
+                        if not self.ui.opened then 
+                            return text .. "\n" .. effect.get_localised_string("mct_new_settings_created_end")
+                        else 
+                            return text
+                        end
+                    end,
+                    function()
+                        if not self.ui.opened then
+                            return true
+                        else
+                            return false
+                        end
+                    end,
+                    function()
+                        if self.ui.opened then
+                            -- do nothing
+                        else
+                            self.ui:open_frame()
+                        end
                     end,
                     function()
                         -- do nothing?
@@ -350,7 +366,9 @@ function mod_configuration_tool:log(text)
     end
 
     local file = io.open(self._logpath, "a+")
-    file:write(text .. "\n")
+
+    local timestamp = get_timestamp()
+    file:write(tostring(timestamp) .. "\t" .. text .. "\n")
     file:close()
 end
 
@@ -366,7 +384,9 @@ function mod_configuration_tool:warn(text)
     end
 
     local file = io.open(self._logpath, "a+")
-    file:write("WARNING: " .. text .. "\n")
+
+    local timestamp = get_timestamp()
+    file:write(tostring(timestamp).."\tWARNING: " .. text .. "\n")
     --file:write(debug.traceback("", 2) .. "\n")
     file:close()
 end
@@ -383,7 +403,10 @@ function mod_configuration_tool:error(text)
     end
 
     local file = io.open(self._logpath, "a+")
-    file:write("ERROR: " .. text .. "\n")
+
+    local timestamp = get_timestamp()
+
+    file:write(tostring(timestamp).."\tERROR: " .. text .. "\n")
     file:write(debug.traceback("", 2) .. "\n")
     file:close()
 end
@@ -441,7 +464,10 @@ function mod_configuration_tool:load_mod(filename, filename_for_out)
 end
 
 function mod_configuration_tool:load_mods()
-    self:log("********\nLOADING SETTINGS SCRIPTS\n********")
+    self:log("********")
+    self:log("LOADING SETTINGS SCRIPTS")
+    self:log("********")
+
     package.path = self._filepath .. "?.lua;" .. package.path
 
     local file_str = effect.filesystem_lookup(self._filepath, "*.lua")
@@ -476,7 +502,9 @@ function mod_configuration_tool:load_mods()
         self:load_mod(filename, filename_for_out)
     end
 
-    self:log("********\nFINISHED LOADING SETTINGS\n********")
+    self:log("********")
+    self:log("FINISHED LOADING SETTINGS")
+    self:log("********")
 end
 
 --- Internal loader for scripts located in `script/mct/modules/`.
@@ -726,3 +754,26 @@ core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)
 --mod_configuration_tool:init()
 
 _G.get_mct = get_mct
+
+-- REMOVE THIS
+core:add_listener(
+    "a",
+    "ShortcutPressed",
+    true,
+    function(context)
+        ModLog("ShortcutPressed:")
+        ModLog(context.string)
+    end,
+    true
+)
+
+core:add_listener(
+    "b",
+    "ShortcutTriggered",
+    true,
+    function(context)
+        ModLog("ShortcutTriggered:")
+        ModLog(context.string)
+    end,
+    true
+)
