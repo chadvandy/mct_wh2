@@ -413,33 +413,38 @@ function settings:save_mct_settings()
     local t = ""
 
     -- append a loop for the cached mods
-    for mod_key, mod_data in pairs(self.cached_settings) do
-        t = "\t[\""..mod_key.."\"] = {\n"
+    if self.cached_settings and not is_nil(next(self.cached_settings)) then
+        t = "\t[\"mct_cached_settings\"] = {\n"
+        for mod_key, mod_data in pairs(self.cached_settings) do
+            t = t .. "\t\t[\""..mod_key.."\"] = {\n"
 
-        -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
-        for option_key, option_data in pairs(mod_data) do
-            t = t .. "\t\t[\""..option_key.."\"] = {\n"
+            -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
+            for option_key, option_data in pairs(mod_data) do
+                t = t .. "\t\t\t[\""..option_key.."\"] = {\n"
 
-            for _,saved_setting in pairs(option_data) do
-                t = t .. "\t\t\t[\"_setting\"] = "
-                if is_string(saved_setting) then
-                    t = t .. "\"" .. saved_setting .. "\",\n"
-                elseif is_number(saved_setting) then
-                    t = t .. tostring(saved_setting) .. ",\n"
-                elseif is_boolean(saved_setting) then
-                    t = t .. tostring(saved_setting) .. ",\n"
-                else
-                    --mct:log("not a string number or boolean?")
-                    --mct:log(tostring(saved_setting))
-                    t = t .. "nil" .. ",\n"
+                for _,saved_setting in pairs(option_data) do
+                    t = t .. "\t\t\t\t[\"_setting\"] = "
+                    if is_string(saved_setting) then
+                        t = t .. "\"" .. saved_setting .. "\",\n"
+                    elseif is_number(saved_setting) then
+                        t = t .. tostring(saved_setting) .. ",\n"
+                    elseif is_boolean(saved_setting) then
+                        t = t .. tostring(saved_setting) .. ",\n"
+                    else
+                        --mct:log("not a string number or boolean?")
+                        --mct:log(tostring(saved_setting))
+                        t = t .. "nil" .. ",\n"
+                    end
+
+                    --t = t .. "\t\t\t},\n"
                 end
 
-                --t = t .. "\t\t\t},\n"
+
+                t = t .. "\t\t\t},\n"
+
             end
 
-
             t = t .. "\t\t},\n"
-
         end
 
         t = t .. "\t},\n"
@@ -707,12 +712,36 @@ function settings:load()
             end
         end
 
+        -- loop through the "mct_cached_settings", if it exists, and add all of the stuff into the cached_settings table
+        if content["mct_cached_settings"] then
+            local tab = content["mct_cached_settings"]
+            for mod_key, mod_data in pairs(tab) do
+                mct:log("Re-caching settings for mct_mod with key ["..mod_key.."]")
+
+                if not self.cached_settings[mod_key] then
+                    self.cached_settings[mod_key] = {}
+                end
+
+                for k,v in pairs(mod_data) do
+                    self.cached_settings[mod_key][k] = v
+                end
+            end
+        end
+
         -- loop through the rest of "content", which is either empty entirely or has
         -- any bits of information that need to be cached due to a disabled mct_mod
         for mod_key, mod_data in pairs(content) do
             mct:log("Caching settings for mct_mod with key ["..mod_key.."]")
-            self.cached_settings[mod_key] = mod_data
+
+            if not self.cached_settings[mod_key] then
+                self.cached_settings[mod_key] = {}
+            end
+
+            for k,v in pairs(mod_data) do
+                self.cached_settings[mod_key][k] = v
+            end
         end
+
 
         --self:finalize()
 

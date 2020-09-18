@@ -2614,56 +2614,67 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
                     )
                 end
             end
-
-            core:add_listener(
-                "closed_box",
-                "ComponentLClickUp",
-                function(context)
-                    local button = UIComponent(context.component)
-                    return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
-                end,
-                function(context)
-                    core:remove_listener("mct_checkbox_ticked")
-
-                    local panel = self.panel
-                    panel:LockPriority()
-
-                    self:delete_component(popup)
-
-                    -- if accepted, Finalize!
-                    if context.string == "button_tick" then
-                        -- loop through reverted-options to refresh their UI
-                        --[[mct:log("checking reverted options")
-                        for mod_key, data in pairs(reverted_options) do
-                            mct:log("checking mod "..mod_key)
-                            local mod_obj = mct:get_mod_by_key(mod_key)
-
-                            for option_key, _ in pairs(data) do
-                                mct:log("checking option "..option_key)
-                                local option_obj = mod_obj:get_option_by_key(option_key)
-
-                                local option_data = self.changed_settings[mod_key][option_key]
-                                mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
-                                option_obj:set_selected_setting(option_data.old_value)
-                            end
-                        end ]]
-
-                        mct:finalize()
-                        ui_obj:set_actions_states()
-                    else
-                        -- nada
-                    end
-
-                end,
-                false
-            )
-
-            list_box:Layout()
-
-            list_box:SetCanResizeHeight(true)
-            list_box:Resize(list_box:Width(), list_box:Height() + 100)
-            list_box:SetCanResizeHeight(false)
         end
+
+        core:add_listener(
+            "closed_box",
+            "ComponentLClickUp",
+            function(context)
+                local button = UIComponent(context.component)
+                return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
+            end,
+            function(context)
+                mct:log("button tick'd")
+                core:remove_listener("mct_checkbox_ticked")
+                mct:log("post remove listener")
+
+                local panel = self.panel
+                panel:LockPriority()
+                mct:log("post lock priority")
+
+                mct:log("pre delete")
+                self:delete_component(popup)
+                mct:log("post delete")
+
+                -- if accepted, Finalize!
+                if context.string == "button_tick" then
+                    -- loop through reverted-options to refresh their UI
+                    --[[mct:log("checking reverted options")
+                    for mod_key, data in pairs(reverted_options) do
+                        mct:log("checking mod "..mod_key)
+                        local mod_obj = mct:get_mod_by_key(mod_key)
+
+                        for option_key, _ in pairs(data) do
+                            mct:log("checking option "..option_key)
+                            local option_obj = mod_obj:get_option_by_key(option_key)
+
+                            local option_data = self.changed_settings[mod_key][option_key]
+                            mct:log("assigning selected setting as old value: "..tostring(option_data.old_value))
+                            option_obj:set_selected_setting(option_data.old_value)
+                        end
+                    end ]]
+
+                    mct:log("pre finalize")
+
+                    mct:finalize()
+
+                    mct:log("post finalize / pre set action states")
+                    ui_obj:set_actions_states()
+                    mct:log("post action states")
+                else
+                    -- nada
+                end
+
+            end,
+            false
+        )
+
+        list_box:Layout()
+
+        list_box:SetCanResizeHeight(true)
+        list_box:Resize(list_box:Width(), list_box:Height() + 100)
+        list_box:SetCanResizeHeight(false)
+        
     end) if not ok then mct:error(err) end
 
     end
