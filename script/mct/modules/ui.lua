@@ -2624,17 +2624,12 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
                 return (button:Id() == "button_tick" or button:Id() == "button_cancel") and UIComponent(UIComponent(button:Parent()):Parent()):Id() == "mct_finalize_settings_popup"
             end,
             function(context)
-                mct:log("button tick'd")
                 core:remove_listener("mct_checkbox_ticked")
-                mct:log("post remove listener")
 
                 local panel = self.panel
                 panel:LockPriority()
-                mct:log("post lock priority")
 
-                mct:log("pre delete")
                 self:delete_component(popup)
-                mct:log("post delete")
 
                 -- if accepted, Finalize!
                 if context.string == "button_tick" then
@@ -2654,13 +2649,8 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
                         end
                     end ]]
 
-                    mct:log("pre finalize")
-
                     mct:finalize()
-
-                    mct:log("post finalize / pre set action states")
                     ui_obj:set_actions_states()
-                    mct:log("post action states")
                 else
                     -- nada
                 end
@@ -2674,7 +2664,7 @@ function ui_obj:add_finalize_settings_popup(selected_mod)
         list_box:SetCanResizeHeight(true)
         list_box:Resize(list_box:Width(), list_box:Height() + 100)
         list_box:SetCanResizeHeight(false)
-        
+
     end) if not ok then mct:error(err) end
 
     end
