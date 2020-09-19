@@ -687,8 +687,14 @@ function mod_configuration_tool:register_mod(mod_name)
     local info = debug.getinfo(2, "S")
     local filepath = info.source
     if self:has_mod_with_name_been_registered(mod_name) then
-        self:log("Loading mod with name ["..mod_name.."], but it's already been registered. Only use `mct:register_mod()` once. Returning the previous version.")
+        self:warn("Loading mod with name ["..mod_name.."], but it's already been registered. Only use `mct:register_mod()` once. Returning the previous version.")
         return self:get_mod_by_key(mod_name)
+    end
+
+    -- TODO return a null interface to prevent buggerinos?
+    if mod_name == "mct_cached_settings" then
+        self:error("mct:register_mod() called with key \"mct_cached_settings\". Why have you tried to do this? Use a different key.")
+        return false
     end
 
     local new_mod = self._MCT_MOD.new(mod_name)
