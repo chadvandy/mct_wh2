@@ -491,7 +491,7 @@ end
 function mct_option:highlight_in_ui()
     local dummy_option = self:get_uic_with_key("dummy")
     if not is_uicomponent(dummy_option) then
-        -- errmsg
+        mct:error("highlight_in_ui() called, but the dummy_option doesn't exist in UI!")
         return false
     end
 

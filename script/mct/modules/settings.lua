@@ -700,22 +700,26 @@ function settings:load()
                 if cached_settings then
                     mct:log("cached settings exists")
                     if cached_settings[mod_key] then
-                        mct:log("cached settings exists for ["..mod_key.."].")
-                        if cached_settings[mod_key][option_key] then
-                            mct:log("cached settings exists for ["..option_key.."].")
-                            -- apply the new setting, and clear out the index in cached settings
-                            setting = cached_settings[mod_key][option_key]["_setting"]
-                            cached_settings[mod_key][option_key] = nil
+                        if next(cached_settings[mod_key]) == nil then
+                            cached_settings[mod_key] = nil
+                        else
+                            mct:log("cached settings exists for ["..mod_key.."].")
+                            if cached_settings[mod_key][option_key] then
+                                mct:log("cached settings exists for ["..option_key.."].")
+                                -- apply the new setting, and clear out the index in cached settings
+                                setting = cached_settings[mod_key][option_key]["_setting"]
+                                cached_settings[mod_key][option_key] = nil
 
-                            mct:log("setting the setting of the above option to ["..tostring(setting).."].")
+                                mct:log("setting the setting of the above option to ["..tostring(setting).."].")
 
-                            -- if that was the last cached setting in this mct_mod, then remove the mod from cached settings
-                            if cached_settings[mod_key] and next(cached_settings[mod_key]) == nil then
-                                cached_settings[mod_key] = nil
+                                -- if that was the last cached setting in this mct_mod, then remove the mod from cached settings
+                                if cached_settings[mod_key] and next(cached_settings[mod_key]) == nil then
+                                    cached_settings[mod_key] = nil
 
-                                -- if that was the last cached setting in any mct_mod, then just delete the table
-                                if cached_settings and next(cached_settings) == nil then
-                                    cached_settings = nil
+                                    -- if that was the last cached setting in any mct_mod, then just delete the table
+                                    if cached_settings and next(cached_settings) == nil then
+                                        cached_settings = nil
+                                    end
                                 end
                             end
                         end
@@ -744,14 +748,18 @@ function settings:load()
         -- loop through the "mct_cached_settings", if it exists, and add all of the stuff into the cached_settings table
         if cached_settings then
             for mod_key, mod_data in pairs(cached_settings) do
-                mct:log("Re-caching settings for mct_mod with key ["..mod_key.."]")
+                if next(mod_data) == nil then
+                    self.cached_settings[mod_key] = nil
+                else
+                    mct:log("Re-caching settings for mct_mod with key ["..mod_key.."]")
 
-                if not self.cached_settings[mod_key] then
-                    self.cached_settings[mod_key] = {}
-                end
+                    if not self.cached_settings[mod_key] then
+                        self.cached_settings[mod_key] = {}
+                    end
 
-                for k,v in pairs(mod_data) do
-                    self.cached_settings[mod_key][k] = v
+                    for k,v in pairs(mod_data) do
+                        self.cached_settings[mod_key][k] = v
+                    end
                 end
             end
         end
@@ -803,6 +811,39 @@ function settings:load()
 
                 --text = text .. "\n" .. effect.get_localised_string("mct_new_settings_end")
 
+                local function highlight_stuffs()
+                    local currently_selected_mod = mct:get_selected_mod()
+                    local mod_key = currently_selected_mod:get_key()
+
+                    -- highlight all new options in currently selected mod
+                    if not is_nil(self.new_settings[mod_key]) then
+                        local options_added = self.new_settings[mod_key]
+                        for i = 1, #options_added do
+                            local option_key = options_added[i]
+                            local option_obj = currently_selected_mod:get_option_by_key(option_key)
+                            if not mct:is_mct_option(option_obj) then
+                                -- errmsg
+                            else
+                                option_obj:highlight_in_ui()
+                            end
+                        end
+                    end
+
+                    -- highlight all unselected mods (and stash the options they have to higlight)
+                    for stashed_mod_key, options in pairs(self.new_settings) do
+                        if stashed_mod_key == mod_key then
+                            -- skip
+                        else
+                            local mod_obj = mct:get_mod_by_key(stashed_mod_key)
+                            if not mct:is_mct_mod(mod_obj) then
+                                -- errmsg
+                            else
+                                mod_obj:highlight_in_ui(options)
+                            end
+                        end
+                    end
+                end
+
                 mct.ui:create_popup(
                     key,
                     function()
@@ -821,9 +862,11 @@ function settings:load()
                     end,
                     function()
                         if mct.ui.opened then
-                            -- do nothing
+                            mct:callback(highlight_stuffs, 50)
                         else
                             mct.ui:open_frame()
+
+                            mct:callback(highlight_stuffs, 1000)
                         end
                     end,
                     function()

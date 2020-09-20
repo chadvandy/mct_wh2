@@ -241,7 +241,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
                 local function highlight_stuffs()
                     local currently_selected_mod = self:get_selected_mod()
-                    local mod_key = currently_selected_mod:key()
+                    local mod_key = currently_selected_mod:get_key()
 
                     -- highlight all new options in currently selected mod
                     if not is_nil(new_options_added[mod_key]) then
@@ -361,13 +361,15 @@ function mod_configuration_tool:callback(callback_function, time_delay)
         return false
     end
 
+    local int = self.callback_int
+
     self.callback_int = self.callback_int +1
 
     core:add_listener(
         "do_stuff",
         "RealTimeTrigger",
         function(context)
-            return context.string == "do_stuff"..tostring(self.callback_int)
+            return context.string == "do_stuff"..tostring(int)
         end,
         function(context)
             callback_function()
@@ -375,7 +377,46 @@ function mod_configuration_tool:callback(callback_function, time_delay)
         false
     )
 
-    real_timer.register_singleshot("do_stuff"..tostring(self.callback_int), time_delay)
+    real_timer.register_singleshot("do_stuff"..tostring(int), time_delay)
+end
+
+function mod_configuration_tool:repeat_callback(callback_function, time_delay, callback_name)
+    if not is_string(callback_name) then
+        -- errmsg
+        return false
+    end
+
+    if not is_function(callback_function) then
+        -- errmsg
+        return false
+    end
+
+    if not is_number(time_delay) then
+        -- errmsg
+        return false
+    end
+
+    core:add_listener(
+        callback_name,
+        "RealTimeTrigger",
+        function(context)
+            return context.string == callback_name
+        end,
+        callback_function,
+        true
+    )
+
+    real_timer.register_repeating(callback_name, time_delay)
+end
+
+function mod_configuration_tool:remove_callback(callback_name)
+    if not is_string(callback_name) then
+        -- errmsg
+        return false
+    end
+
+    core:remove_listener(callback_name)
+    real_timer.unregister(callback_name)
 end
 
 function mod_configuration_tool:log_init()
