@@ -111,3 +111,5 @@ mct8:text_input_add_validity_test(
     mct9:slider_set_precision(2)
     mct9:set_default_value(0)
 --end
+
+--local new = mct_mod:add_new_option("new", "checkbox")

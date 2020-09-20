@@ -413,33 +413,38 @@ function settings:save_mct_settings()
     local t = ""
 
     -- append a loop for the cached mods
-    for mod_key, mod_data in pairs(self.cached_settings) do
-        t = "\t[\""..mod_key.."\"] = {\n"
+    if self.cached_settings and not is_nil(next(self.cached_settings)) then
+        t = "\t[\"mct_cached_settings\"] = {\n"
+        for mod_key, mod_data in pairs(self.cached_settings) do
+            t = t .. "\t\t[\""..mod_key.."\"] = {\n"
 
-        -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
-        for option_key, option_data in pairs(mod_data) do
-            t = t .. "\t\t[\""..option_key.."\"] = {\n"
+            -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
+            for option_key, option_data in pairs(mod_data) do
+                t = t .. "\t\t\t[\""..option_key.."\"] = {\n"
 
-            for _,saved_setting in pairs(option_data) do
-                t = t .. "\t\t\t[\"_setting\"] = "
-                if is_string(saved_setting) then
-                    t = t .. "\"" .. saved_setting .. "\",\n"
-                elseif is_number(saved_setting) then
-                    t = t .. tostring(saved_setting) .. ",\n"
-                elseif is_boolean(saved_setting) then
-                    t = t .. tostring(saved_setting) .. ",\n"
-                else
-                    --mct:log("not a string number or boolean?")
-                    --mct:log(tostring(saved_setting))
-                    t = t .. "nil" .. ",\n"
+                for _,saved_setting in pairs(option_data) do
+                    t = t .. "\t\t\t\t[\"_setting\"] = "
+                    if is_string(saved_setting) then
+                        t = t .. "\"" .. saved_setting .. "\",\n"
+                    elseif is_number(saved_setting) then
+                        t = t .. tostring(saved_setting) .. ",\n"
+                    elseif is_boolean(saved_setting) then
+                        t = t .. tostring(saved_setting) .. ",\n"
+                    else
+                        --mct:log("not a string number or boolean?")
+                        --mct:log(tostring(saved_setting))
+                        t = t .. "nil" .. ",\n"
+                    end
+
+                    --t = t .. "\t\t\t},\n"
                 end
 
-                --t = t .. "\t\t\t},\n"
+
+                t = t .. "\t\t\t},\n"
+
             end
 
-
             t = t .. "\t\t},\n"
-
         end
 
         t = t .. "\t},\n"
@@ -642,6 +647,9 @@ function settings:load()
         --local content = table.load(self.settings_file)
         local all_mods = mct:get_mods()
 
+        local cached_settings = content["mct_cached_settings"]
+        content["mct_cached_settings"] = nil
+
         for mod_key, mod_obj in pairs(all_mods) do
             --mct:log("Loading settings for mod ["..mod_key.."].")
 
@@ -687,6 +695,32 @@ function settings:load()
                     -- this returns the default value
                     setting = option_obj:get_finalized_setting()
                 end
+
+                -- if any setting is found in `mct_cached_settings`, check that for this mod key, for this option key, and then apply it over
+                if cached_settings then
+                    mct:log("cached settings exists")
+                    if cached_settings[mod_key] then
+                        mct:log("cached settings exists for ["..mod_key.."].")
+                        if cached_settings[mod_key][option_key] then
+                            mct:log("cached settings exists for ["..option_key.."].")
+                            -- apply the new setting, and clear out the index in cached settings
+                            setting = cached_settings[mod_key][option_key]["_setting"]
+                            cached_settings[mod_key][option_key] = nil
+
+                            mct:log("setting the setting of the above option to ["..tostring(setting).."].")
+
+                            -- if that was the last cached setting in this mct_mod, then remove the mod from cached settings
+                            if cached_settings[mod_key] and next(cached_settings[mod_key]) == nil then
+                                cached_settings[mod_key] = nil
+
+                                -- if that was the last cached setting in any mct_mod, then just delete the table
+                                if cached_settings and next(cached_settings) == nil then
+                                    cached_settings = nil
+                                end
+                            end
+                        end
+                    end
+                end
                 
                 -- set the finalized setting and read only stuffs
                 option_obj:set_finalized_setting(setting, true)
@@ -707,11 +741,34 @@ function settings:load()
             end
         end
 
+        -- loop through the "mct_cached_settings", if it exists, and add all of the stuff into the cached_settings table
+        if cached_settings then
+            for mod_key, mod_data in pairs(cached_settings) do
+                mct:log("Re-caching settings for mct_mod with key ["..mod_key.."]")
+
+                if not self.cached_settings[mod_key] then
+                    self.cached_settings[mod_key] = {}
+                end
+
+                for k,v in pairs(mod_data) do
+                    self.cached_settings[mod_key][k] = v
+                end
+            end
+        end
+
         -- loop through the rest of "content", which is either empty entirely or has
         -- any bits of information that need to be cached due to a disabled mct_mod
         for mod_key, mod_data in pairs(content) do
+            
             mct:log("Caching settings for mct_mod with key ["..mod_key.."]")
-            self.cached_settings[mod_key] = mod_data
+
+            if not self.cached_settings[mod_key] then
+                self.cached_settings[mod_key] = {}
+            end
+
+            for k,v in pairs(mod_data) do
+                self.cached_settings[mod_key][k] = v
+            end
         end
 
         --self:finalize()
