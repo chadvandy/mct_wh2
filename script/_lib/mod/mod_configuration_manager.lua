@@ -20,6 +20,8 @@ local mod_configuration_tool = {
     _selected_mod = nil,
 
     ui_created_callbacks = {},
+
+    callback_int = 0,
 }
 
 
@@ -237,12 +239,45 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
                 end
 
+                local function highlight_stuffs()
+                    local currently_selected_mod = self:get_selected_mod()
+                    local mod_key = currently_selected_mod:key()
+
+                    -- highlight all new options in currently selected mod
+                    if not is_nil(new_options_added[mod_key]) then
+                        local options_added = new_options_added[mod_key]
+                        for i = 1, #options_added do
+                            local option_key = options_added[i]
+                            local option_obj = currently_selected_mod:get_option_by_key(option_key)
+                            if not self:is_mct_option(option_obj) then
+                                -- errmsg
+                            else
+                                option_obj:highlight_in_ui()
+                            end
+                        end
+                    end
+
+                    -- highlight all unselected mods (and stash the options they have to higlight)
+                    for stashed_mod_key, options in pairs(new_options_added) do
+                        if stashed_mod_key == mod_key then
+                            -- skip
+                        else
+                            local mod_obj = self:get_mod_by_key(stashed_mod_key)
+                            if not self:is_mct_mod(mod_obj) then
+                                -- errmsg
+                            else
+                                mod_obj:highlight_in_ui(options)
+                            end
+                        end
+                    end 
+                end
+
                 self.ui:create_popup(
                     key,
                     function()
-                        if not self.ui.opened then 
+                        if not self.ui.opened then
                             return text .. "\n" .. effect.get_localised_string("mct_new_settings_created_end")
-                        else 
+                        else
                             return text
                         end
                     end,
@@ -255,9 +290,13 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
                     end,
                     function()
                         if self.ui.opened then
-                            -- do nothing
+                            self:callback(highlight_stuffs, 5)
                         else
+                            -- open the frame and then do the same higlight thing as above
                             self.ui:open_frame()
+                            
+                            -- do a 5ms callback to make sure the panel opens up and all in time
+                            self:callback(highlight_stuffs, 5)
                         end
                     end,
                     function()
@@ -309,6 +348,34 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         true
     )
 --end) if not ok then self:error(err) end
+end
+
+function mod_configuration_tool:callback(callback_function, time_delay)
+    if not is_function(callback_function) then
+        -- errmsg
+        return false
+    end
+
+    if not is_number(time_delay) then
+        -- errmsg
+        return false
+    end
+
+    self.callback_int = self.callback_int +1
+
+    core:add_listener(
+        "do_stuff",
+        "RealTimeTrigger",
+        function(context)
+            return context.string == "do_stuff"..tostring(self.callback_int)
+        end,
+        function(context)
+            callback_function()
+        end,
+        false
+    )
+
+    real_timer.register_singleshot("do_stuff"..tostring(self.callback_int), time_delay)
 end
 
 function mod_configuration_tool:log_init()

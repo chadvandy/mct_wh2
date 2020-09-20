@@ -1494,6 +1494,40 @@ function ui_obj:create_panels()
     mod_details_panel:SetCanResizeWidth(true) mod_details_panel:SetCanResizeHeight(true)
     mod_details_panel:Resize(right_panel:Width() * 0.95, right_panel:Height() * 0.3)
 
+    -- the side bar w/ mod image
+    local image_sidebar = core:get_or_create_component("image_sidebar", "ui/mct/script_dummy", mod_details_panel)
+    image_sidebar:Resize(mod_details_panel:Height() * 0.98, mod_details_panel:Height() * 0.98)
+    image_sidebar:SetDockingPoint(4)
+    image_sidebar:SetDockOffset(15, 0)
+
+    do
+        local border = core:get_or_create_component("background", "ui/templates/custom_image", image_sidebar)
+        border:SetState("custom_state_1")
+        border:SetImagePath("ui/skins/warhammer2/panel_back_border.png")
+        border:SetDockingPoint(0)
+        border:SetDockOffset(0, 0)
+        border:SetCanResizeWidth(true) border:SetCanResizeHeight(true)
+        border:Resize(image_sidebar:Width() * 1.01, image_sidebar:Height() * 1.01)
+
+        local img = core:get_or_create_component("mod_image", "ui/templates/custom_image", image_sidebar)
+        img:SetState("custom_state_1")
+        img:SetImagePath("ui/skins/default/advisor_beastmen_2d.png")
+        img:SetDockingPoint(5)
+        img:SetDockOffset(0, 0)
+        img:SetCanResizeWidth(true) img:SetCanResizeHeight(true)
+        img:Resize(image_sidebar:Width() * 0.95, image_sidebar:Height() * 0.95)
+        img:SetCanResizeWidth(false) img:SetCanResizeHeight(false)
+
+        -- prevent the image from resizing
+        img:SetCanResizeCurrentStateImageHeight(0, true)
+        img:SetCanResizeCurrentStateImageWidth(0, true)
+        
+        img:ResizeCurrentStateImage(0, img:Width(), img:Height())
+
+        img:SetCanResizeCurrentStateImageHeight(0, false)
+        img:SetCanResizeCurrentStateImageWidth(0, false)
+    end
+
     --[[local list_view = core:get_or_create_component("mod_details_panel", "ui/templates/vlist", mod_details_panel)
     list_view:SetDockingPoint(5)
     --list_view:SetDockOffset(0, 50)
@@ -1650,11 +1684,13 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
     local mod_title_txt = self.mod_title_txt
 
     -- set up the mod details - name of selected mod, display author, and whatever blurb of text they want
+    local mod_image = find_uicomponent(mod_details_panel, "image_sidebar", "mod_image")
     local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
     local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
 
     local title, author, desc = selected_mod:get_localised_texts()
+    local preview_image_path = selected_mod:get_preview_image_path()
 
     -- setting up text & stuff
     do
@@ -1675,6 +1711,8 @@ function ui_obj:populate_panel_on_mod_selected(former_mod_key)
         set_text(mod_title_txt, title)
         set_text(mod_author, author)
         set_text(mod_description, desc)
+
+        mod_image:SetImagePath(preview_image_path)
     end
 
     --mct:log("testing 3")
@@ -2108,6 +2146,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 
             dummy_border:SetVisible(border_visible)
 
+            option_obj:set_uic_with_key("dummy", dummy_option, true)
             option_obj:set_uic_with_key("border", dummy_border, true)
 
             -- make some text to display deets about the option
@@ -2205,6 +2244,8 @@ function ui_obj:new_mod_row(mod_obj)
     txt:Resize(row:Width() * 0.9, row:Height() * 0.9)
     txt:SetDockingPoint(2)
     txt:SetDockOffset(10,0)
+
+    mod_obj:set_mod_row(row)
 
     local txt_txt = mod_obj:get_title()
     local author_txt = mod_obj:get_author()

@@ -488,6 +488,16 @@ function mct_option:add_option_set_callback(callback, is_context)
     )
 end
 
+function mct_option:highlight_in_ui()
+    local dummy_option = self:get_uic_with_key("dummy")
+    if not is_uicomponent(dummy_option) then
+        -- errmsg
+        return false
+    end
+
+    dummy_option:StartPulseHighlight(4)
+end
+
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using @{mct_option:add_option_set_callback}.
 --- @tparam any val Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 --- @tparam boolean is_creation Whether this is being set on the option's UI creation, or being set somewhere else.

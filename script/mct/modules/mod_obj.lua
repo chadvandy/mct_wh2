@@ -26,6 +26,8 @@ function mct_mod.new(key)
     self._options = {}
     self._options_by_type = {}
 
+    self._mod_row = nil
+
     local valid_types = mct:get_valid_option_types()
     for i = 1, #valid_types do
         local valid_type = valid_types[i]
@@ -58,6 +60,10 @@ function mct_mod.new(key)
     self._title = "No Title Assigned"
     self._author = "No Author Assigned"
     self._description = "No Description Assigned"
+
+    self._preview_image_path = ""
+
+    self._workshop_id = "0"
     --self._workshop_link = ""
 
     -- start with the default section, if none are specified this is what's used
@@ -785,6 +791,58 @@ function mct_mod:get_localised_texts()
         --self:get_workshop_link()
 end
 
+--- Sets the image path for the preview image in MCT. If none is set, it will use some placeholder image.
+--- The path should be relatively to the .pack file. So if your file is in `mymod.pack/ui/mymod/myimage.png`, you will input `"ui/mymod/myimage.png". Extension included, please!
+--- @tparam string image_path The path to the image for your mod. Include the extension, only accepts .png images.
+function mct_mod:set_preview_image_path(image_path)
+    if not is_string(image_path) then
+        -- errmsg
+        return false
+    end
+
+    if not image_path:find(".png") then
+        -- errmsg, not a .png
+        return false
+    end
+
+    self._preview_image_path = image_path
+end
+
+--- Gets the image path for the preview image. If none is found, it'll return a default file for now.
+--- @treturn string The image path to the preview image.
+function mct_mod:get_preview_image_path()
+    local str = self._preview_image_path
+
+    if not is_string(str) or not str:find(".png") then
+        -- not a valid string / doesn't have a .png, return a default file
+        return "ui/skins/default/advisor_beastmen_2d.png"
+    end
+
+    return str
+end
+
+--- Sets the Workshop ID for this mod. This can be found in the URL for the mod - it'll be the numbers following "?id=".
+--- Set this through a string, not a number!
+--- @tparam string workshop_id The ID for this mod, wrapped in quotes.
+function mct_mod:set_workshop_id(workshop_id)
+    if is_number(workshop_id) then
+        workshop_id = tostring(workshop_id)
+    end
+
+    if not is_string(workshop_id) then
+        -- errmsg
+        return false
+    end
+
+    self._workshop_id = workshop_id
+end
+
+--- Returns the Workshop ID for this mod.
+--- @treturn string The ID for this mod.
+function mct_mod:get_workshop_id()
+    return self._workshop_id
+end
+
 --- Returns every @{mct_option} attached to this mct_mod.
 function mct_mod:get_options()
     return self._options
@@ -889,10 +947,65 @@ function mct_mod:delete_option(option_key)
     self._options[option_key] = nil
 end
 
+function mct_mod:set_mod_row(row)
+    if not is_uicomponent(row) then
+        -- errmsg
+        return false
+    end
+
+    self._mod_row = row
+end
+
+function mct_mod:get_mod_row()
+    return self._mod_row
+end
+
+function mct_mod:highlight_in_ui(options_table)
+    local mod_row = self:get_mod_row()
+    if not is_uicomponent(mod_row) then
+        -- errmsg
+        return false
+    end
+
+    mod_row:StartPulseHighlight(4)
+    local id = mod_row:Id()
+
+    core:add_listener(
+        "mod_row_pressed_for_highlight_in_ui",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == id
+        end,
+        function(context)
+            local mod_row = self:get_mod_row()
+            if not is_uicomponent(mod_row) then
+                -- do nothing
+                return false
+            end
+
+            mod_row:StopPulseHighlight()
+
+            -- pulse highlight all of the options in the table
+            if is_table(options_table) then
+                for i = 1, #options_table do
+                    local option_key = options_table[i]
+                    local option_obj = self:get_option_by_key(option_key)
+                    if mct:is_mct_option(option_obj) then
+                        option_obj:highlight_in_ui()
+                    end
+                end
+            end
+        end,
+        false
+    )
+end
+
 --- bloop
 --- @local
 --- @function mct_mod:clear_uics
 function mct_mod:clear_uics(kill_selected)
+    self._mod_row = nil
+
     local opts = self:get_options()
     for _, option in pairs(opts) do
         option:clear_uics(kill_selected)
