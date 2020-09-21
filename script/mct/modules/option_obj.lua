@@ -931,6 +931,7 @@ function mct_option:get_text()
     if text ~= "" then
         return text
     end
+    
     -- nothing found, check for anything supplied by `set_text()`, or send the default "No text assigned"
     text = self._text
     if is_table(text) then
@@ -942,6 +943,10 @@ function mct_option:get_text()
         else
             text = text[1]
         end
+    end
+
+    if not is_string(text) then
+        text = "No text assigned"
     end
     
     return text
@@ -965,6 +970,10 @@ function mct_option:get_tooltip_text()
         else
             text = text[1]
         end
+    end
+
+    if not is_string(text) then
+        text = ""
     end
 
     return text
