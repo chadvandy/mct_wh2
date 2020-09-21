@@ -933,6 +933,10 @@ function mct_option:get_text()
             text = text[1]
         end
     end
+
+    if not is_string(text) then
+        text = "No text assigned"
+    end
     
     return text
 end
@@ -955,6 +959,10 @@ function mct_option:get_tooltip_text()
         else
             text = text[1]
         end
+    end
+
+    if not is_string(text) then
+        text = ""
     end
 
     return text
