@@ -47,6 +47,9 @@ local ui_obj = {
     -- if the panel is openeded or closededed
     opened = false,
     notify_num = 0,
+
+    -- filter saved between states
+    filter_text = "",
 }
 
 local mct = mct
@@ -683,6 +686,23 @@ function ui_obj:open_frame()
             self:new_mod_row(mod_obj)
         end
 
+        local left_panel = self.left_panel_holder
+        local filter_holder = find_uicomponent(left_panel, "filter_holder")
+        local filter_text_input = find_uicomponent(filter_holder, "mct_filter_text_input")
+        
+        if is_uicomponent(filter_text_input) then
+            local filter_x = find_uicomponent(filter_text_input, "mct_filter_x")
+
+            if is_string(self.filter_text) and self.filter_text ~= "" then
+                filter_text_input:SetStateText(self.filter_text)
+                self:apply_filter(self.filter_text)
+                filter_x:SetState("active")
+            else
+                filter_text_input:SetStateText("")
+                self:apply_filter("")
+                filter_x:SetState("inactive")
+            end
+        end
         -- TODO setup
         --self:override_escape()
     else
@@ -1479,11 +1499,17 @@ function ui_obj:create_panels()
     filter_button:SetDockOffset(5, 0)
     filter_button:Resize(filter_holder:Height() * 0.67, filter_holder:Height() * 0.67)
 
-    local filter_text_input = core:get_or_create_component("mct_filter_text_input", "ui/common ui/text_box", filter_holder)
+    local filter_text_input = core:get_or_create_component("mct_filter_text_input", "ui/mct/text_box_left", filter_holder)
     filter_text_input:SetInteractive(false)
     filter_text_input:SetDockingPoint(6)
     filter_text_input:SetDockOffset(-5, 0)
     filter_text_input:Resize(filter_holder:Width() - filter_button:Width() - 10, filter_holder:Height() * 0.95)
+
+    local filter_x = core:get_or_create_component("mct_filter_x", "ui/templates/square_medium_button", filter_text_input)
+    filter_x:SetDockingPoint(6)
+    filter_x:SetDockOffset(-5, 0)
+    filter_x:Resize(filter_button:Width(), filter_button:Height())
+    filter_x:SetState("inactive")
 
     -- save the listview and list box into the obj
     self.left_panel_holder = left_panel_bg
@@ -2768,10 +2794,17 @@ function ui_obj:set_filter_inactive()
     local filter_holder = find_uicomponent(left_panel_holder, "filter_holder")
     local filter_button = find_uicomponent(filter_holder, filter_button_key)
     local filter_text_input = find_uicomponent(filter_holder, text_input_key)
+    local filter_x = find_uicomponent(filter_text_input, "mct_filter_x")
 
     if is_uicomponent(filter_text_input) then
         filter_text_input:SetInteractive(false)
-        filter_text_input:SetStateText("")
+        --filter_text_input:SetStateText("")
+
+        if self.filter_text == "" then
+            filter_x:SetState("inactive")
+        else
+            filter_x:SetState("active")
+        end
     end
 
     if is_uicomponent(filter_button) then
@@ -2779,7 +2812,7 @@ function ui_obj:set_filter_inactive()
     end
 
     -- set all mods back to visible
-    local all_mods = mct:get_mods()
+    --[[local all_mods = mct:get_mods()
     for _, mod_obj in pairs(all_mods) do
         local mod_row = mod_obj:get_mod_row()
         if not is_uicomponent(mod_row) then
@@ -2788,6 +2821,36 @@ function ui_obj:set_filter_inactive()
         end
 
         mod_row:SetVisible(true)
+    end]]
+end
+
+function ui_obj:set_filter_text_in_ui(str)
+    if not is_string(str) then
+        -- errmsg
+        return false
+    end
+
+    self.filter_text = str
+
+    local left_panel_holder = self.left_panel_holder
+
+    if not is_uicomponent(left_panel_holder) then
+        -- errmsg
+        return false
+    end
+
+    local filter_text_input = find_uicomponent(left_panel_holder, "filter_holder", "mct_filter_text_input")
+
+    if not is_uicomponent(filter_text_input) then
+        -- errmsg
+        return false
+    end
+
+    filter_text_input:SetStateText(str)
+
+    local filter_x = find_uicomponent(filter_text_input, "mct_filter_x")
+    if str == "" then
+        filter_x:SetState("inactive")
     end
 end
 
@@ -2796,6 +2859,8 @@ function ui_obj:apply_filter(filter)
         -- errmsg
         return false
     end
+
+    self.filter_text = filter
 
     local all_mods = mct:get_mods()
 
@@ -2830,21 +2895,48 @@ function ui_obj:set_filter_active()
     local filter_holder = find_uicomponent(left_panel_holder, "filter_holder")
     local filter_button = find_uicomponent(filter_holder, filter_button_key)
     local filter_text_input = find_uicomponent(filter_holder, text_input_key)
+    local filter_x = find_uicomponent(filter_text_input, "mct_filter_x")
 
     filter_text_input:SetInteractive(true)
     filter_button:SetState("inactive")
+
+    if self.filter_text == "" then
+        filter_x:SetState("inactive")
+    else
+        filter_x:SetState("active")
+    end
 
     core:add_listener(
         "mct_filter_deselected",
         "ComponentLClickUp",
         function(context)
-            return context.string ~= text_input_key
+            return context.string ~= text_input_key and context.string ~= "mct_filter_x"
         end,
         function(context)
             self:set_filter_inactive()
         end,
         false
     )
+
+    local function apply()
+        local uic = filter_text_input
+
+        if not is_uicomponent(uic) then
+            mct:remove_callback("mct_filter")
+            core:remove_listener("mct_filter_selected")
+            return
+        end
+
+        self.filter_text = uic:GetStateText()
+
+        if self.filter_text == "" then
+            filter_x:SetState("inactive")
+        else
+            filter_x:SetState("active")
+        end
+
+        self:apply_filter(self.filter_text)
+    end
 
     core:add_listener(
         "mct_filter_selected",
@@ -2853,27 +2945,35 @@ function ui_obj:set_filter_active()
             return context.string == text_input_key
         end,
         function(context)
-            local uic = UIComponent(context.component)
-            self:apply_filter(uic:GetStateText())
+            apply()
         end,
         true
     )
 
     mct:repeat_callback(
         function()
-            if not is_uicomponent(filter_text_input) then
-                mct:remove_callback("mct_filter")
-                return
-            end
-
-            local filter_str = filter_text_input:GetStateText()
-
-            self:apply_filter(filter_str)
+            apply()
         end,
         100,
         "mct_filter"
     )
 end
+
+core:add_listener(
+    "mct_filter_clear",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_filter_x"
+    end,
+    function(context)
+        mct:log("mct filter x pressed")
+        ui_obj.filter_text = ""
+        ui_obj:set_filter_text_in_ui("")
+        ui_obj:apply_filter("")
+        mct:log("mct filter x end")
+    end,
+    true
+)
 
 core:add_listener(
     "mct_filter_pressed",
