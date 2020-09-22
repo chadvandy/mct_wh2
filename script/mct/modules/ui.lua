@@ -67,6 +67,7 @@ function ui_obj:set_mct_button(uic)
     end
 
     self.mct_button = uic
+    local key = uic:Id()
 
     -- after getting the button, create the label counter, and then set it invisible
     local label = core:get_or_create_component("label_notify", "ui/vandy_lib/number_label", uic)
@@ -79,6 +80,69 @@ function ui_obj:set_mct_button(uic)
     label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
 
     label:SetVisible(false)
+
+    -- set the functionality to right click the button to open up a dropdown list
+    local dropdown = core:get_or_create_component("killer", "ui/vandy_lib/dropdown_button_no_event", uic)
+    local kill = find_uicomponent(dropdown, "popup_menu")
+
+    local popup_menu = UIComponent(kill:CopyComponent("popup_menu"))
+    self:delete_component(dropdown)
+    uic:Adopt(popup_menu:Address())
+
+    popup_menu:DestroyChildren()
+
+    local options_button = UIComponent(popup_menu:CreateComponent("mct_options", "ui/templates/round_small_button"))
+    local action_button = UIComponent(popup_menu:CreateComponent("mct_actions", "ui/templates/round_small_button"))
+
+    options_button:SetCanResizeWidth(false)
+    options_button:SetCanResizeHeight(false)
+
+    action_button:SetCanResizeWidth(false)
+    action_button:SetCanResizeHeight(false)
+
+    popup_menu:Resize(action_button:Width() * 1.15, action_button:Height() * 2.5)
+
+    popup_menu:SetDockingPoint(8)
+    popup_menu:SetDockOffset(0, popup_menu:Height())
+
+    options_button:SetDockingPoint(2)
+    options_button:SetDockOffset(0, 5)
+    action_button:SetDockingPoint(8)
+    action_button:SetDockOffset(0, -5)
+
+    popup_menu:SetVisible(false)
+
+    core:add_listener(
+        "mct_button_right_clicked",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == key
+        end,
+        function(context)
+            local uic = UIComponent(context.component)
+            local popup_menu = find_uicomponent(uic, "popup_menu")
+            if popup_menu:Visible() then
+                popup_menu:SetVisible(false)
+            else
+                popup_menu:SetVisible(true)
+            end
+
+            core:add_listener(
+                "next_thing_clicked_closes_the_popup_menu",
+                "ComponentLClickUp",
+                function(context)
+                    return true
+                end,
+                function(context)
+                    if is_uicomponent(popup_menu) then
+                        popup_menu:SetVisible(false)
+                    end
+                end,
+                false
+            )
+        end,
+        true
+    )
 end
 
 function ui_obj:get_locally_edited()
@@ -2283,7 +2347,9 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     end
 end
 
+function ui_obj:open_actions_menu()
 
+end
 
 function ui_obj:new_mod_row(mod_obj)
     local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
@@ -3092,10 +3158,22 @@ core:add_listener(
     "mct_button_pressed",
     "ComponentLClickUp",
     function(context)
-        return context.string == "button_mct_options"
+        return context.string == "mct_options"
     end,
     function(context)
         ui_obj:open_frame()
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_actions_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "mct_actions"
+    end,
+    function(context)
+        ui_obj:open_actions_menu()
     end,
     true
 )
