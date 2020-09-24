@@ -2348,7 +2348,56 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 end
 
 function ui_obj:open_actions_menu()
-
+    local actions_menu = core:get_or_create_component("actions_menu", "u/mct/mct_frame", core:get_ui_root()
+    self.actions_menu = actions_menu
+    
+    actions_menu:SetDockingPoint(0)
+    actions_menu:SetDockOffset(0,0)
+    actions_menu:SetMoveable(true)
+    
+    actions_menu:SetCanResizeWidth(true)
+    actions_menu:SetCanResizeHeight(true)
+    
+    -- TODO restrict curent state images from resizing their dimensions
+    
+    actions_menu:Resize(250, 400)
+    
+    -- create the +/- buttons to change the width and the height
+    local height_holder = core:get_or_create_component("height_holder", "ui/mct/script_dummy", actions_menu)
+    local width_holder = core:get_or_create_component("width_holder", "ui/mct/script_dummy", actions_menu)
+    
+    height_holder:Resize(100, 50)
+    width_holder:Resize(100, 50)
+    
+    width_holder:SetCanResizeWidth(false)
+    width_holder:SetCanResizeHeight(false)
+    
+    height_holder:SetCanResizeWidth(false)
+    height_holder:SetCanResizeHeight(false)
+    
+    height_holder:SetDockingPoint(3)
+    height_holder:SetDockOffset(-10, 10)
+    
+    width_holder:SetDockingPoint(3)
+    width_holder:SetDockingPoint(-10, 60)
+    
+    
+    do
+        local text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda/unaligned", height_holder)
+        text:SetStateText("Height")
+        
+        text:SetDockingPoint(4)
+        text:SetDockOffset(5, 0)
+    
+    end
+    
+    do
+        local text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda/unaligned", width_holder)
+        text:SetStateText("Width")
+        
+        text:SetDockingPoint(4)
+        text:SetDockOffset(5, 0)
+    end
 end
 
 function ui_obj:new_mod_row(mod_obj)
