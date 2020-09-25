@@ -2348,7 +2348,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
 end
 
 function ui_obj:open_actions_menu()
-    local actions_menu = core:get_or_create_component("actions_menu", "u/mct/mct_frame", core:get_ui_root()
+    local actions_menu = core:get_or_create_component("actions_menu", "u/mct/mct_frame", core:get_ui_root())
     self.actions_menu = actions_menu
     
     actions_menu:SetDockingPoint(0)
