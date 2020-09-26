@@ -526,6 +526,10 @@ function mct_option:set_selected_setting(val, is_creation)
     -- save the val as the currently selected setting, used for UI and finalization
     self._selected_setting = val
 
+    if is_nil(is_creation) then
+        is_creation = false
+    end
+
     core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
 
     if not is_creation then
