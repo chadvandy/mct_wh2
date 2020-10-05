@@ -182,10 +182,17 @@ local function init()
                 popped = true
 
                 local popup_uic = core:get_or_create_component("mct_mp_host", "ui/mct/mct_dialogue")
+                popup_uic:SetCanResizeWidth(true) popup_uic:SetCanResizeHeight(true)
+                popup_uic:Resize(popup_uic:Width() * 1.05, popup_uic:Height() * 1.10)
+                popup_uic:SetCanResizeWidth(false) popup_uic:SetCanResizeHeight(false)
 
-                local both_group = UIComponent(popup:CreateComponent("both_group", "ui/mct/script_dummy"))
-                local ok_group = UIComponent(popup:CreateComponent("ok_group", "ui/mct/script_dummy"))
-                local DY_text = UIComponent(popup:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+                mct:log("popup created")
+
+                local both_group = UIComponent(popup_uic:CreateComponent("both_group", "ui/mct/script_dummy"))
+                local ok_group = UIComponent(popup_uic:CreateComponent("ok_group", "ui/mct/script_dummy"))
+                local DY_text = UIComponent(popup_uic:CreateComponent("DY_text", "ui/vandy_lib/text/la_gioconda/center"))
+
+                mct:log("all dummies created")
         
                 both_group:SetDockingPoint(8)
                 both_group:SetDockOffset(0, 0)
@@ -198,6 +205,8 @@ local function init()
                 local ow, oh = popup_uic:Width() * 0.9, popup_uic:Height() * 0.8
                 DY_text:Resize(ow, oh)
                 DY_text:SetDockOffset(1, -35)
+
+                mct:log("Dummies set")
         
                 local cancel_img = effect.get_skinned_image_path("icon_cross.png")
                 local tick_img = effect.get_skinned_image_path("icon_check.png")
@@ -205,6 +214,8 @@ local function init()
                 do
                     local button_tick = UIComponent(both_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
                     local button_cancel = UIComponent(both_group:CreateComponent("button_cancel", "ui/templates/round_medium_button"))
+
+                    mct:log("buttons created")
         
                     button_tick:SetImagePath(tick_img)
                     button_tick:SetDockingPoint(8)
@@ -213,29 +224,43 @@ local function init()
                     button_cancel:SetImagePath(cancel_img)
                     button_cancel:SetDockingPoint(8)
                     button_cancel:SetDockOffset(30, -10)
+
+                    mct:log("buttons moved")
                 end
         
                 do
                     local button_tick = UIComponent(ok_group:CreateComponent("button_tick", "ui/templates/round_medium_button"))
+
+                    mct:log("single button created")
         
                     button_tick:SetImagePath(tick_img)
                     button_tick:SetDockingPoint(8)
                     button_tick:SetDockOffset(0, -10)
+
+                    mct:log("button moved")
                 end
 
                 popup_uic:LockPriority()
+
+                mct:log("prio lock")
 
                 local str = ""
 
                 local player_name = find_uicomponent(uic, "dy_player_name"):GetStateText()
 
+                mct:log("player name is: "..player_name)
+
                 local is_is_host_host = core:svr_load_bool("local_is_host")
 
+                mct:log("is host is: "..tostring(is_is_host_host))
+
                 if is_is_host_host then
-                    str = effect.get_localised_string("mct_mp_is_host_start") .. "\n" .. effect.get_localised_sring("mct_mp_is_host_mid") .. "\n\n" .. effect.get_localised_string("mct_mp_is_host_end") --"[[col:red]]MCT: Loading Your Settings[[/col]]\n\nLoading your settings from MCT. Make sure the other player is cool with the settings you've chosen, if you care!\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF THE OTHER PLAYER IS ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN.[[/col]]"
+                    str = effect.get_localised_string("mct_mp_is_host_start") .. "\n\n" .. effect.get_localised_string("mct_mp_is_host_mid") .. "\n\n" .. effect.get_localised_string("mct_mp_is_host_end") --"[[col:red]]MCT: Loading Your Settings[[/col]]\n\nLoading your settings from MCT. Make sure the other player is cool with the settings you've chosen, if you care!\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF THE OTHER PLAYER IS ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN.[[/col]]"
                 else
                     str = effect.get_localised_string("mct_mp_not_host_start") .. player_name .. effect.get_localised_string("mct_mp_not_host_mid") .. "\n\n" .. effect.get_localised_string("mct_mp_not_host_end") .. "\n\n" .. effect.get_localised_string("mct_mp_not_host_end_actually") --"[[col:red]]MCT: Loading "..player_name.."'s Settings[[/col]]\n\nLoading the Host's settings from MCT. Make sure you're cool with the settings they've picked. Do note - you can't see the host's settings until you load into the campaign, so you'll have to discuss it elsewhere.\n\n[[col:fabulous_pink]]IF THIS IS WRONG - IF YOU ARE ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN. ALSO REPORT THIS TO VANDY.[[/col]]"
                 end
+
+                mct:log("str is: "..str)
 
        
                 -- grab and set the text
@@ -250,13 +275,16 @@ local function init()
                 w,h = tx:TextDimensionsForText(str)
                 tx:ResizeTextResizingComponentToInitialSize(ow,oh)
 
+                mct:log("resizes and set the text")
+
                 find_uicomponent(popup_uic, "both_group"):SetVisible(false)
                 find_uicomponent(popup_uic, "ok_group"):SetVisible(true)
 
-                core:remove_listener("box_close")
+                mct:log("invisible")
 
+                core:remove_listener("mct_mp_box_close")
                 core:add_listener(
-                    "box_close",
+                    "mct_mp_box_close",
                     "ComponentLClickUp",
                     function(context)
                         local button = UIComponent(context.component)

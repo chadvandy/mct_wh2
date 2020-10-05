@@ -12,7 +12,7 @@ test:set_local_only(true)
 
 --mct_mod:add_new_section("testing2")
 
-local mct1 = mct_mod:add_new_option("mct1", "dropdown", "This is a test")
+--[[local mct1 = mct_mod:add_new_option("mct1", "dropdown", "This is a test")
 mct1:set_text("mct1")
 mct1:add_dropdown_value("option_1", "Option 1", "This is option1")
 mct1:add_dropdown_value("option_2", "Option 2", "This is option2")
@@ -108,7 +108,7 @@ mct8:text_input_add_validity_test(
     mct9:slider_set_min_max(0, 10)
     mct9:slider_set_step_size(0.01, 2)
     mct9:slider_set_precision(2)
-    mct9:set_default_value(0)
+    mct9:set_default_value(0)]]
 --end
 
 --local new = mct_mod:add_new_option("new", "checkbox")

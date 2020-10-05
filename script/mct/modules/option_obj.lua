@@ -717,11 +717,13 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
-    if self:get_uic_locked() and not is_first_load then
+    -- fuck it, sure. I need this for MP option.
+    -- TODO figure out a much more elegant way to try and do this.
+    --[[if self:get_uic_locked() and not is_first_load then
         -- can't change finalized setting for read onlys! Error!
         mct:warn("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is locked! This shouldn't happen, investigate.")
         return false
-    end
+    end]]
 
     -- save locally
     self._finalized_setting = val

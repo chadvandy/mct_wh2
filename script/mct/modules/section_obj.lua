@@ -94,11 +94,16 @@ function mct_section:sort_options()
         local option_key = ordered_options[i]
         local option_obj = mct_mod:get_option_by_key(option_key)
 
-        -- if it's set as visible, pass it forward
-        -- if it's invisible but still set to exist in the UI, pass it forward
-        -- if it's invisible and not, remove it
-        if option_obj:get_uic_visibility() == true or (option_obj:get_uic_visibility() == false and option_obj._uic_in_ui == true) then
-            retval[#retval+1] = option_key
+        if not mct:is_mct_option(option_obj) then
+            mct:warn("sort_options() called but the option found ["..option_key.."] is not a valid MCT option! Skipping.")
+        else
+
+            -- if it's set as visible, pass it forward
+            -- if it's invisible but still set to exist in the UI, pass it forward
+            -- if it's invisible and not, remove it
+            if option_obj:get_uic_visibility() == true or (option_obj:get_uic_visibility() == false and option_obj._uic_in_ui == true) then
+                retval[#retval+1] = option_key
+            end
         end
     end
 

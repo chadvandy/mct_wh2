@@ -616,6 +616,9 @@ function mod_configuration_tool:finalize(specific_mod)
 
                 self.settings:local_only_finalize(true)
             else
+                self._finalized = true
+                self.ui.locally_edited = false
+                
                 self.settings:local_only_finalize(false)
             end
         else

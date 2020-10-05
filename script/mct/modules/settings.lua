@@ -496,6 +496,10 @@ function settings:local_only_finalize(sent_by_host)
     
     mct.ui.locally_edited = false
 
+    if not sent_by_host then
+        mct.ui.changed_settings = {}
+    end
+
     core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = sent_by_host})
 end
 
