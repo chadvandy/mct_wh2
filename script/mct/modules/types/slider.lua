@@ -252,6 +252,7 @@ function wrapped_type:ui_create_option(dummy_parent)
     edit_button:Resize(text_input:Height(), text_input:Height())
     edit_button:SetDockingPoint(4)
     edit_button:SetDockOffset(5, 0)
+
     local img_path = effect.get_skinned_image_path("icon_options.png")
     edit_button:SetImagePath(img_path)
     edit_button:SetTooltipText("Edit", true)
@@ -259,7 +260,6 @@ function wrapped_type:ui_create_option(dummy_parent)
     second_dummy:Resize(new_uic:Width() - edit_button:Width() - 5, new_uic:Height())
     second_dummy:SetDockingPoint(6)
     second_dummy:SetDockOffset(-5, 0)
-
 
     text_input:SetCanResizeWidth(true)
     text_input:Resize(text_input:Width() * 0.4, text_input:Height())

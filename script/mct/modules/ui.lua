@@ -2119,7 +2119,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- set the tooltip on the "dummy", and remove anything from the option text
             dummy_option:SetInteractive(true)
             option_text:SetInteractive(false)
-            self:SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
+
+            if option_obj:get_tooltip_text() ~= "No tooltip assigned" then
+                self:SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
+            end
 
             -- create the interactive option
             local new_option = option_obj:ui_create_option(dummy_option)
@@ -2129,15 +2132,19 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- resize the text so it takes up the space of the dummy column that is not used by the option
             local n_w = new_option:Width()
             local t_w = dummy_option:Width()
-            local w = t_w - n_w
-            local _, h = option_text:Dimensions()
+            local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
+            local _, oh = option_text:Dimensions()
 
-            option_text:Resize(w-15, h)
+            do         
+                local w, h = option_text:TextDimensionsForText(option_obj:get_text())
+                option_text:ResizeTextResizingComponentToInitialSize(w, h)
 
-            local w, h = option_text:TextDimensionsForText(option_obj:get_text())
-            option_text:ResizeTextResizingComponentToInitialSize(w, h)
+                self:SetStateText(option_text, option_obj:get_text())
 
-            self:SetStateText(option_text, option_obj:get_text())
+                option_text:Resize(ow, oh)
+                w,h = option_text:TextDimensionsForText(option_obj:get_text())
+                option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+            end
 
             new_option:SetDockingPoint(6)
             new_option:SetDockOffset(-15, 0)

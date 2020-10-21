@@ -619,6 +619,11 @@ end
 -- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
 -- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
 function settings:load()
+    -- if we're in the campaign, save the "mct_init" value as true
+    if __game_mode == __lib_type_campaign then
+        cm:set_saved_value("mct_init", true)
+    end
+
     local file, err = io.open(self.settings_file, "r")
     if not file then
         -- create a file with all the defaults!

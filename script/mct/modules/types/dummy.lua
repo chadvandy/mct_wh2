@@ -107,7 +107,7 @@ end
 --- Create the option in UI - just the text!
 function wrapped_type:ui_create_option(dummy_parent)
     local new_uic = core:get_or_create_component("dummy", "ui/mct/script_dummy", dummy_parent)
-    new_uic:Resize(dummy_parent:Width() * 0.0001, dummy_parent:Height() * 0.00001)
+    new_uic:Resize(1, 1)
 
     self:set_uic_with_key("option", new_uic, true)
     return new_uic
