@@ -101,7 +101,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
     core:add_listener(
         "who_is_the_host_tell_me_now_please",
-        "UITriggerScriptEvent",
+        "UITrigger",
         function(context)
             self:log("test uitriggerscroptevent")
             self:log(context:trigger())
@@ -138,7 +138,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
                 if not cm:get_saved_value("mct_mp_init") then
                     self:log("MP init")
                     --if cm:is_new_game() then
-                        local my_faction = cm:get_local_faction(true)
+                        local my_faction = cm:get_local_faction_name(true)
                         --[[local their_faction = ""
                         local faction_keys = cm:get_human_factions()
                         if faction_keys[1] == my_faction then
@@ -584,7 +584,7 @@ function mod_configuration_tool:finalize(specific_mod)
         -- check if it's MP!
         if cm.game_interface:model():is_multiplayer() then
             -- check if it's the host
-            if cm:get_local_faction(true) == cm:get_saved_value("mct_host") then
+            if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
                 self:log("Finalizing settings mid-campaign for MP.")
                 self.settings:finalize(false, specific_mod)
 

@@ -2162,8 +2162,8 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                 end
 
                 -- if game is MP, and the local faction isn't the host, lock any non-local settings
-                if cm:is_multiplayer() and cm:get_local_faction(true) ~= cm:get_saved_value("mct_host") then
-                    mct:log("local faction: "..cm:get_local_faction(true))
+                if cm:is_multiplayer() and cm:get_local_faction_name(true) ~= cm:get_saved_value("mct_host") then
+                    mct:log("local faction: "..cm:get_local_faction_name(true))
                     mct:log("host faction: "..cm:get_saved_value("mct_host"))
                     -- if the option isn't local only, disable it
                     mct:log("mp and client")

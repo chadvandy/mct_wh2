@@ -55,7 +55,7 @@ end
 function ClMultiplayerEvents.registerForEvent(eventName, listenerName, callback)
     core:add_listener(
           listenerName,
-          "UITriggerScriptEvent",
+          "UITrigger",
           function(context)
               return context:trigger():starts_with(eventName .. SEPARATOR);
           end,
@@ -119,5 +119,5 @@ function ClMultiplayerEvents.notifyEvent(eventName, factionCqi, table)
 end
 
 function ClMultiplayerEvents.notifyEventForCurrentFaction(eventName, table)
-    ClMultiplayerEvents.notifyEvent(eventName, cm:get_faction(cm:get_local_faction(true)):command_queue_index(), table);
+    ClMultiplayerEvents.notifyEvent(eventName, cm:get_faction(cm:get_local_faction_name(true)):command_queue_index(), table);
 end

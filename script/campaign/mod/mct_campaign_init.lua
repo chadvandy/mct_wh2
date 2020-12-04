@@ -25,9 +25,7 @@ core:add_listener(
     "MCT_ClientMpUX",
     "MctFinalized",
     function(context)
-        --mct:log(cm:get_local_faction(true))
-        --mct:log(cm:get_saved_value("mct_host"))
-        return cm:is_multiplayer() and cm:get_local_faction(true) ~= cm:get_saved_value("mct_host") and context:mp_sent()
+        return cm:is_multiplayer() and cm:get_local_faction_name(true) ~= cm:get_saved_value("mct_host") and context:mp_sent()
     end,
     function(context)
         local button = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup", "button_mct_options")
