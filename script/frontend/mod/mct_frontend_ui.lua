@@ -46,35 +46,17 @@ core:add_listener(
         real_timer.unregister("check_for_da_button")
         core:remove_listener("button_check!")
 
-        local parent = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar")
-        local button = UIComponent(parent:Find("button_mct_options"))
+        local button_group = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar")
 
-        --[[local button = UIComponent(parent:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
+        local button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
 
-        -- set the tooltip
+        -- set the tooltip & img
         button:SetTooltipText(effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
         local img_path = effect.get_skinned_image_path("icon_options.png")
         button:SetImagePath(img_path)
-
-        -- make sure it's on the button group, and set its z-priority to be as high as its parents
-        button:PropagatePriority(parent:Priority())
-        parent:Adopt(button:Address())
-
-        for i = 0, parent:ChildCount() -1 do
-            local child = UIComponent(parent:Find(i))
-            if child:Id() == "button_mct_options" then
-                local backwards = UIComponent(parent:Find(i-1))
-                if not is_uicomponent(backwards) then
-                    mct:log("???? da fuq")
-                    return
-                end
-
-                local x,y = backwards:Position()
-                local w,h = backwards:Dimensions()
-
-                child:MoveTo(x+(w*1.1), y)
-            end
-        end]]
+    
+        -- refresh the button group layout
+        button_group:Layout()
 
         mct:load_and_start()
 
