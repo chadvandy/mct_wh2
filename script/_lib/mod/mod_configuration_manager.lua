@@ -764,25 +764,25 @@ core:add_static_object("mod_configuration_tool", mod_configuration_tool, false)
 
 _G.get_mct = get_mct
 
--- REMOVE THIS
-core:add_listener(
-    "a",
-    "ShortcutPressed",
-    true,
-    function(context)
-        ModLog("ShortcutPressed:")
-        ModLog(context.string)
-    end,
-    true
-)
+-- -- REMOVE THIS
+-- core:add_listener(
+--     "a",
+--     "ShortcutPressed",
+--     true,
+--     function(context)
+--         ModLog("ShortcutPressed:")
+--         ModLog(context.string)
+--     end,
+--     true
+-- )
 
-core:add_listener(
-    "b",
-    "ShortcutTriggered",
-    true,
-    function(context)
-        ModLog("ShortcutTriggered:")
-        ModLog(context.string)
-    end,
-    true
-)
+-- core:add_listener(
+--     "b",
+--     "ShortcutTriggered",
+--     true,
+--     function(context)
+--         ModLog("ShortcutTriggered:")
+--         ModLog(context.string)
+--     end,
+--     true
+-- )
