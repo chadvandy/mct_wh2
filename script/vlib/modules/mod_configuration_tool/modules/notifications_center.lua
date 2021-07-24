@@ -1,0 +1,2 @@
+--- TODO, a visible UI and underlying mechanisms to trigger popups and inform about notifications, stash older notifications, etc.
+--- TODO, consider if MCT or VLib.

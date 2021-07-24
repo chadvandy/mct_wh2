@@ -1,0 +1,1 @@
+--- A system for triggering new "actions" for a mod - stuff like "spawn my lord" or "delete all units" or whatever, similar to console commands/dev menu.

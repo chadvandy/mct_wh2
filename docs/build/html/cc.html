@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Camp Counselor &#8212; Vandy Library 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Mod Configuration Tool" href="mct.html" />
+    <link rel="prev" title="Vandy Lib Core" href="vandy_lib.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mct.html" title="Mod Configuration Tool"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vandy_lib.html" title="Vandy Lib Core"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Vandy Library 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Camp Counselor</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="camp-counselor">
+<h1>Camp Counselor<a class="headerlink" href="#camp-counselor" title="Permalink to this headline">¶</a></h1>
+<dl class="lua class">
+<dt class="sig sig-object lua" id="vlib_camp_counselor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">vlib_camp_counselor</span></span><em class="property"><span class="pre">:</span> </em><span class="pre">manager_prototype</span><a class="headerlink" href="#vlib_camp_counselor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.handle_filters">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">handle_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.handle_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Handles a table of any filters, and returns a single table with a list of faction keys to use as filters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_active_techs_for_faction">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_active_techs_for_faction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">faction_obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_active_techs_for_faction" title="Permalink to this definition">¶</a></dt>
+<dd><p>comment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>faction_obj</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">userdata</span></code></span>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_TechObj]</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.new_techs_from_table">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">new_techs_from_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tech_keys</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.new_techs_from_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>comment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tech_keys</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – </p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_TechObj]</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.new_units_from_table">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">new_units_from_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">unit_keys</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.new_units_from_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>comment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unit_keys</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – </p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_UnitObj]</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.restrict_techs_for_faction">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">restrict_techs_for_faction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">techs</span></em>, <em class="sig-param"><span class="pre">faction_key</span></em>, <em class="sig-param"><span class="pre">is_disable</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.restrict_techs_for_faction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>techs</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>faction_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>is_disable</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.add_pr_uic">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">add_pr_uic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pooled_resource_key</span></em>, <em class="sig-param"><span class="pre">pr_icon_path</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.add_pr_uic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add in-game UI for a Pooled Resource - similar to the UI for Canopic Jars, or the various Vortex Currencies, or otherwise. The Pooled Resource MUST be created already in data, and have valid factors, valid text, and be hooked up to each faction provided herein.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pooled_resource_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The key for your PR, from pooled_resources_tables.</p></li>
+<li><p><strong>pr_icon_path</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The image path for your PR icon. It should start from the root of a .pack file - so if your file is in mymod.pack/ui/icons/pr_icon.png, you would put in “ui/icons/pr_icon.png”, including the file name (must be a .png).</p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.set_mutually_exclusive_techs">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">set_mutually_exclusive_techs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tech_table</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.set_mutually_exclusive_techs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A system to create mutually exclusive technologies - if one is researched, the other[s] are locked, permanently. Handles the UI and the actual locking of the techs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tech_table</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">table]</span></code></span>) – A table of the relevant techs that are being mutually exclusive’d. Needs to be a table of techs, optionally linked to each techs child key. For instance, without child techs: {“tech_1”, “tech_2”, “tech_3”}; with child techs: {[“tech_1”] = {“child_1”, “child_2”}, [“tech_2”] = {“child_3”, “child_4”}}</p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.set_tech_unit_unlock">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">set_tech_unit_unlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tech_key</span></em>, <em class="sig-param"><span class="pre">unit_table</span></em>, <em class="sig-param"><span class="pre">is_unlock</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.set_tech_unit_unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide a list of units to lock behind this tech, and to subsequently unlock upon research. Set the “is_unlock” bool to false, to handle the opposite interaction - unlock by default, and then LOCK upon research.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tech_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The tech behind which to lock your units. Must match the key in “technologies”</p></li>
+<li><p><strong>unit_table</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">table</span></code></span>) – The unit[s] to attach to this tech. You can provide a single unit key <cite>“unit_1”</cite>, or a bunch of them using a table <cite>{“unit_1”, “unit_2”}</cite></p></li>
+<li><p><strong>is_unlock</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">boolean</span></code></span>) – Set this to true to lock the units by default, and unlock through this tech being research; set this to false to have the reverse behaviour.</p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.set_techs_lock_state">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">set_techs_lock_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tech_table</span></em>, <em class="sig-param"><span class="pre">lock_state</span></em>, <em class="sig-param"><span class="pre">lock_reason</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.set_techs_lock_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to set the lock state for a technology. This can unlock a previously locked tech, apply a lock to a tech, or completely remove and hide a tech from player and AI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tech_table</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – A single technology key, or a table of them.</p></li>
+<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <a href="#id1"><span class="problematic" id="id2">|&quot;locked&quot;|</span></a>”unlocked”|”disabled” Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it’s hidden and unusable.</p></li>
+<li><p><strong>lock_reason</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">nil</span></code></span>) – Provide the reason for the lock, if the lock_state is “locked”. Otherwise, this parameter is ignored.</p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.set_units_lock_state">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">set_units_lock_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">unit_keys</span></em>, <em class="sig-param"><span class="pre">lock_state</span></em>, <em class="sig-param"><span class="pre">lock_reason</span></em>, <em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.set_units_lock_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the lock state for the units provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unit_keys</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – The unit[s] to lock. Use “unit_key” or {“unit_key”, “unit_key_2”}.</p></li>
+<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <a href="#id3"><span class="problematic" id="id4">|&quot;unlocked&quot;|</span></a>”locked”|”disabled” Set the lock state to unlocked to have the unit readily available; locked to have the unit restricted, but visible in the UI with an explanation (lock_reason) and a chain around it; or disabled, to have the unit restricted and invisible in the UI.</p></li>
+<li><p><strong>lock_reason</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">nil</span></code></span>) – The reason to list in the UI for the lock. I recommend passing in text grabbed through effect.get_localised_string(). Only necessary if the lock_state is “locked”.</p></li>
+<li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vandy_lib.html"
+                        title="previous chapter">Vandy Lib Core</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mct.html"
+                        title="next chapter">Mod Configuration Tool</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/cc.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mct.html" title="Mod Configuration Tool"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vandy_lib.html" title="Vandy Lib Core"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Vandy Library 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Camp Counselor</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Vandy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
+    </div>
+  </body>
+</html>
