@@ -1,9 +1,10 @@
-local UI = UIComponent
-function UIComponent(address)
-    if not is_component(address) then return script_error("Calling UIComponent(), but the address/component passed is not valid!") end
+-- TODO only overwrite this on MCT Verbose Logging
+-- local UI = UIComponent
+-- function UIComponent(address)
+--     if not is_component(address) then return script_error("Calling UIComponent(), but the address/component passed is not valid!") end
 
-    return UI(address)
-end
+--     return UI(address)
+-- end
 
 --- Overwrote this to plop in the pair of error checks
 function core_object:get_or_create_component(name, path, uic_parent)
