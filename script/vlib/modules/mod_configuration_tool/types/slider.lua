@@ -145,23 +145,15 @@ function wrapped_type:ui_select_value(val)
         return false
     end
 
-    --print_all_uicomponent_children(option_uic)
-
     local right_button = self:get_uic_with_key("right_button")
     local left_button = self:get_uic_with_key("left_button")
     local text_input = self:get_uic_with_key("text_input")
-
-    --log("ui select val for slider 2")
 
     local values = self:get_values()
     local max = values.max
     local min = values.min
     local step_size = values.step_size
     local step_size_precision = values.step_size_precision
-
-    log(values)
-
-    --log("ui select val for slider 3")
 
     -- enable both buttons & push new value
     _SetState(right_button, "active")

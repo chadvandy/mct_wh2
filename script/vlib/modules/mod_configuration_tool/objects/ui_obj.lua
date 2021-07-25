@@ -759,6 +759,9 @@ function ui_obj:set_actions_states()
     end
 end
 
+function ui_obj:set_selected_profile()
+
+end
 
 -- called each time the Profiles UI changes
 function ui_obj:populate_profiles_dropdown_box()
@@ -797,10 +800,6 @@ function ui_obj:populate_profiles_dropdown_box()
 
         for i = 1, #all_profiles do
             local profile_key = all_profiles[i]
-
-            --[[if selected_boi == "" or selected_boi == nil and i == 1 then
-                mct.settings:set_selected_profile(profile_key)
-            end]]
 
             local new_entry = core:get_or_create_component(profile_key, dropdown_option_template, popup_list)
             new_entry:SetTooltipText("", true)
@@ -1364,20 +1363,16 @@ function ui_obj:create_actions_panel()
     _SetState(revert_to_default_txt, "active")
     _SetStateText(revert_to_default_txt, effect.get_localised_string("mct_button_revert_to_default"))
 
-    revert_to_default:SetTooltipText(effect.get_localised_string("mct_button_revert_to_default_tt"), true)
+    _SetTooltipText(revert_to_default, effect.get_localised_string("mct_button_revert_to_default_tt"), true)
 end
 
 function ui_obj:close_frame()
-    errf("Deleting panel!")
     -- save the profiles file every time we close it up
     mct.settings:save_profiles_file()
     
     local panel = self.panel
     if is_uicomponent(panel) then
-        logf("Deleting panel really!")
-        -- delete_component(panel)
         panel:Destroy()
-        logf("Deleting panel done!")
     end
 
     --core:remove_listener("left_or_right_pressed")
@@ -1798,7 +1793,6 @@ function ui_obj:handle_tabs()
 end
 
 function ui_obj:populate_panel_on_mod_selected()
-    log("populating panel!")
     local selected_mod = mct:get_selected_mod()
 
     -- set the positions for all options in the mod

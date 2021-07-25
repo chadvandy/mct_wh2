@@ -76,8 +76,6 @@ function settings:set_selected_profile(key)
     -- save the new one as saved
     self.selected_profile = key
     self.profiles[key].selected = true
-
-    mct.ui:populate_profiles_dropdown_box()
 end
 
 function settings:get_all_profile_keys()
