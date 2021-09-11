@@ -3,12 +3,16 @@
             __used_profile = "main",
             __profiles = {
                 main = {
-                    mod_key = {
-                        __settings = {
-                            option_key = value
-                        },
-                        __patch = 0,
-                        __other_variables = nil,
+                    __name = "",
+                    __description = ""
+                    __mods = {
+                        mod_key = {
+                            __settings = {
+                                option_key = value
+                            },
+                            __patch = 0,
+                            __other_variables = nil,
+                        }
                     }
                 },
                 --- Only store DIFFERENTLY SAVED options

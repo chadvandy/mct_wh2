@@ -9,6 +9,14 @@ local mod_configuration_tool = {
     ---@type mct_settings
     settings = nil,
 
+    ---@type mct_ui
+    ui = nil,
+    ---@type mct_mod
+    _MCT_MOD = nil,
+
+    ---@type table<string, table>
+    _MCT_TYPES = nil,
+
     -- default to false
     _finalized = false,
     _initialized = false,
@@ -16,6 +24,7 @@ local mod_configuration_tool = {
 
     write_to_log = true,
 
+    ---@type table<string, mct_mod>
     _registered_mods = {},
     _selected_mod = nil,
 
@@ -273,6 +282,7 @@ function mod_configuration_tool:get_mod_with_name(mod_name)
     return self:get_mod_by_key(mod_name)
 end
 
+--- TODO use new system!
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mod_configuration_tool:finalize(specific_mod)
     local ok, msg = pcall(function()
@@ -359,7 +369,16 @@ function mod_configuration_tool:get_mod_by_key(mod_name)
     return self._registered_mods[mod_name]
 end
 
----@return mct_mod[]
+--- Iterate over all mods, iterating through all mod keys and their options.
+function mod_configuration_tool:get_mods_iter()
+    local mods = self:get_mods()
+
+    return function()
+        local mod_key,mod = next(mods)
+        return mod,mod:get_options()
+    end
+end
+
 function mod_configuration_tool:get_mods()
     return self._registered_mods
 end

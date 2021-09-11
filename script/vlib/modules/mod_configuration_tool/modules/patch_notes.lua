@@ -2,61 +2,7 @@
 
 local mct = get_mct()
 
----@type mct_mod
-local mct_mod = mct._MCT_MOD
 local ui = mct.ui
-
---- Create a new patch. This allows you to slightly-better communicate with your users, by adding patches to a tab within the UI and potentially forcing a popup to inform your users of important stuff.
----@param patch_name string The name of your patch. Will display in larger text in the patch notes section.
----@param patch_description string Description for your patch. Accepts any existing localisation tags - [[col]] tags or whatever. Will get automatic linebreaks in it, to make it fit properly.
----@param patch_number number The order this patch should come in. Don't skip any numbers, and keep these to whole integers - ie., 1-2-3-4-5. Higher number means more recent, which means a higher placement; put your oldest at 1 and your highest at max.
----@param is_important boolean Set this to true to prioritize this patch by giving a popup to the user about a new patch (will only show once). Don't abuse pls!
-function mct_mod:create_patch(patch_name, patch_description, patch_number, is_important)
-    assert(is_string(patch_name), "You need to provide a patch name for the patch!")
-    assert(is_string(patch_description), "You need to provide a patch description!")
-    
-    -- TODO somee way to make sure the number is valid?
-    if not is_number(patch_number) then patch_number = #self._patches+1 end
-    if not is_boolean(is_important) then is_important = false end
-
-    patch_description = string.format_with_linebreaks(patch_description, 150)
-
-
-    self._patches[patch_number] = 
-    {
-        name = patch_name,
-        description = patch_description,
-        is_important = is_important
-    }
-
-    core:trigger_custom_event(
-        "MctPatchCreated", 
-        {
-            mct = mct,
-            mod = self,
-            patch = self._patches[patch_number],
-            patch_number = patch_number,
-        }
-    )
-end
-
-function mct_mod:set_last_viewed_patch(index)
-    if not is_number(index) or not self._patches[index] then return end
-
-    self._last_viewed_patch = index
-end
-
-function mct_mod:get_last_viewed_patch()
-    return self._last_viewed_patch
-end
-
-function mct_mod:get_patches()
-    return self._patches
-end
-
-function mct_mod:get_patch(index)
-    return self._patches[index]
-end
 
 ui:set_tab_action(
     "patch_notes",

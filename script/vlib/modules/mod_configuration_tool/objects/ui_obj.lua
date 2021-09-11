@@ -627,9 +627,6 @@ function ui_obj:open_frame()
 
     self.opened = true
 
-    -- load up the profiles file
-    mct.settings:read_profiles_file()
-
     -- make a new one!
     if not is_uicomponent(test) then
         -- create the new window and set it visible
@@ -729,13 +726,13 @@ function ui_obj:set_actions_states()
 
     local revert_to_defaults = find_uicomponent(actions_panel, "mct_revert_to_default")
     local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
-    local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+    -- local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
 
     -- profiles_new is always allowed!
     _SetState(profiles_new, "active")
 
     -- check if there is any selected profile - if not, lock!
-    local test = mct.settings:get_selected_profile()
+    local test = mct.settings:get_selected_profile_key()
     if not test or test == "" then
         _SetState(profiles_delete, "inactive")
         _SetState(profiles_save, "inactive")
@@ -753,19 +750,19 @@ function ui_obj:set_actions_states()
     -- easy to start - if changed_settings is empty, lock everything!
     if not self:get_locally_edited() then
         _SetState(button_mct_finalize_settings, "inactive")
-        _SetState(mct_finalize_settings_on_mod, "inactive")
+        -- _SetState(mct_finalize_settings_on_mod, "inactive")
     else
         -- set the finalize settings button to active; SOMETHING was changed!
         _SetState(button_mct_finalize_settings, "active")
 
-        -- check if there are any changed settings for the currently selected mod
-        if (not is_table(self.changed_settings[selected_mod_key])) or next(self.changed_settings[selected_mod_key]) == nil then
-            -- no changed settings - lock this mod
-            _SetState(mct_finalize_settings_on_mod, "inactive")
-        else
-            -- changed settings - unlock!
-            _SetState(mct_finalize_settings_on_mod, "active")
-        end
+        -- -- check if there are any changed settings for the currently selected mod
+        -- if (not is_table(self.changed_settings[selected_mod_key])) or next(self.changed_settings[selected_mod_key]) == nil then
+        --     -- no changed settings - lock this mod
+        --     _SetState(mct_finalize_settings_on_mod, "inactive")
+        -- else
+        --     -- changed settings - unlock!
+        --     _SetState(mct_finalize_settings_on_mod, "active")
+        -- end
     end
 
     if selected_mod:are_any_settings_not_default() then
@@ -812,7 +809,7 @@ function ui_obj:populate_profiles_dropdown_box()
 
         _SetState(profiles_dropdown, "active")
 
-        local selected_boi = mct.settings:get_selected_profile()
+        local selected_boi = mct.settings:get_selected_profile_key()
 
         for i = 1, #all_profiles do
             local profile_key = all_profiles[i]
@@ -924,7 +921,7 @@ function ui_obj:populate_profiles_dropdown_box()
             local old_selected_uic = nil
             local new_selected_uic = UIComponent(context.component)
 
-            local old_key = mct.settings:get_selected_profile()
+            local old_key = mct.settings:get_selected_profile_key()
             local new_key = new_selected_uic:Id()
 
             local popup_list = UIComponent(new_selected_uic:Parent())
@@ -940,6 +937,19 @@ function ui_obj:populate_profiles_dropdown_box()
 
             _SetState(new_selected_uic, "selected")
             mct.settings:set_selected_profile(new_key)
+
+            --- disabled / reenable the "delete" button
+            local delete_button = find_uicomponent(actions_panel, "mct_profiles_button_parent", "mct_profiles_delete")
+            local txt = find_uicomponent(delete_button, "dy_province")
+            if new_key == "main" then
+                _SetState(delete_button, "inactive")
+                _SetTooltipText(txt, effect.get_localised_string("mct_profiles_delete_tt_inactive"), true)
+                _SetStateText(txt, effect.get_localised_string("mct_profiles_delete_txt"))
+            else
+                _SetState(delete_button, 'active')
+                _SetTooltipText(txt, effect.get_localised_string("mct_profiles_delete_tt"), true)
+                _SetStateText(txt, effect.get_localised_string("mct_profiles_delete_txt"))
+            end
             
             local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
             --local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()
@@ -964,8 +974,6 @@ function ui_obj:create_actions_panel()
     -- clear out any existing listeners
     core:remove_listener("mct_profiles_new")
     core:remove_listener("mct_profiles_delete")
-    core:remove_listener("mct_profiles_apply")
-    core:remove_listener("mct_profiles_save")
 
     local panel = self.panel
 
@@ -1245,7 +1253,7 @@ function ui_obj:create_actions_panel()
             key,
             "ComponentLClickUp",
             function(context)
-                return context.string == key
+                return context.string == key and mct.settings:get_selected_profile_key() ~= "main"
             end,
             function(context)
                 if is_uicomponent(uic) then
@@ -1256,10 +1264,10 @@ function ui_obj:create_actions_panel()
                 -- no: close the popup, do naught
                 ui_obj:create_popup(
                     "mct_profiles_delete_popup",
-                    "Are you sure you would like to delete your Profile with the key ["..mct.settings:get_selected_profile().."]? This action is irreversible!",
+                    "Are you sure you would like to delete your Profile with the key ["..mct.settings:get_selected_profile_key().."]? This action is irreversible!",
                     true,
                     function(context) -- "button_tick" triggered for yes
-                        mct.settings:delete_profile_with_key(mct.settings:get_selected_profile())
+                        mct.settings:delete_profile_with_key(mct.settings:get_selected_profile_key())
                     end,
                     function(context) -- "button_cancel" triggered for no
                         -- do nothing!
@@ -1270,69 +1278,69 @@ function ui_obj:create_actions_panel()
         )
     end
 
-    -- "Save" button
-    local profiles_save = core:get_or_create_component("mct_profiles_save", "ui/templates/square_medium_text_button_toggle", buttons_parent)
-    profiles_save:SetVisible(true)
-    profiles_save:Resize(b_w, profiles_save:Height())
-    profiles_save:SetDockingPoint(7)
-    profiles_save:SetDockOffset(15, 5)
+    -- -- "Save" button
+    -- local profiles_save = core:get_or_create_component("mct_profiles_save", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    -- profiles_save:SetVisible(true)
+    -- profiles_save:Resize(b_w, profiles_save:Height())
+    -- profiles_save:SetDockingPoint(7)
+    -- profiles_save:SetDockOffset(15, 5)
 
-    do
-        local uic = profiles_save
-        local key = "mct_profiles_save"
-        local txt = UIComponent(uic:Find("dy_province"))
-        _SetTooltipText(txt, effect.get_localised_string(key.."_tt"), true)
-        _SetStateText(txt, effect.get_localised_string(key.."_txt"))
+    -- do
+    --     local uic = profiles_save
+    --     local key = "mct_profiles_save"
+    --     local txt = UIComponent(uic:Find("dy_province"))
+    --     _SetTooltipText(txt, effect.get_localised_string(key.."_tt"), true)
+    --     _SetStateText(txt, effect.get_localised_string(key.."_txt"))
 
-        core:add_listener(
-            key,
-            "ComponentLClickUp",
-            function(context)
-                return context.string == key
-            end,
-            function(context)
-                if is_uicomponent(uic) then
-                    _SetState(uic, 'active')
-                end
+    --     core:add_listener(
+    --         key,
+    --         "ComponentLClickUp",
+    --         function(context)
+    --             return context.string == key
+    --         end,
+    --         function(context)
+    --             if is_uicomponent(uic) then
+    --                 _SetState(uic, 'active')
+    --             end
 
-                -- save the current stuff as the current profile
-                mct.settings:save_profile_with_key(mct.settings:get_selected_profile())
-            end,
-            true
-        )
-    end
+    --             -- save the current stuff as the current profile
+    --             mct.settings:save_profile_with_key(mct.settings:get_selected_profile_key())
+    --         end,
+    --         true
+    --     )
+    -- end
 
-    -- "Apply" button
-    local profiles_apply = core:get_or_create_component("mct_profiles_apply", "ui/templates/square_medium_text_button_toggle", buttons_parent)
-    profiles_apply:SetVisible(true)
-    profiles_apply:Resize(b_w, profiles_apply:Height())
-    profiles_apply:SetDockingPoint(9)
-    profiles_apply:SetDockOffset(-15, 5)
+    -- -- "Apply" button
+    -- local profiles_apply = core:get_or_create_component("mct_profiles_apply", "ui/templates/square_medium_text_button_toggle", buttons_parent)
+    -- profiles_apply:SetVisible(true)
+    -- profiles_apply:Resize(b_w, profiles_apply:Height())
+    -- profiles_apply:SetDockingPoint(9)
+    -- profiles_apply:SetDockOffset(-15, 5)
 
-    do
-        local uic = profiles_apply
-        local key = "mct_profiles_apply"
-        local txt = UIComponent(uic:Find("dy_province"))
-        _SetTooltipText(txt, effect.get_localised_string(key.."_tt"), true)
-        _SetStateText(txt, effect.get_localised_string(key.."_txt"))
+    -- do
+    --     local uic = profiles_apply
+    --     local key = "mct_profiles_apply"
+    --     local txt = UIComponent(uic:Find("dy_province"))
+    --     _SetTooltipText(txt, effect.get_localised_string(key.."_tt"), true)
+    --     _SetStateText(txt, effect.get_localised_string(key.."_txt"))
 
-        core:add_listener(
-            key,
-            "ComponentLClickUp",
-            function(context)
-                return context.string == key
-            end,
-            function(context)
-                if is_uicomponent(uic) then
-                    _SetState(uic, 'active')
-                end
+    --     core:add_listener(
+    --         key,
+    --         "ComponentLClickUp",
+    --         function(context)
+    --             return context.string == key
+    --         end,
+    --         function(context)
+    --             if is_uicomponent(uic) then
+    --                 _SetState(uic, 'active')
+    --             end
 
-                -- apply the settings in this profile to all mods
-                mct.settings:apply_profile_with_key(mct.settings:get_selected_profile())
-            end,
-            true
-        )
-    end
+    --             -- apply the settings in this profile to all mods
+    --             mct.settings:apply_profile_with_key(mct.settings:get_selected_profile_key())
+    --         end,
+    --         true
+    --     )
+    -- end
 
     local aw = actions_panel:Width() * 1.05
 
@@ -1350,21 +1358,21 @@ function ui_obj:create_actions_panel()
     _SetStateText(finalize_button_txt, effect.get_localised_string("mct_button_finalize_settings"))
     finalize_button:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_tt"), true)
 
-    -- create the "finalize for mod" button on the actions menu
-    local finalize_button_for_mod = core:get_or_create_component("mct_finalize_settings_on_mod", "ui/templates/square_large_text_button", actions_panel)
-    finalize_button_for_mod:SetCanResizeWidth(true) finalize_button_for_mod:SetCanResizeHeight(true)
-    finalize_button_for_mod:Resize(aw, finalize_button_for_mod:Height())
-    finalize_button_for_mod:SetDockingPoint(8)
-    finalize_button_for_mod:SetDockOffset(0, finalize_button_for_mod:Height() * -1.2)
+    -- -- create the "finalize for mod" button on the actions menu
+    -- local finalize_button_for_mod = core:get_or_create_component("mct_finalize_settings_on_mod", "ui/templates/square_large_text_button", actions_panel)
+    -- finalize_button_for_mod:SetCanResizeWidth(true) finalize_button_for_mod:SetCanResizeHeight(true)
+    -- finalize_button_for_mod:Resize(aw, finalize_button_for_mod:Height())
+    -- finalize_button_for_mod:SetDockingPoint(8)
+    -- finalize_button_for_mod:SetDockOffset(0, finalize_button_for_mod:Height() * -1.2)
 
-    finalize_button_for_mod:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_for_mod_tt"), true)
-    local finalize_button_for_mod_txt = find_uicomponent(finalize_button_for_mod, "button_txt")
+    -- finalize_button_for_mod:SetTooltipText(effect.get_localised_string("mct_button_finalize_settings_for_mod_tt"), true)
+    -- local finalize_button_for_mod_txt = find_uicomponent(finalize_button_for_mod, "button_txt")
 
-    _SetState(finalize_button_for_mod_txt, "inactive")
-    _SetStateText(finalize_button_for_mod_txt, effect.get_localised_string("mct_button_finalize_settings_for_mod"))
+    -- _SetState(finalize_button_for_mod_txt, "inactive")
+    -- _SetStateText(finalize_button_for_mod_txt, effect.get_localised_string("mct_button_finalize_settings_for_mod"))
 
-    _SetState(finalize_button_for_mod_txt, "active")
-    _SetStateText(finalize_button_for_mod_txt, effect.get_localised_string("mct_button_finalize_settings_for_mod"))
+    -- _SetState(finalize_button_for_mod_txt, "active")
+    -- _SetStateText(finalize_button_for_mod_txt, effect.get_localised_string("mct_button_finalize_settings_for_mod"))
 
     -- create "Revert to Default"
     local revert_to_default = core:get_or_create_component("mct_revert_to_default", "ui/templates/square_large_text_button", actions_panel)
@@ -1384,12 +1392,9 @@ end
 
 function ui_obj:close_frame()
     -- save the profiles file every time we close it up
-    mct.settings:save_profiles_file()
+    -- mct.settings:save_profiles_file()
     
-    local panel = self.panel
-    if is_uicomponent(panel) then
-        panel:Destroy()
-    end
+    delete_component(self.panel)
 
     --core:remove_listener("left_or_right_pressed")
     core:remove_listener("MctRowClicked")
@@ -2741,19 +2746,19 @@ core:add_listener(
     true
 )
 
-core:add_listener(
-    "mct_finalize_button_on_mod_pressed",
-    "ComponentLClickUp",
-    function(context)
-        return context.string == "mct_finalize_settings_on_mod"
-    end,
-    function(context)
-        if ui_obj:get_locally_edited() then
-            ui_obj:add_finalize_settings_popup(mct:get_selected_mod_name())
-        end
-    end,
-    true
-)
+-- core:add_listener(
+--     "mct_finalize_button_on_mod_pressed",
+--     "ComponentLClickUp",
+--     function(context)
+--         return context.string == "mct_finalize_settings_on_mod"
+--     end,
+--     function(context)
+--         if ui_obj:get_locally_edited() then
+--             ui_obj:add_finalize_settings_popup(mct:get_selected_mod_name())
+--         end
+--     end,
+--     true
+-- )
 
 -- Revert to defaults for the currently selected mod
 core:add_listener(
@@ -2796,20 +2801,20 @@ core:add_listener(
             -- highlight the finalize buttons!
             local function func()
                 local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
-                local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
+                -- local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
                 
                 button_mct_finalize_settings:StartPulseHighlight(2, "active")
-                mct_finalize_settings_on_mod:StartPulseHighlight(2, "active")
+                -- mct_finalize_settings_on_mod:StartPulseHighlight(2, "active")
 
                 core:add_listener(
                     "mct_highlight_finalized_any_pressed",
                     "ComponentLClickUp",
                     function(context)
-                        return context.string == "button_mct_finalize_settings" or context.string == "mct_finalize_settings_on_mod"
+                        return context.string == "button_mct_finalize_settings"
                     end,
                     function(context)
                         button_mct_finalize_settings:StopPulseHighlight()
-                        mct_finalize_settings_on_mod:StopPulseHighlight()
+                        -- mct_finalize_settings_on_mod:StopPulseHighlight()
                     end,
                     false
                 )

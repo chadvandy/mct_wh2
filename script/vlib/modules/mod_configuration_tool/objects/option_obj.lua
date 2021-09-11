@@ -135,16 +135,16 @@ end
 --- For instance, this is useful for settings that don't edit the model, like enabling script logging.
 ---@param enabled boolean True for local-only, false for passed-in-MP-and-only-editable-by-the-host.
 function mct_option:set_local_only(enabled)
-    if is_nil(enabled) then
-        enabled = true
-    end
+    -- if is_nil(enabled) then
+    --     enabled = true
+    -- end
 
-    if not is_boolean(enabled) then
-        err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
-        return false
-    end
+    -- if not is_boolean(enabled) then
+    --     err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
+    --     return false
+    -- end
 
-    self._local_only = enabled
+    -- self._local_only = enabled
 end
 
 ---- Read whether this mct_option is available in multiplayer.

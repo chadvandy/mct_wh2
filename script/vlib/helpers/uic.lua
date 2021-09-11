@@ -22,12 +22,11 @@ end
 function delete_component(component)
 	local dummy = create_dummy(core:get_ui_root())
 
-	if type(component) == "table" then
+	if is_table(component) then
 		for i = 1, #component do
-			if not is_uicomponent(component[i]) then
-				break
+			if is_uicomponent(component[i]) then
+                dummy:Adopt(component[i]:Address())
 			end
-			dummy:Adopt(component[i]:Address())
 		end
 
         dummy:DestroyChildren()
