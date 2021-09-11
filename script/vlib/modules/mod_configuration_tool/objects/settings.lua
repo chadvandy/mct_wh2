@@ -13,6 +13,8 @@ local settings = {
     ---@type string Path to the settings save file.
     settings_file = "mct_settings.lua",
 
+    __new_settings_file = "mct_settings_new.lua",
+
     __new_settings = {},
     
     --- this is a table of mod keys to tables of options keys to their options.
@@ -21,7 +23,7 @@ local settings = {
     ---@type table<string, table<string, any>>
     __cached_settings = {},
     
-    __profiles = setmetatable({},{
+    __profile_mt = {
         __index = function(self, k)
             return rawget(self, k)
         end,
@@ -33,26 +35,29 @@ local settings = {
 
             return rawset(self, k, v)
         end,
-    }),
+    },
+    __profiles = {},
     __used_profile = "",
 }
 
-function settings:clear_profile_cache()
-    self.__profiles = setmetatable({},{
-        __index = function(o, k)
-            return rawget(o, k)
-        end,
-        __newindex = function(o, k, v)
-            if k:match("^__") then
-                -- todo errmsg
-                -- you can't make a profile that starts with "__"
-                return
-            end
+setmetatable(settings.__profiles, settings.__profile_mt)
 
-            return rawset(o, k, v)
-        end,
-    })
-end
+-- function settings:clear_profile_cache()
+--     self.__profiles = setmetatable({},{
+--         __index = function(o, k)
+--             return rawget(o, k)
+--         end,
+--         __newindex = function(o, k, v)
+--             if k:match("^__") then
+--                 -- todo errmsg
+--                 -- you can't make a profile that starts with "__"
+--                 return
+--             end
+
+--             return rawset(o, k, v)
+--         end,
+--     })
+-- end
 
 --[[ TODO this should:
     1) load up the mct_settings and mct_profiles files, store them
@@ -87,13 +92,16 @@ function settings:setup_default_profile()
             self.__profiles["main"][mod_key]["__settings"][option_key] = option_obj:get_finalized_setting()
         end
     end
+
+    self:save_new()
 end
 
 --- Load the shit from the profiles file.
 function settings:load_new()
-    local content = loadfile(self.settings_file)
+    local content = loadfile(self.__new_settings_file)
     if not content then
         -- errmsg!
+        return
     end
 
     content = content()
@@ -113,7 +121,7 @@ function settings:save_new()
 
     local str = table_printer:print(t)
 
-    local file = io.open(self.settings_file, "w+")
+    local file = io.open(self.__new_settings_file, "w+")
     file:write(str)
     file:close()
 end
