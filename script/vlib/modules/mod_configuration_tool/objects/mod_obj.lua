@@ -639,6 +639,10 @@ function mct_mod:finalize_settings()
     mct.ui.changed_settings[self:get_key()] = nil
 end
 
+function mct_mod:get_settings_table()
+
+end
+
 function mct_mod:load_finalized_settings()
     local options = self:get_options()
 

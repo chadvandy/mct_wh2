@@ -7,21 +7,7 @@ table_printer = {
     __last = "",
 }
 
-local function is_table(o)
-    return type(o) == "table"
-end
-
-local function is_number(o)
-    return type(o) == "number"
-end
-
-local function is_boolean(o)
-    return type(o) == "boolean"
-end
-
-local function is_string(o)
-    return type(o) == "string"
-end
+--- TODO exempted indices (ie. don't print anything that does or doesn't match a pattern, etc)
 
 function table_printer:newline(tab_i, override)
     self.__tab = self.__tab + tab_i

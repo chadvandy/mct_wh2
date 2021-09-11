@@ -13,17 +13,13 @@ local settings = {
     ---@type string Path to the settings save file.
     settings_file = "mct_settings.lua",
 
-    -- TODO move the print-table-to-file functionality into some library?
-    ---@type number The current tab, for printing out the save files prettily.
-    tab = 0,
-
-    new_settings = {},
+    __new_settings = {},
     
     --- this is a table of mod keys to tables of options keys to their options.
     --- cached on reading mct_settings.lua. When reading *extant* mct_mods, the cache is cleared for that mod key.
     --- This lets a user/modder disable a mod, finalize settings, and load up that old mod again without losing settings.
     ---@type table<string, table<string, any>>
-    cached_settings = {},
+    __cached_settings = {},
     
     __profiles = setmetatable({},{
         __index = function(self, k)
@@ -38,7 +34,7 @@ local settings = {
             return rawset(self, k, v)
         end,
     }),
-    __selected_profile = "",
+    __used_profile = "",
 }
 
 function settings:clear_profile_cache()
@@ -48,6 +44,7 @@ function settings:clear_profile_cache()
         end,
         __newindex = function(o, k, v)
             if k:match("^__") then
+                -- todo errmsg
                 -- you can't make a profile that starts with "__"
                 return
             end
@@ -65,31 +62,66 @@ end
     5) save everything in mct_settings.lua
 ]]
 function settings:setup_default_profile()
+    self:read_profiles_file()
+
+    --- clear out the old fields in all profiles
+    for key,profile in pairs(self.__profiles) do
+        self.__profiles[key].selected = nil
+        self.__profiles[key].__settings = self.__profiles[key].settings
+        self.__profiles[key].settings = nil
+    end
+
+    self.__used_profile = "main"
     -- self:add_profile_with_key("main")
     self.__profiles["main"] = {}
 
-    -- TODO populate this with all the current settings!
-    local settings_file = io.open(self.settings_file, "r")
-    local profiles_file = io.open(self.profiles_file, "r")
+    ---@param mod_key string
+    ---@param mod_obj mct_mod
+    for mod_key,mod_obj in pairs(mct:get_mods()) do
+        self.__profiles["main"][mod_key] = {
+            __patch = 0,
+            __settings = {},
+        }
 
-    if not settings_file then
-        -- Use defaults!
+        for option_key, option_obj in pairs(mod_obj:get_options()) do
+            self.__profiles["main"][mod_key]["__settings"][option_key] = option_obj:get_finalized_setting()
+        end
     end
-    local settings_content = loadfile(settings_file)
-
 end
 
-
+--- Load the shit from the profiles file.
 function settings:load_new()
+    local content = loadfile(self.settings_file)
+    if not content then
+        -- errmsg!
+    end
 
+    content = content()
+
+    self.__selected_profile = content.__selected_profile
+    self.__profiles = content.__profiles
+    self.__cached_settings = content.__cached_settings
 end
 
 --- Save the shit into the profiles file.
 function settings:save_new()
     local t = {}
 
+    t.__selected_profile = self.__selected_profile
+    t.__profiles = self:get_profiles()
+    t.__cached_settings = self.__cached_settings
+
+    local str = table_printer:print(t)
+
     local file = io.open(self.settings_file, "w+")
+    file:write(str)
+    file:close()
 end
+
+--- TODO a function to save an option w/ a new value in the profiles table
+--- Needs to grab the current profile:
+    --- if main, just change the new value in main
+    --- otherwise, change the new value in this profile and set the value to old in main
 
 function settings:get_profiles()
     return self.__profiles
@@ -117,6 +149,8 @@ function settings:delete_profile_with_key(key)
     end
 
     self.__profiles[key] = nil
+
+    -- TODO never none selected!
     self.__selected_profile = ""
 
     -- refresh the dropdown UI
@@ -134,15 +168,8 @@ function settings:set_selected_profile(key)
         return false
     end
 
-    -- -- get the former selected profile, and un-save it as saved
-    -- local former = self.__profiles[self.__selected_profile]
-    -- if is_table(former) then
-    --     former.selected = false
-    -- end
-
     -- save the new one as saved
     self.__selected_profile = key
-    -- self.__profiles[key].selected = true
 end
 
 function settings:get_all_profile_keys()
@@ -374,13 +401,13 @@ function settings:add_cached_settings(mod_key, option_data)
         return nil
     end
 
-    local test_mod = self.cached_settings[mod_key]
+    local test_mod = self.__cached_settings[mod_key]
     if is_nil(test_mod) then
-        self.cached_settings[mod_key] = {}
+        self.__cached_settings[mod_key] = {}
     end
 
     for k,v in pairs(option_data) do
-        self.cached_settings[mod_key][k] = v
+        self.__cached_settings[mod_key][k] = v
     end
 end
 
@@ -398,7 +425,7 @@ function settings:get_cached_settings(mod_key, option_keys)
 
     if is_nil(option_keys) then
         -- return the entire cached mod
-        return self.cached_settings[mod_key]
+        return self.__cached_settings[mod_key]
     end
 
     if not is_table(option_keys) then
@@ -406,7 +433,7 @@ function settings:get_cached_settings(mod_key, option_keys)
         return nil
     end
 
-    local test_mod = self.cached_settings[mod_key]
+    local test_mod = self.__cached_settings[mod_key]
 
     -- no mod with this key was found in cached settings
     if is_nil(test_mod) then
@@ -441,7 +468,7 @@ function settings:remove_cached_setting(mod_key, option_keys)
 
     -- no "option_keys" were passed - just remove the mod from memory!
     if is_nil(option_keys) then
-        self.cached_settings[mod_key] = nil
+        self.__cached_settings[mod_key] = nil
         return
     end
 
@@ -451,7 +478,7 @@ function settings:remove_cached_setting(mod_key, option_keys)
     end
 
     -- check if the mod is cached in memory
-    local test_mod = self.cached_settings[mod_key]
+    local test_mod = self.__cached_settings[mod_key]
 
     if is_nil(test_mod) then
         -- this mod was already removed from cached settings - cancel!
@@ -466,6 +493,8 @@ function settings:remove_cached_setting(mod_key, option_keys)
         test_mod[option_key] = nil
     end
 end
+
+
 
 --- 
 --- TODO consolidate mct_settings.lua and mct_profiles.lua
@@ -491,9 +520,9 @@ function settings:save_mct_settings()
     local t = ""
 
     -- append a loop for the cached mods
-    if self.cached_settings and not is_nil(next(self.cached_settings)) then
+    if self.__cached_settings and not is_nil(next(self.__cached_settings)) then
         t = "\t[\"mct_cached_settings\"] = {\n"
-        for mod_key, mod_data in pairs(self.cached_settings) do
+        for mod_key, mod_data in pairs(self.__cached_settings) do
             t = t .. "\t\t[\""..mod_key.."\"] = {\n"
 
             -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
@@ -687,12 +716,6 @@ end
 -- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
 -- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
 function settings:load()
-    --- trigger the create-new-profile "main" thing here
-    if not self:get_profile("main") then
-        -- first time setup, either for a completely new user or a pre-port user.
-        self:setup_default_profile()
-    end
-
     -- if we're in the campaign, save the "mct_init" value as true
     if __game_mode == __lib_type_campaign then
         cm:set_saved_value("mct_init", true)
@@ -769,13 +792,13 @@ function settings:load()
                         -- save the option key in the new_settings table, so we can look back later and see that it's new!
                         -- skip this process if the option is a dummy!
                         if option_obj:get_type() ~= "dummy" then
-                            if is_nil(self.new_settings[mod_key]) then
+                            if is_nil(self.__new_settings[mod_key]) then
                                 --log("?")
-                                self.new_settings[mod_key] = {}
+                                self.__new_settings[mod_key] = {}
                                 --log("??")
                             end
 
-                            self.new_settings[mod_key][#self.new_settings[mod_key]+1] = option_key
+                            self.__new_settings[mod_key][#self.__new_settings[mod_key]+1] = option_key
                             any_added = true
                         end
                     end
@@ -832,12 +855,12 @@ function settings:load()
             for mod_key, mod_data in pairs(cached_settings) do
                 log("Re-caching settings for mct_mod with key ["..mod_key.."]")
 
-                if not self.cached_settings[mod_key] then
-                    self.cached_settings[mod_key] = {}
+                if not self.__cached_settings[mod_key] then
+                    self.__cached_settings[mod_key] = {}
                 end
 
                 for k,v in pairs(mod_data) do
-                    self.cached_settings[mod_key][k] = v
+                    self.__cached_settings[mod_key][k] = v
                 end
             end
         end
@@ -848,12 +871,12 @@ function settings:load()
             
             log("Caching settings for mct_mod with key ["..mod_key.."]")
 
-            if not self.cached_settings[mod_key] then
-                self.cached_settings[mod_key] = {}
+            if not self.__cached_settings[mod_key] then
+                self.__cached_settings[mod_key] = {}
             end
 
             for k,v in pairs(mod_data) do
-                self.cached_settings[mod_key][k] = v
+                self.__cached_settings[mod_key][k] = v
             end
         end
 
@@ -864,7 +887,7 @@ function settings:load()
             --log("does this exist")
             mct.ui:add_ui_created_callback(function()
                 local mod_keys = {}
-                for k, _ in pairs(self.new_settings) do
+                for k, _ in pairs(self.__new_settings) do
                     mod_keys[#mod_keys+1] = k
                 end
 
@@ -920,6 +943,12 @@ function settings:load()
         end
 
         self:finalize_first_time()
+    end
+
+    --- trigger the create-new-profile "main" thing here
+    if not self:get_profile("main") then
+        -- first time setup, either for a completely new user or a pre-port user.
+        self:setup_default_profile()
     end
 end
 
