@@ -1,3 +1,4 @@
+local vlib = get_vlib()
 local mct = get_mct()
 
 if core:is_campaign() then
@@ -45,44 +46,43 @@ elseif core:is_battle() then
         mct.ui:ui_created()
     end
 
-    --- TODO swap to real timer?
-    bm:repeat_callback(
+    vlib:repeat_callback(
         function()
             local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
             if is_uicomponent(button_group) then
-                bm:remove_process("check_for_ui")
+                vlib:remove_callback("check_for_ui")
                 create_button()
             end
         end,
-        100,
+        1000,
         "check_for_ui"
     )
 
     --core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 
-    -- lock the finalize settings button
-    core:add_listener(
-        "MctPanelOpened",
-        "MctPanelOpened",
-        true,
-        function(context)
-            local mct = context:mct()
-            local ui_obj = context:ui_obj()
+    -- -- lock the finalize settings button
+    -- core:add_listener(
+    --     "MctPanelOpened",
+    --     "MctPanelOpened",
+    --     true,
+    --     function(context)
+    --         local mct = context:mct()
+    --         local ui_obj = context:ui_obj()
 
-            local mod_settings_panel = ui_obj.mod_settings_panel
-            if is_uicomponent(mod_settings_panel) then
-                local finalize_button = UIComponent(mod_settings_panel:Find("button_mct_finalize_settings"))
-                if is_uicomponent(finalize_button) then
-                    ui_obj:SetState(finalize_button, "inactive")
-                    ui_obj:SetTooltipText(finalize_button, effect.get_localised_string("mct_button_finalize_settings_battle"), true)
+    --         local mod_settings_panel = ui_obj.mod_settings_panel
+    --         if is_uicomponent(mod_settings_panel) then
+    --             local finalize_button = UIComponent(mod_settings_panel:Find("button_mct_finalize_settings"))
+    --             if is_uicomponent(finalize_button) then
+    --                 ui_obj:SetState(finalize_button, "inactive")
+    --                 ui_obj:SetTooltipText(finalize_button, effect.get_localised_string("mct_button_finalize_settings_battle"), true)
 
-                    local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
-                    ui_obj:SetStateText(finalize_button_txt, "[[col:red]]" .. effect.get_localised_string("mct_button_finalize_setting") .. "[[/col]]")
-                end
-            end
-        end,
-        true
-    )
+    --                 local finalize_button_txt = find_uicomponent(finalize_button, "button_txt")
+    --                 ui_obj:SetStateText(finalize_button_txt, "[[col:red]]" .. effect.get_localised_string("mct_button_finalize_setting") .. "[[/col]]")
+    --             end
+    --         end
+    --     end,
+    --     true
+    -- )
 elseif core:is_frontend() then
     local function check_highlight()
         local uic = find_uicomponent(core:get_ui_root(), "sp_frame", "menu_bar", "button_mct_options")

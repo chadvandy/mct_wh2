@@ -1,34 +1,33 @@
 --- TODO make adding new PR's work post-first-tick
 --- TODO add functionality for setting visible/invisible
 --- TODO create a bar UIC!
---- TODO make work before first tick
 
 local vlib = get_vandy_lib()
 local log,logf,errlog,errlogf = vlib:get_log_functions("[pr_ui]")
 
----@class vlib_pr_manager
-local PR_Manager = {
-    pr_path = "ui/vandy_lib/pooled_resources/dy_canopic_jars",
-    negative_list_entry = "ui/vandy_lib/pooled_resources/negative_list_entry",
-    positive_list_entry = "ui/vandy_lib/pooled_resources/positive_list_entry",
-
-    tt_path = "{{tt:ui/campaign ui/tooltip_pooled_resource_breakdown}}",
-    tt_key = "tooltip_pooled_resource_breakdown",
-    
-    resources = {},
-}
-
 ---@class vlib_pr_obj
-local PR_Obj = {
+local PRObj = {
+    _uics = {
+        pr = "ui/vandy_lib/pooled_resources/dy_canopic_jars",
+        negative_list_entry = "ui/vandy_lib/pooled_resources/negative_list_entry",
+        positive_list_entry = "ui/vandy_lib/pooled_resources/positive_list_entry",
+    },
+
+    _tt_path = "{{tt:ui/campaign ui/tooltip_pooled_resource_breakdown}}",
+    _tt_key = "tooltip_pooled_resource_breakdown",
+
+    _initialized = false,
     _pr_key = "",
     _icon_path = "",
     _factions = {},
 }
 
-function PR_Obj:new(pr_key, icon_path, faction_table)
+local resources = {}
+
+function PRObj.new(pr_key, icon_path, faction_table)
     ---@type vlib_pr_obj
-    local o = table.deepcopy(PR_Obj)
-    setmetatable(o, {__index = PR_Obj})
+    local o = table.deepcopy(PRObj)
+    setmetatable(o, {__index = PRObj})
 
     o._pr_key = pr_key
     o._icon_path = icon_path
@@ -38,42 +37,41 @@ function PR_Obj:new(pr_key, icon_path, faction_table)
     return o
 end
 
-function PR_Obj:get_key()
+function PRObj:get_key()
     return self._pr_key
 end
 
-function PR_Obj:add_faction(faction_key)
+function PRObj:add_faction(faction_key)
     self._factions[faction_key] = true
 end
 
-function PR_Obj:set_factions(faction_table)
+function PRObj:set_factions(faction_table)
     self._factions = {}
-    for i = 1, #faction_table do
-        local faction_key = faction_table[i]
+    for _,faction_key in ipairs(faction_table) do
         self._factions[faction_key] = true
     end
 end
 
-function PR_Obj:is_faction_valid(faction_key)
+function PRObj:is_faction_valid(faction_key)
     return self._factions[faction_key]
 end
 
-function PR_Obj:get_icon_path()
+function PRObj:get_icon_path()
     return self._icon_path
 end
 
-function PR_Manager:create_new_pr(pooled_resource_key, pr_icon_path, filters)
-    local o = PR_Obj:new(pooled_resource_key, pr_icon_path, filters)
+function PRObj.create_new_pr(pooled_resource_key, pr_icon_path, filters)
+    local o = PRObj.new(pooled_resource_key, pr_icon_path, filters)
 
-    self.resources[#self.resources+1] = o
+    resources[#resources+1] = o
 
     return o
 end
 
-function PR_Manager:get_pr_with_key(key)
+function PRObj.get_pr_with_key(key)
     if not is_string(key) then return false end
-    for i = 1, #self.resources do
-        local o = self.resources[i]
+    for i = 1, #resources do
+        local o = resources[i]
         if o:get_key() == key then
             return o
         end
@@ -85,7 +83,7 @@ end
 ---Get the UIC for a PR, if any are on screen. Returns false if none are found!
 ---@param pr_key string
 ---@return UIComponent|boolean
-function PR_Manager:get_uic(pr_key)
+function PRObj.get_uic(pr_key)
     local parent = find_uicomponent(core:get_ui_root(), "layout", "resources_bar", "topbar_list_parent")
 
     return find_uicomponent(parent, pr_key)
@@ -94,19 +92,19 @@ end
 --- Create the UIC on the top bar!
 ---@param pr_obj vlib_pr_obj
 ---@param faction_key string
-function PR_Manager:create_uic(pr_obj, faction_key)
+function PRObj.create_uic(pr_obj, faction_key)
     local pr_key = pr_obj:get_key()
     log("Adding ["..pr_key.."] UI to faction ["..faction_key.."].")
     local parent = find_uicomponent(core:get_ui_root(), "layout", "resources_bar", "topbar_list_parent")
 
     if not parent then return errlogf("Parent not found!!!!") end
 
-    local test = self:get_uic(pr_key)
+    local test = PRObj.get_uic(pr_key)
     if test then
         return
     end
         
-    local uic = UIComponent(core:get_ui_root():CreateComponent(pr_key, self.pr_path))
+    local uic = UIComponent(core:get_ui_root():CreateComponent(pr_key, PRObj._uics.pr))
 
     if not uic then return errlogf("Failed to create component") end
     local pos = 1
@@ -130,13 +128,13 @@ function PR_Manager:create_uic(pr_obj, faction_key)
     local uic_icon = find_uicomponent(uic, "icon")
     uic_icon:SetImagePath(pr_obj:get_icon_path())
     
-    uic:SetTooltipText(self.tt_path, true)
+    uic:SetTooltipText(PRObj._tt_path, true)
     
-    self:check_value(pr_key, faction_key)
+    PRObj.check_value(pr_key, faction_key)
 end
 
-function PR_Manager:check_value(pooled_resource_key, faction_key)
-    local uic = self:get_uic(pooled_resource_key)
+function PRObj.check_value(pooled_resource_key, faction_key)
+    local uic = PRObj.get_uic(pooled_resource_key)
     if uic then
         local pr_interface = cm:get_faction(faction_key):pooled_resource(pooled_resource_key)
         local val = pr_interface:value()
@@ -146,7 +144,7 @@ function PR_Manager:check_value(pooled_resource_key, faction_key)
     end
 end
 
-function PR_Manager:adjust_tooltip(pooled_resource_key, faction_key)
+function PRObj.adjust_tooltip(pooled_resource_key, faction_key)
     local ok, err = pcall(function()
     local tooltip = find_uicomponent(core:get_ui_root(), "tooltip_pooled_resource_breakdown")
     tooltip:SetVisible(true)
@@ -199,10 +197,10 @@ function PR_Manager:adjust_tooltip(pooled_resource_key, faction_key)
 
         if state == "positive" then
             parent = positive_list
-            uic_path = self.positive_list_entry
+            uic_path = PRObj._uics.positive_list_entry
         else
             parent = negative_list
-            uic_path = self.negative_list_entry
+            uic_path = PRObj._uics.negative_list_entry
         end
 
         local factor_list = find_uicomponent(parent, "factor_list")
@@ -275,12 +273,11 @@ function PR_Manager:adjust_tooltip(pooled_resource_key, faction_key)
     total_val:SetStateText(tostring(diff)) end) if not ok then errlogf(err) end
 end
 
-function PR_Manager:get_resource_keys_for_faction(faction_obj)
+function PRObj.get_resource_keys_for_faction(faction_obj)
     local faction_key = faction_obj:name()
 
     local ret = {}
 
-    local resources = self.resources
     for i = 1, #resources do
         local pr = resources[i]
         if pr:is_faction_valid(faction_key) then
@@ -291,31 +288,82 @@ function PR_Manager:get_resource_keys_for_faction(faction_obj)
     return ret
 end
 
-function PR_Manager:faction_has_resources(faction_obj)
-    local res = self:get_resource_keys_for_faction(faction_obj)
+function PRObj.faction_has_resources(faction_obj)
+    local res = PRObj.get_resource_keys_for_faction(faction_obj)
     return #res >= 1
 end
 
-function PR_Manager:add_pr_uics_for_local_faction()
+function PRObj.add_pr_uics_for_local_faction()
     local faction = cm:get_local_faction(true)
     local faction_key = faction:name()
-    if self:faction_has_resources(faction) then
-        local resource_keys = self:get_resource_keys_for_faction(faction)
+    if PRObj.faction_has_resources(faction) then
+        local resource_keys = PRObj.get_resource_keys_for_faction(faction)
         
         for i = 1, #resource_keys do
             local resource_key = resource_keys[i]
-            local pr_obj = self:get_pr_with_key(resource_key)
+            local pr_obj = PRObj.get_pr_with_key(resource_key)
 
-            self:create_uic(pr_obj, faction_key)
+            PRObj.create_uic(pr_obj, faction_key)
         end
     end
 end
 
-function PR_Manager:init()
-    log("init")
-    self._initialized = true
+function PRObj.init()
+    PRObj._initialized = true
+    PRObj.add_pr_uics_for_local_faction()
 
-    self:add_pr_uics_for_local_faction()
+    -- initialize the listeners!
+    core:add_listener(
+        "PR_HoveredOn",
+        "ComponentMouseOn",
+        function(context)
+            return PRObj.get_pr_with_key(context.string)
+        end,
+        function(context)
+            local str = context.string
+            vlib:callback(function()
+                -- logf("Checking tooltip for PR %q", str)
+                local ok, msg = pcall(function()
+                    PRObj.adjust_tooltip(str, cm:get_local_faction_name(true))
+                end) if not ok then errlog(msg) end
+            end, 5, "pr_hovered")
+        end,
+        true
+    )
+
+    core:add_listener(
+        "PR_ValueChanged",
+        "PooledResourceEffectChangedEvent",
+        function(context)
+            return context:faction():name() == cm:get_local_faction_name(true) and PRObj.get_pr_with_key(context:resource():key())
+        end,
+        function(context)
+            PRObj.check_value(context:resource():key(), cm:get_local_faction_name(true))
+        end,
+        true
+    )
+
+    core:add_lookup_listener_callback(
+        "faction_turn_start_listeners_by_name", "PR_TurnStart", cm:get_local_faction_name(true),
+        function(context)
+            local faction = context:faction()
+            local faction_key = faction:name()
+            if PRObj.faction_has_resources(faction) then
+                local resource_keys = PRObj.get_resource_keys_for_faction(faction)
+                for i = 1, #resource_keys do
+                    local resource_key = resource_keys[i]
+
+                    if not PRObj.get_uic(resource_key) then
+                        -- create UIC, if it doesn't exist already
+                        PRObj.create_uic(PRObj.get_pr_with_key(resource_key), faction_key)
+                    else -- check value if it does
+                        PRObj.check_value(resource_key, faction_key)
+                    end
+                end
+            end
+        end,
+        true
+    )
 end
 
-return PR_Manager
+return PRObj

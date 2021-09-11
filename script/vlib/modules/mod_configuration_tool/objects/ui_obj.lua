@@ -10,7 +10,23 @@ local ui_obj = {
     ---@type table<string, fun()> The actions done for each individual tab.
     _tab_actions = {},
     _tab_validity = {},
-    -- UICs
+
+    _tabs = {
+        {
+            "settings",
+            "icon_options_tab.png",
+        },
+        {
+            "patch_notes",
+            "icon_objectives.png",
+        },
+        {
+            "logging",
+            "icon_records_tab.png",
+        }
+    },
+
+    -- UICs --
 
     -- the MCT button
     mct_button = nil,
@@ -546,60 +562,60 @@ function ui_obj:get_selected_mod()
 end
 
 -- TODO steal escape in all game modes; seems difficult in frontend :(
-function ui_obj:override_escape()
-    local panel = self.panel
+-- function ui_obj:override_escape()
+--     local panel = self.panel
 
-    -- frontend takes some hackiness :(
-    if __game_mode == __lib_type_frontend then
+--     -- frontend takes some hackiness :(
+--     if __game_mode == __lib_type_frontend then
 
-        -- listen for the esc menu shortcut being pressed
-        core:add_listener(
-            "mct_esc_pressed",
-            "ShortcutTriggered",
-            function(context)
-                return context.string == "escape_menu"
-            end,
-            function(context)
+--         -- listen for the esc menu shortcut being pressed
+--         core:add_listener(
+--             "mct_esc_pressed",
+--             "ShortcutTriggered",
+--             function(context)
+--                 return context.string == "escape_menu"
+--             end,
+--             function(context)
 
-                -- trigger a listener on the next UI tick, to see if the escape menu has been opened
-                real_timer.register_singleshot("next_tick", 0)
-                core:add_listener(
-                    "next_tick",
-                    "RealTimeTrigger",
-                    function(context)
-                        return context.string == "next_tick"
-                    end,
-                    function(context)
-                        -- find the quit menu
-                        local esc_menu = find_uicomponent("quit_box")
-                        if not is_uicomponent(esc_menu) then
-                            -- ModLog("fuck")
-                            return false
-                        end
+--                 -- trigger a listener on the next UI tick, to see if the escape menu has been opened
+--                 real_timer.register_singleshot("next_tick", 0)
+--                 core:add_listener(
+--                     "next_tick",
+--                     "RealTimeTrigger",
+--                     function(context)
+--                         return context.string == "next_tick"
+--                     end,
+--                     function(context)
+--                         -- find the quit menu
+--                         local esc_menu = find_uicomponent("quit_box")
+--                         if not is_uicomponent(esc_menu) then
+--                             -- ModLog("fuck")
+--                             return false
+--                         end
                         
-                        -- press "cancel" to remove all the shits
-                        local cancel_button = find_uicomponent(esc_menu, "both_group", "button_cancel")
-                        cancel_button:SimulateLClick()
+--                         -- press "cancel" to remove all the shits
+--                         local cancel_button = find_uicomponent(esc_menu, "both_group", "button_cancel")
+--                         cancel_button:SimulateLClick()
 
-                        -- close the MCT panel
-                        --- TODO make sure this doesn't trigger if there's invalid shit in the MCT, mebbeh do a popup?
-                        self:close_frame()
-                    end,
-                    false
-                )
-            end,
-            false
-        )
+--                         -- close the MCT panel
+--                         --- TODO make sure this doesn't trigger if there's invalid shit in the MCT, mebbeh do a popup?
+--                         self:close_frame()
+--                     end,
+--                     false
+--                 )
+--             end,
+--             false
+--         )
 
-        -- TODO finish this fucking fuck
-    else
-        if __game_mode == __lib_type_campaign then
+--         -- TODO finish this fucking fuck
+--     else
+--         if __game_mode == __lib_type_campaign then
 
-        elseif __game_mode == __lib_type_battle then
+--         elseif __game_mode == __lib_type_battle then
 
-        end
-    end
-end
+--         end
+--     end
+-- end
 
 function ui_obj:open_frame()
     -- check if one exists already
@@ -1563,27 +1579,14 @@ function ui_obj:create_panels()
     -- TODO programatically create these! Hide/show on populate_panel_on_mod_selected!
     -- create the tabs
     local ui_path = "ui/templates/square_small_tab_toggle"
-    local tabs = {
-        {
-            "settings",
-            "icon_options_tab.png",
-        },
-        {
-            "patch_notes",
-            "icon_objectives.png",
-        },
-        {
-            "logging",
-            "icon_records_tab.png",
-        }
-    }
 
     -- set the left side (logging list view/mod settings) as 3/4th of the width
     local w = w * 0.99
     -- Create the tabs, and each listview sheet for the tabs.
     -- I use individual sheets that are hidden and set visible, instead of using one sheet and deleting/adding every time. This way is just slightly quicker on the UI.
-    for i = 1, #tabs do
-        local tab_table = tabs[i]
+    for i = 1, #self._tabs do
+        local tab_table = self._tabs[i]
+
         ---@type string
         local name = tab_table[1]
         ---@type string
@@ -1633,6 +1636,24 @@ function ui_obj:create_panels()
     self.mod_settings_panel = mod_settings_panel
 end
 
+--- TODO affect order
+--- TODO check if there's already a tab by this name
+--- Create a new tab for the UI.
+---@param name string The key for this tab.
+---@param icon string The icon for this tab. Just provide the "name.png"; it must be a skinned file, ie. in ui/skins/default.
+function ui_obj:new_tab(name, icon)
+    if not is_string(name) or not is_string(icon) then return end
+
+    self._tabs[#self._tabs+1] = {
+        name,
+        icon
+    }
+end
+
+---comment
+---@param tab_name string
+---@param callback fun(ui_obj:mct_ui, mod:mct_mod, list_view:UIComponent)
+---@return boolean
 function ui_obj:set_tab_action(tab_name, callback)
     if not is_string(tab_name) then return false end
     if not is_function(callback) then return false end
@@ -2177,10 +2198,10 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
                 end
             end
 
-            -- read-only in battle (do this elsewhere? (TODO))
-            if __game_mode == __lib_type_battle then
-                option_obj:set_uic_locked(true, "mct_lock_reason_battle", true)
-            end
+            -- -- read-only in battle (do this elsewhere? (TODO))
+            -- if __game_mode == __lib_type_battle then
+            --     option_obj:set_uic_locked(true, "mct_lock_reason_battle", true)
+            -- end
 
             -- TODO why the fuck do I do this?
             if option_obj:get_uic_locked() then

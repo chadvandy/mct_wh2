@@ -63,9 +63,23 @@ mct_mod:create_patch("Brass Bull & Blowpipe\nJuly 14th, 2021", [[
     true
 )
 
+--- TODO new section for specifically logging!
 local logging = mct_mod:add_new_option("enable_logging", "checkbox")
 --test:set_default_value(false)
 logging:set_read_only(false)
-logging:set_text("[DISABLED]")
+logging:set_text("[DISABLED]") -- Logging: Vanilla/Mods
 logging:set_tooltip_text("This option doesn't do anything right now, I have to fix it. :)")
 logging:set_local_only(true)
+
+local mct_logging = mct_mod:add_new_option("mct_logging", "checkbox")
+mct_logging:set_default_value(true)
+
+mct_logging:set_text("Logging: Vandy Library")
+mct_logging:set_tooltip_text("Allows the Vandy Library (MCT and all submods) to print a log file to your desktop. It's very performative and refreshes every time the game is loaded.")
+mct_logging:set_local_only(true)
+
+local debug = mct_mod:add_new_option("mct_debug", "checkbox")
+debug:set_default_value(false)
+debug:set_text("Debug Logging")
+debug:set_tooltip_text("This option removes the performative nature of the Vandy Library logging. Using Debug mode will mean more accurate log files, but you may notice a slowdown at points as the mod writes the logs. [[col:red]]Only use if you're getting crashes![[/col]]")
+debug:set_local_only(true)

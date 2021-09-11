@@ -1,78 +1,139 @@
---- TODO for now, this entire module is disabled.
--- do return end
+--- This is a series of functionalities lumped into one singular manager. The name is partially erroneous because it has some functionality for the frontend as well as the campaign (and maybe eventually battle).
 
 --- Campaign Counselor (because CA already took the Campaign Manager).
 
---- TODO move Counselor into its own file, keep main.lua for purely init/listeners
---- TODO move each "object" into its own files - techproto and stuff.
 --- TODO move "filters" into own file.
 --- TODO Create "requirements"
 --- TODO make it easy to use all of this shit (:
 
---- This manager handles a lot of the fun stuff that can happen within a campaign - unit disabling, mutually exclusive techs, scripted building and agent stuff.
--- This will specifically handle stuff that can happen at any point in the campaign; first-turn exclusive things like changing starting units belong elsewhere.
----@module CampCounselor
----@see vlib_camp_counselor
+--- Lock states are either 0 (unlocked), 1 (invisible), 2 (locked) or 3 (permanently locked)
+---@alias lock_state "0"|"1"|"2"|"3"
 
+--- 
+---@alias lock_state_string "\"locked\""|"\"unlocked\""|"\"invisible\""
+
+-- Campaign only!
 if __game_mode ~= __lib_type_campaign then return end
 
 local vlib = get_vandy_lib()
 local log,logf,errlog,errlogf = vlib:get_log_functions("[camp]")
 
-log("HELLO")
+local this_path = "script/vlib/modules/camp_counselor/"
+local functionality_path = this_path.."functionality/"
+local go_path = this_path.."game_objects/"
 
---- load in wrappers and stuff
-vlib:load_module("cm_additions", "script/vlib/modules/camp_counselor/")
-log("HELLO")
-vlib:load_module("cm_wrappers", "script/vlib/modules/camp_counselor/")
-log("HELLO")
+---@class vlib_camp_counselor
+local Counselor = vlib:new_class("camp_counselor")
+vlib:add_module("camp_counselor", Counselor)
 
---- TODO fix this error by moving the new_manager() function into vlib_init. Also fuck you sumneko
----@class vlib_camp_counselor : manager_prototype
-local Counselor = vlib:new_manager("camp_counselor")
+--- Called on Counselor creation, default values and shit.
+function Counselor:__init()
+    self._classes = {
+        ---@type unit_class
+        UnitObj = vlib:load_module("UnitObj", go_path)(),
 
-local functionality_path = "script/vlib/modules/camp_counselor/functionality/"
+        ---@type tech_class
+        TechObj = vlib:load_module("TechObj", go_path)(),
 
----@type vlib_pr_manager
-local pr_ui = vlib:load_module("pooled_resource_ui", functionality_path)
+        ---@type vlib_pr_obj TODO swap to the custom class setup?
+        PRObj = vlib:load_module("PRObj", go_path),
+    }
 
-Counselor._filters = {}
+    
+    self._objects = {}
 
-local function is_tech(obj)
-    return string.sub(tostring(obj), 1, 7) == "TechObj"
+    for k,_ in pairs(self._classes) do
+        self._objects[k] = {}
+    end
+    -- anything else needed on creation
+
+    --- load functionality here
+    vlib:load_modules(functionality_path)
 end
 
-local function is_unit(obj)
-    return string.sub(tostring(obj), 1, 7) == "UnitObj"
+-- triggers :__init()
+Counselor()
+
+function Counselor:get_class(class_key)
+    return self._classes[class_key]
 end
 
----@return vlib_TechObj
-local function get_tech(key)
-    if not is_string(key) then return false end
+--- TODO make sure new/get obj are valid, so it doesn't break on objects[class_key][object_key] if class is invalid
+function Counselor:new_object(class_key, object_key, ...)
+    local object = self:get_class(class_key).new(object_key, ...)
 
-    return Counselor:get_obj(key, "TechObj")
+    self._objects[class_key][object_key] = object
+    return object
 end
 
----@return vlib_UnitObj
+function Counselor:get_object(class_key, object_key)
+    return self._objects[class_key][object_key]
+end
+
+function Counselor:get_objects_of_class(class_key)
+    return self._objects[class_key]
+end
+
+
+-- TODO set these all to CC
+
+---comment
+---@param key string
+---@return unit_class
 local function get_unit(key)
     if not is_string(key) then return false end
 
-    return Counselor:get_obj(key, "UnitObj")
+    return Counselor:get_object("UnitObj", key)
 end
 
-local function get_all(class_key)
-    if not is_string(class_key) then return false end
-    if not Counselor:get_class(class_key) then return false end
+---comment
+---@param key string
+---@return tech_class
+local function get_tech(key)
+    if not is_string(key) then return false end
 
-    return Counselor._objects[class_key]
+    return Counselor:get_object("TechObj", key)
 end
 
----@return table<string, vlib_TechObj>
+---comment
+---@param key any
+---@param filters any
+---@return tech_class
+local function new_tech(key, filters)
+    if not is_string(key) then return false end
+
+    return Counselor:new_object("TechObj", key, filters)
+end
+
+---comment
+---@param key any
+---@param filters any
+---@return unit_class
+local function new_unit(key, filters)
+    if not is_string(key) then return false end
+
+    return Counselor:new_object("UnitObj", key, filters)
+end
+
+---@return table<string, tech_class>
 local function get_all_techs()
-    return get_all("TechObj")
+    return Counselor:get_objects_of_class("TechObj")
 end
 
----@return table<number, vlib_TechObj>
+---@return table<string, tech_class>
+local function get_all_units()
+    return Counselor:get_objects_of_class("UnitObj")
+end
+
+local function is_tech(obj)
+    return tostring(obj):match("^TechObj")
+end
+
+local function is_unit(obj)
+    return tostring(obj):match("^UnitObj")
+end
+
+---@return table<number, tech_class>
 local function get_techs_for_faction(faction_key)
     local all = get_all_techs()
     local ret = {}
@@ -86,30 +147,11 @@ local function get_techs_for_faction(faction_key)
     return ret
 end
 
----@return table<string, vlib_UnitObj>
-local function get_all_units()
-    return get_all("UnitObj")
-end
-
----@return table<number, vlib_UnitObj>
-local function get_units_for_faction(faction_key)
-    local all = get_all_units()
-    local ret = {}
-
-    for _, unit_obj in pairs(all) do
-        if unit_obj:get_state(faction_key) then
-            ret[#ret+1] = unit_obj
-        end
-    end
-
-    return ret
-end
-
-local function get_units_for_building(building_key, faction_key)
+function Counselor:get_units_for_building(building_key, faction_key)
     local all
     local ret = {}
     if faction_key then
-        all = get_units_for_faction(faction_key)
+        all = self:get_units_for_faction(faction_key)
 
         for i = 1, #all do
             local unit_obj = all[i]
@@ -130,465 +172,27 @@ local function get_units_for_building(building_key, faction_key)
     return ret
 end
 
--- TODO handle filters! If it's a subculture, make a single obj instance for every faction in that boi.
-
-local function new_tech(key, filters)
-    if not is_string(key) then return false end
-
-    ---@type vlib_TechObj
-    local obj = Counselor:new_object(key, "TechObj")
-
-    for i = 1, #filters do
-        local faction_key = filters[i]
-        obj:new_state(faction_key)
+---@return table<number, unit_class>
+function Counselor:get_units_for_faction(faction_key)
+    if not is_string(faction_key) then
+        -- errmsg
+        return false
     end
 
-    return obj
-end
-
-local function new_unit(key, filters)
-    if not is_string(key) then return false end
-
-    ---@type vlib_UnitObj
-    local obj = Counselor:new_object(key, "UnitObj")
-
-    for i = 1, #filters do
-        local faction_key = filters[i]
-        obj:new_state(faction_key)
-    end
-
-    return obj
-end
-
----@class vlib_TechState : object_prototype
-local TechStateProto = {
-    _faction_key = "",
-
-    -- 0 is unlocked; 1 is invisible; 2 is locked w/ reason; 3 is permalocked w/ reason
-    _lock_state = 0,
-    _lock_reason = "",
-    
-    _exclusive_techs = {},
-    _units = {},
-}
-
----@class vlib_UnitState : object_prototype
-local UnitStateProto = {
-    _faction_key = "",
-
-    -- 0 is unlocked; 1 is locked w/ reason; 2 is invisible.
-    _lock_state = 0,
-    _lock_reason = "",
-}
-
----@class vlib_TechObj : object_prototype
-local TechProto = {
-    ---@type table<string, vlib_TechState>
-    _states = {},
-
-    ---@type table<number, string>
-    _child_techs = {},
-    
-    _parent_key = nil,
-}
-
----@class vlib_UnitObj : object_prototype
-local UnitProto = {
-    ---@type table<string, vlib_UnitState>
-    _states = {},
-
-    --- TODO decide if this needs to be a table?
-    ---@type string Building that this unit can be found within.
-    _building_key = "",
-
-    ---@type string The localised name of this unit, for the currently played language.
-    _localised_name = "",
-}
-
---[[
-    ====== Technology Objects ======
-    
-    This section contains all of the methods and stuff for the technology objects within the VLib.
-
-    "TechObj" is the main object for a technology. It internally tracks global things, like children of this technology, any localised text for this technology - but, mostly, it holds information about the various states of this technology.
-
-    "TechState"s are individual states of a technology, for different factions. This enables features, so faction A might have tech1 unlocked, but faction B would have tech1 locked with the reason "You have to be faction A to use this technology!" States drive the majority of this system.
-
-    There should be no reason for outside moddeurs to handle tech objects or states directly, and can make all their necessary edits from within the camp counselor, but you can use these for querying states - seeing if tech_a is locked for faction_a, for instance.
-
-    ======
---]]
-
---- TODO hook up w/ unit objs!
----@param unit_table any
----@param is_unlock any
----@param faction_key any
-function TechProto:set_unit_table(unit_table, is_unlock, faction_key)
-    local state = self:get_state(faction_key, true)
-
-    local key = is_unlock and "unlock" or "lock"
-    state._units[key] = unit_table
-end
-
-function TechProto:get_unit_table(faction_key)
-    local state = self:get_state(faction_key, true)
-
-    return state and state._units or {}
-end
-
-function TechProto:has_units(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and is_table(state._units)
-end
-
-function TechProto:set_child_techs(children, filters)
-    if not is_table(children) then
-        return errlogf("Trying to set children for technology w/ key [%s] but the child_techs arg provided [%s] is not a table!", self:get_key(), tostring(children))
-    end
-
-    for i = 1, #children do
-        local child_key = children[i]
-        local tech = new_tech(child_key, filters)
-
-        self:add_child_tech(tech)
-    end
-end
-
----@param child_tech vlib_TechObj
----@return boolean
-function TechProto:add_child_tech(child_tech)
-    if not is_tech(child_tech) then
-        return errlogf("Trying to add child tech to tech %q, but the child tech provided [%s] isn't a valid technology!", self:get_key(), tostring(child_tech))
-    end
-
-    logf("Adding tech %q as parent to %q", self:get_key(), child_tech:get_key())
-
-    self._child_techs[#self._child_techs+1] = child_tech:get_key()
-    child_tech:set_parent(self:get_key())
-end
-
-function TechProto:get_child_techs()
+    local all = get_all_units()
     local ret = {}
-    local keys = self:get_child_tech_keys()
 
-    for i = 1, #keys do
-        local tech = get_tech(keys[i])
-        ret[#ret+1] = tech
+    for _, unit_obj in pairs(all) do
+        if unit_obj:get_state(faction_key) then
+            ret[#ret+1] = unit_obj
+        end
     end
 
     return ret
 end
 
-function TechProto:get_child_tech_keys()
-    return self._child_techs
-end
-
-function TechProto:set_parent(tech_key)
-    if not is_string(tech_key) then
-        return false
-    end
-
-    self._parent_key = tech_key
-end
-
-function TechProto:set_exclusive_techs(tech_table, faction_key)
-    local state = self:get_state(faction_key, true)
-
-    local t = {}
-    for i = 1, #tech_table do
-        if tech_table[i] ~= self:get_key() then
-            t[#t+1] = tech_table[i]
-        end
-    end
-
-    state:set_exclusive_techs(t)
-end
-
-function TechProto:get_exclusive_techs(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and state:get_exclusive_techs()
-end
-
-function TechProto:add_exclusive_tech(tech_key, faction_key)
-    local state = self:get_state(faction_key, true)
-
-    return state and state:add_exclusive_tech(tech_key)
-end
-
--- TODO query if there's already a state, also errmsg's
-function TechProto:new_state(faction_key)
-    if self._states[faction_key] then return self._states[faction_key] end
-
-    local obj = TechStateProto:new(faction_key)
-    obj._faction_key = faction_key
-
-    self._states[faction_key] = obj
-    return obj
-end
-
----@return vlib_TechState
-function TechProto:get_state(faction_key, is_set)
-    local state = self._states[faction_key]
-    if not state and is_set then
-        state = self:new_state(faction_key)
-    end
-
-    return state
-end
-
-function TechProto:has_parent()
-    return is_string(self._parent_key)
-end
-
-function TechProto:get_parent()
-    return is_string(self._parent_key) and get_tech(self._parent_key)
-end
-
-function TechProto:has_children()
-    return is_table(self._child_techs) and #self._child_techs >= 1
-end
-
-function TechProto:is_exclusive_with_tech(tech_key, faction_key)
-    local state = self:get_state(faction_key)
-
-    if not state then return false end
-
-    local exclusives = state:get_exclusive_techs()
-    for i = 1, #exclusives do
-        if exclusives[i] == tech_key then
-            return true
-        end
-    end
-
-    return false
-end
-
-function TechProto:has_exclusive_techs(faction_key)
-    local state = self:get_state(faction_key)
-    return state and is_table(state._exclusive_techs) and #state._exclusive_techs >= 1
-end
-
-function TechStateProto:set_exclusive_techs(tech_table)
-    self._exclusive_techs = tech_table
-end
-
-function TechStateProto:get_exclusive_techs()
-    return self._exclusive_techs
-end
-
-function TechStateProto:add_exclusive_tech(tech_key)
-    self._exclusive_techs[#self._exclusive_techs+1] = tech_key
-end
-
-function TechStateProto:set_lock_state(lock_state, lock_reason)
-    -- TODO err check?
-
-    self._lock_state = lock_state
-    self._lock_reason = lock_reason
-end
-
-function TechStateProto:get_lock_state()
-    return self._lock_state
-end
-
-function TechStateProto:get_lock_reason()
-    return self._lock_reason
-end
-
--- TODO have a version where this can handle a table of faction keys?
-function TechProto:set_lock_state(lock_state, lock_reason, faction_key)
-    local state = self:get_state(faction_key, true)
-    state:set_lock_state(lock_state, lock_reason)
-end
-
-function TechProto:get_lock_state(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and state:get_lock_state() or 0
-end
-
-function TechProto:get_lock_reason(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and state:get_lock_reason() or ""
-end
-
-function TechProto:is_perma_locked(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and state:get_lock_state() == 3
-end
-
-function TechProto:is_disabled(faction_key)
-    local state = self:get_state(faction_key)
-
-    return state and state:get_lock_state() == 1
-end
-
---[[ TODO fill dis out
-    ====== Unit Objects ======
-
-
-
-    ======
---]]
-
----@return vlib_UnitState
-function UnitProto:new_state(faction_key)
-    if self._states[faction_key] then 
-        logf("Wanted to create a new state for unit %q, for faction %s, but a state already exists!", self:get_key(), faction_key)
-        return self._states[faction_key] 
-    end
-
-    local obj = UnitStateProto:new(faction_key)
-    obj._faction_key = faction_key
-
-    self._states[faction_key] = obj
-    return obj
-end
-
----comment
----@param faction_key any
----@return vlib_UnitState
-function UnitProto:get_state(faction_key, is_set)
-    local state = self._states[faction_key]
-
-    if not state and is_set then
-        state = self:new_state(faction_key)
-    end
-
-    return state
-end
-
-function UnitProto:set_lock_state(lock_state, lock_reason, faction_key)
-    local state = self:get_state(faction_key, true)
-
-    logf("Setting unit key [%q] to state [%s] w/ reason [%s] for faction %q", self:get_key(), lock_state, tostring(lock_reason), faction_key)
-
-    return state and state:set_lock_state(lock_state, lock_reason)
-end
-
-function UnitProto:get_lock_state(faction_key)
-    local state = self:get_state(faction_key)
-
-    if not state then logf("In unit w/ key %q, can't find any state for faction %s???", self:get_key(), faction_key) end
-
-    return state and state:get_lock_state()
-end
-
-function UnitProto:get_lock_reason(faction_key)
-    local state = self:get_state(faction_key)
-    
-    return state and state:get_lock_reason()
-end
-
-function UnitProto:set_building_key(building_key)
-    self._building_key = building_key
-
-    -- TODO?
-    -- if not unit_manager.building_key_to_units[building_key] then
-	-- 	unit_manager.building_key_to_units[building_key] = {self}
-	-- else
-	-- 	unit_manager.building_key_to_units[building_key][#unit_manager.building_key_to_units[building_key]+1] = self
-	-- end
-end
-
-function UnitProto:get_building_key()
-    return self._building_key
-end
-
--- TODO, needed for the building_key_to_units thingy?
--- function unit_obj:instantiate(o)
--- 	setmetatable(o, {__index = unit_obj})
--- 	-- TODO make it a bit prettier?
--- 	-- This is entirely needed so unit manager gets update with building_key_to_units. (Save the building key to units table stuff?)
--- 	o:set_building_key(o._building_key)
-
--- 	logf("Instantiating unit obj %q. Building key %q", o:get_key(), tostring(o:get_building_key()))
--- end
-
-function UnitProto:set_localised_name(name)
-    if self:get_localised_name() ~= "" then return end
-    if not is_string(name) then return end
-
-    self._localised_name = name
-end
-
-function UnitProto:get_localised_name()
-	return self._localised_name
-end
-
-function UnitStateProto:set_lock_state(lock_state, lock_reason)
-    -- TODO err check?
-    logf("Doing UnitState lock state change!")
-
-    self._lock_state = lock_state
-    self._lock_reason = lock_reason
-end
-
-function UnitStateProto:get_lock_state()
-    return self._lock_state
-end
-
-function UnitStateProto:get_lock_reason()
-    return self._lock_reason
-end
-
--- TODO, an individual STATE object, for within a tech. This will go in a tech._states[faction_key].
--- A TechState should hold whatever individual state stuff exists therein; it should hold query methods and what not.
-
--- Add everything to the Counselor!
----@type vlib_TechState
-TechStateProto = Counselor:new_class("TechState", TechStateProto)
--- vlib._prototypes.CLASS.new("TechState", TechStateProto)
-
--- Uh, ditto on UnitState, lmao.
----@type vlib_UnitState
-UnitStateProto = Counselor:new_class("UnitState", UnitStateProto)
-
----@type vlib_TechObj
-TechProto = Counselor:new_class("TechObj", TechProto)
-
----@type vlib_UnitObj
-UnitProto = Counselor:new_class("UnitObj", UnitProto)
-
----comment
----@param o vlib_UnitObj
----@return table
-function UnitProto:instantiate(o)
-    logf("Instantiating object w/ key %q of type %s", o._key, self._type)
-
-    setmetatable(o, {
-        __index = self._prototype,
-        __tostring = function(t) return t._type .. " [" .. t._key .. "]" end,
-    })
-
-    for key, state in pairs(o._states) do
-        o._states[key] = UnitStateProto:instantiate(state)
-    end
-    
-    return o
-end
-
----@param o vlib_TechObj
-function TechProto:instantiate(o)
-    logf("Instantiating object w/ key %q of type %s", o._key, self._type)
-
-    setmetatable(o, {
-        __index = self._prototype,
-        __tostring = function(t) return t._type .. " [" .. t._key .. "]" end,
-    })
-
-    for key, state in pairs(o._states) do
-        o._states[key] = TechStateProto:instantiate(state)
-    end
-    
-    return o
-end
-
-
+--- TODO make Filter its own "object" that can be created and used on its own
+--- ie., local filter = Counselor:new_filter({faction="faction_key"}) or whatever, and then you can keep that filter with its MT and all and use it for multiple functions at once
 --- TODO Handles a table of any filters, and returns a single table with a list of faction keys to use as filters.
 function Counselor:handle_filters(filters)
     if is_string(filters) then filters = {faction = filters} end
@@ -675,7 +279,7 @@ end
 
 ---comment
 ---@param faction_obj userdata
----@return table<number, vlib_TechObj>
+---@return table<number, tech_class>
 function Counselor:get_active_techs_for_faction(faction_obj)
     local faction_key = faction_obj:name()
 
@@ -695,7 +299,7 @@ end
 ---comment
 ---@param tech_keys table<number, string>
 ---@param filters any
----@return table<number, vlib_TechObj>
+---@return table<number, tech_class>
 function Counselor:new_techs_from_table(tech_keys, filters)
     local techs = {}
     
@@ -716,7 +320,7 @@ end
 ---comment
 ---@param unit_keys table<number, string>
 ---@param filters any
----@return table<number, vlib_UnitObj>
+---@return table<number, unit_class>
 function Counselor:new_units_from_table(unit_keys, filters)
     local units = {}
     
@@ -732,974 +336,6 @@ function Counselor:new_units_from_table(unit_keys, filters)
     end
 
     return units
-end
-
---[[
-
-    ====== UI Stuff ======
-    This section has all of my UI-specific functions!
-
---]]
-
----@class vlib_TechUI
-local tech_ui = {
-    _faction_key = nil,
-    _slot_parent = nil,
-    _currently_hovered = nil,
-
-    ---@type table<string, vlib_TechObj>
-    _researched_or_researching = {},
-
-    ---@type table<string, table>
-    _techs = {},
-}
-
----@param tech_obj vlib_TechObj
----@param is_lock boolean
----@param affect_children boolean
----@return boolean
-function tech_ui:set_tech_node_state(tech_obj, is_lock, affect_children)
-    if not is_boolean(is_lock) then is_lock = true end
-    if not is_boolean(affect_children) then affect_children = true end
-
-    -- prevent unlocking any perma-locked!
-    if tech_obj:is_perma_locked() then is_lock = true end
-    
-    local tech_key = tech_obj:get_key()
-
-    logf("Setting %s for tech %q", tostring(is_lock and "locked" or "unlocked"), tech_key)
-
-    local uic = self:get_uic_with_key(tech_key)
-    if not is_uicomponent(uic) then
-        errlogf("Can't find a tech UIC w/ key %q", tech_key)
-        return false
-    end
-
-    if uic:CurrentState() == "researching" then return logf("This tech is being researched, can't do stuff!") end
-    if is_lock and uic:CurrentState() == "locked_rank" then return logf("This tech is already locked visually!") end
-
-    local time = UIComponent(uic:Find("dy_time"))
-    local icons = UIComponent(uic:Find("icon_list"))
-
-    -- local id = uic:Id()
-    if is_lock == true then
-        self._techs[tech_key] = {
-            current_state = "locked_rank",
-            previous_states = {uic:CurrentState(), time:Visible(), icons:Visible()},
-            is_removed = nil,
-        }
-
-        uic:SetState("locked_rank")
-        time:SetVisible(false)
-        icons:SetVisible(false)
-    else
-        local previous_states = self._techs[tech_key].previous_states
-        self._techs[tech_key] = nil
-
-        if previous_states[1] then
-            local state = previous_states[1]
-            local t_visible = previous_states[2]
-            local i_visible = previous_states[3]
-
-            logf("Returning tech w/ key %q to state [%s]", tech_key, state)
-    
-            uic:SetState(state)
-            time:SetVisible(t_visible)
-            icons:SetVisible(i_visible)
-        end
-    end
-
-    if affect_children then
-        local children = tech_obj:get_child_techs()
-        for i = 1, #children do
-            logf("Setting child of %q with key %q as locked", tech_key, children[i]:get_key())
-            self:set_tech_node_state(children[i], is_lock, false)
-        end
-    end
-end
-
-function tech_ui:get_uic_with_key(key)
-    if not is_string(key) then return false end
-
-    local slot = self._slot_parent
-    if slot then
-        return UIComponent(slot:Find(key)) or false
-    end
-end
-
-function tech_ui:remove(tech_key)
-    local uic = self:get_uic_with_key(tech_key)
-
-    if uic then
-       uic:SetVisible(false)
-
-       self._techs[tech_key] = {is_removed = true}
-    end
-end
-
--- TODO if a tech is being researched, and then you click on another, both show as visually researching. Gotta fix!!!!!!!!!!!!!
--- TODO figure out how to refresh the techs after a tech node is pressed, so the locks and tooltips get re-applied
--- do the check on all exclusive techs and their states and shit
-function tech_ui:refresh()
-    local faction_obj = cm:get_local_faction(true)
-
-    -- first, check the panel for any nodes that SHOULD be locked on the screen :)
-
-    local active_techs = Counselor:get_active_techs_for_faction(faction_obj)
-
-    for i = 1, #active_techs do
-        -- local active_tech_key = active_tech_keys[i]
-        local active_tech = active_techs[i]
-        local active_tech_key = active_tech:get_key()
-
-        if not active_tech then
-            logf("Can't find any tech with key %q", tostring(active_tech_key))
-        else
-            if active_tech:is_disabled(self._faction_key) and not self._techs[active_tech_key].is_removed then
-                self:remove(active_tech_key)
-            end
-    
-            if faction_obj:has_technology(active_tech_key) then
-                self._researched_or_researching[active_tech_key] = active_tech
-            end
-        end
-    end
-
-    for tech_key, tech in pairs(self._researched_or_researching) do
-        local exclusives = tech:get_exclusive_techs()
-        for j = 1, #exclusives do
-            local exclusive_tech_key = exclusives[j]
-            local exclusive_tech = get_tech(exclusive_tech_key)
-
-            if not exclusive_tech:is_perma_locked() then
-                local str = effect.get_localised_string("vlib_technology_locked")
-                str = str .. "\n - " .. effect.get_localised_string("technologies_onscreen_name_"..tech_key)
-                str = str .. effect.get_localised_string("vlib_colour_end")
-
-                -- TODO, the UI shouldn't change state, right?
-                exclusive_tech:set_lock_state(3, str, self._faction_key)
-                -- exclusive_tech:set_perma_locked(true, str)
-            end
-
-            self:set_tech_node_state(exclusive_tech, true, true)
-        end
-    end
-end
-
-function tech_ui:open()
-    local faction_key = cm:get_local_faction_name(true)
-
-    self._faction_key = faction_key
-
-    self._slot_parent = find_uicomponent("technology_panel", "listview", "list_clip", "list_box", "emp_civ_reworkd", "tree_parent", "slot_parent")
-
-    vlib:repeat_callback(function() self:refresh() end, 25, "vlib_tech_ui_refresh")
-
-    -- second, do a listener for hovering over any tech nodes that are in the list of techs here, and then lock the exclusive tech stuffs
-
-    -- TODO don't do the locks if the hovered tech is already researched!
-    -- TODO don't do anything if the hovered tech is perma locked!
-
-    core:remove_listener("VLIB_TechHovered")
-    core:add_listener(
-        "VLIB_TechHovered",
-        "ComponentMouseOn",
-        true,
-        function(context)
-            self:set_tech_as_hovered(context.string)
-        end,
-        true
-    )
-end
-
-function tech_ui:close()
-    core:remove_listener("VLIB_TechHovered")
-
-    vlib:remove_callback("vlib_tech_ui_refresh")
-
-    self._researched_or_researching = {}
-    self._currently_hovered = nil
-    self._slot_parent = nil
-    self._techs = {}
-end
-
----comment
----@param tech_key string
-function tech_ui:set_tech_as_hovered(tech_key)
-    local ok, er = pcall(function()
-    local faction_obj = cm:get_local_faction(true)
-
-    local tech = get_tech(tech_key)
-
-    if self._currently_hovered and self._currently_hovered ~= tech_key or not self._currently_hovered then
-        local affected = self._techs
-        logf("Removing any currently-affected tech locks, visually.")
-
-        for key, status in pairs(affected) do
-            local affected_tech = get_tech(key)
-            logf("Removing tech lock for %q", key)
-            self:set_tech_node_state(affected_tech, false, false)
-        end
-    end
-    
-    if not tech then
-        self._currently_hovered = nil
-        return
-    end
-
-    logf("Setting %q as hovered!", tech_key)
-    self._currently_hovered = tech_key
-
-    -- currently hovered tech is locked somehow; set its tooltip but don't mess with any other techs.
-    if tech:get_lock_state(self._faction_key) >= 2 then
-        vlib:callback(function()
-            local tt = find_uicomponent("TechTooltipPopup")
-            if tt then
-                local list_parent = UIComponent(tt:Find("list_parent"))
-
-                local add = UIComponent(list_parent:Find("additional_info"))
-                add:SetVisible(true)
-
-                local str = tech:get_lock_reason(self._faction_key)
-
-                add:SetStateText(str)
-            end
-        end, 5)
-
-        return
-    end
-
-    local has_tech = faction_obj:has_technology(tech_key)
-
-    -- TODO clean up the exclusives text!
-    vlib:callback(function()
-        local tt = find_uicomponent("TechTooltipPopup")
-        if tt then
-            local list_parent = UIComponent(tt:Find("list_parent"))
-
-            local add = UIComponent(list_parent:Find("additional_info"))
-            add:SetVisible(true)
-
-            local str = ""
-
-            local exclusives = tech:get_exclusive_techs(self._faction_key)
-
-            ---@param mah_str string
-            ---@return string
-            local function add_linebreak(mah_str)
-                if mah_str == "" then return "\n" end
-                if not mah_str:ends_with("\n\n") then
-                    if mah_str:ends_with("\n") then
-                        mah_str = mah_str .. "\n"
-                    else
-                        mah_str = mah_str .. "\n\n"
-                    end
-                end
-
-                return mah_str
-            end
-
-            if #exclusives >= 1 then
-                str = add_linebreak(str)
-                if has_tech then
-                    str = str .. effect.get_localised_string("vlib_technology_locking")
-                else
-                    str = str .. effect.get_localised_string("vlib_technology_will_lock")
-                end
-
-                if #exclusives > 1 then
-                    str = string.format(str, effect.get_localised_string("vlib_lock"), effect.get_localised_string("vlib_technologies"))
-                else 
-                    str = string.format(str, effect.get_localised_string("vlib_lock"), effect.get_localised_string("vlib_technology"))
-                end
-    
-                -- str = str .. effect.get_localised_string("vlib_colour_red")
-                local colour = effect.get_localised_string("vlib_colour_red")
-                local colour_end = effect.get_localised_string("vlib_colour_end")
-    
-                for i = 1, #exclusives do
-                    local tech_text = effect.get_localised_string("technologies_onscreen_name_" .. exclusives[i])
-                    if tech_text == "" then tech_text = "TECH TEXT FOR [".. exclusives[i] .."] NOT FOUND" end
-                    str = str .. "\n    - " .. colour .. tech_text .. colour_end
-                end
-
-                -- str = str .. effect.get_localised_string("vlib_colour_end")
-            end
-
-            local unit_table = tech:get_unit_table(self._faction_key)
-            if unit_table.unlock then
-                str = add_linebreak(str)
-
-                if has_tech then
-                    str = str .. effect.get_localised_string("vlib_technology_units_locking")
-                else
-                    str = str .. effect.get_localised_string("vlib_technology_units_will_lock")
-                end
-
-                local lock_str = effect.get_localised_string("vlib_unlock")
-
-                local units = unit_table.unlock
-
-                if #units > 1 then
-                    str = string.format(str, lock_str, effect.get_localised_string("vlib_units"))
-                else
-                    str = string.format(str, lock_str, effect.get_localised_string("vlib_unit"))
-                end
-
-                local colour = effect.get_localised_string("vlib_colour_green")
-                local colour_end = effect.get_localised_string("vlib_colour_end")
-
-                for i = 1, #units do
-                    local unit_text = effect.get_localised_string("land_units_onscreen_name_"..units[i])
-                    if unit_text == "" then unit_text = "UNIT TEXT FOR ["..units[i].."] NOT FOUND!" end
-                    str = str .. "\n\t  - " .. colour .. unit_text .. colour_end
-                end
-            end
-
-            if unit_table.lock then
-                str = add_linebreak(str)
-
-                if has_tech then
-                    str = str .. effect.get_localised_string("vlib_technology_units_locking")
-                else
-                    str = str .. effect.get_localised_string("vlib_technology_units_will_lock")
-                end
-
-                local lock_str =  effect.get_localised_string("vlib_lock")
-
-                local units = unit_table.lock
-
-                if #units > 1 then
-                    str = string.format(str, lock_str, effect.get_localised_string("vlib_units"))
-                else
-                    str = string.format(str, lock_str, effect.get_localised_string("vlib_unit"))
-                end
-
-                local colour = effect.get_localised_string("vlib_colour_red")
-                local colour_end = effect.get_localised_string("vlib_colour_end")
-
-                for i = 1, #units do
-                    local unit_text = effect.get_localised_string("land_units_onscreen_name_"..units[i])
-                    if unit_text == "" then unit_text = "UNIT TEXT FOR ["..units[i].."] NOT FOUND!" end
-                    str = str .. "\n\t  - " .. colour .. unit_text .. colour_end
-                end
-            end
-
-            add:SetStateText(str)
-        end
-    end, 5)
-
-    -- We don't need to do anything with the below because they're already locked :)
-    -- if has_tech then return end
-    -- if tech:get_uic():CurrentState() == "researching" then return end
-
-    logf("Disabling techs visually that are excluded by %q", tech_key)
-
-    local exclusive_techs = tech:get_exclusive_techs(self._faction_key)
-    for i = 1, #exclusive_techs do
-        local exclusive_tech_key = exclusive_techs[i]
-        logf("Hiding tech with key %q", exclusive_tech_key)
-
-        local exclusive_tech = get_tech(exclusive_tech_key)
-        self:set_tech_node_state(exclusive_tech, true, true)
-    end end) if not ok then logf(er) end
-end
-
----@class vlib_UnitUI
-local unit_ui = {
-    ---@type string The currently hovered upon building in a building browser!
-    _building_hovered = nil,
-
-}
-
-function unit_ui:get_cp()
-	local construction_popups = {"construction_popup", "second_construction_popup"}
-	for i = 1, #construction_popups do
-		local cp = find_uicomponent(construction_popups[i])
-		if cp then
-			return cp
-		end
-	end
-
-    return errlogf("Trying to get the Construction Popup within the Unit UI, but can't find any!")
-end
-
-function unit_ui:get_bip(is_settlement_panel)
-	local bip
-
-	-- if an arg is passed, just test that one BIP
-	if is_boolean(is_settlement_panel) then
-		if is_settlement_panel == true then
-			return find_uicomponent("layout", "info_panel_holder", "secondary_info_panel_holder", "info_panel_background", "BuildingInfoPopup")
-		else
-			return find_uicomponent("building_browser", "info_panel_background", "BuildingInfoPopup")
-		end
-	end
-
-	-- no arg is passed; we don't know which direction the BIP is coming from, so test both!
-	bip = find_uicomponent("layout", "info_panel_holder", "secondary_info_panel_holder", "info_panel_background", "BuildingInfoPopup")
-
-	if not bip then
-		bip = find_uicomponent("building_browser", "info_panel_background", "BuildingInfoPopup")
-	end
-
-	return bip
-end
-
-function unit_ui:edit_building_info_panel(bip_uic)
-	if is_nil(bip_uic) then bip_uic = self:get_bip() end
-	if not bip_uic then return end
-	if not self._building_hovered then return end
-
-	local building_key = self._building_hovered
-
-	local faction_key = cm:get_local_faction_name(true)
-    local units = get_units_for_building(building_key, faction_key)
-
-	logf("Hovering over building %q that has unit key stuff!", building_key)
-
-	local unit_names = {}
-	for i = 1, #units do
-		local unit = units[i]
-
-        local name = unit:get_localised_name()
-        local lock_state = unit:get_lock_state(faction_key)
-
-		-- only if they're hidden entirely, not locked with visual stuff
-		if lock_state == 1 then
-			unit_names[name] = 1
-        elseif lock_state >= 2 then
-            unit_names[name] = 2
-		end
-	end
-
-	logf("Checking BIP for effects and shit")
-
-	local entry_parent = find_uicomponent(bip_uic, "effects_list", "building_info_recruitment_effects", "entry_parent")
-
-	if not entry_parent then return end
-
-	local all = entry_parent:ChildCount()
-	local total = 0
-
-	for i = 0, all-1 do
-		local child = UIComponent(entry_parent:Find(i))
-		local unit_name_uic = UIComponent(child:Find("unit_name"))
-		local unit_name_text = unit_name_uic:GetStateText()
-
-		logf("Seeing if %q is a unit to hide", unit_name_text)
-
-        local state = unit_names[unit_name_text]
-        if state then
-            if state == 1 then
-                child:SetVisible(false)
-				total = total + 1
-            elseif state == 2 then
-                unit_name_text = "[[col:red]]"..unit_name_text.."[[/col]]"
-                unit_name_uic:SetStateText(unit_name_text)
-            end
-        end
-	end
-
-	if total == all then
-		UIComponent(entry_parent:Parent()):SetVisible(false)
-	end
-end
-
---- Handles the "slot parent" component, which is used within the Building Browser and within Construction Popups. Goes through all of the building slots, checks their unit lists, and handles shit appropriately.
----@param slot_parent userdata
-function unit_ui:handle_slot_parent(slot_parent)
-	logf("Handling the slot parent component! Locking unit cards visibly and shtuff.")
-	-- local slot_parent
-
-	if not is_uicomponent(slot_parent) then
-		return logf("Trying to handle the slot parent shtuff, but the slot parent provided wasn't valid!")
-	end
-
-    local faction_key = cm:get_local_faction_name(true)
-
-	-- loop through all of the "slots" within the building tree. Order here goes Slot Parent -> Slot # -> Building UIC
-	logf("Pre-loop, num children is %d", slot_parent:ChildCount())
-	for i = 0, slot_parent:ChildCount() -1 do
-		-- logf("Getting slot address, child num %d", i)
-		logf("Getting slot UIC at child index %d", i)
-		local slot = UIComponent(slot_parent:Find(i))
-        if not is_uicomponent(slot) then logf("No UIC found?") end
-
-        if is_uicomponent(slot) and slot:ChildCount() > 0 and slot:Find(0) then
-            logf("Retrieved slot w/ key %s", slot:Id())
-            logf("Getting building UIC")
-            local building_uic = UIComponent(slot:Find(0))
-            logf("Gotten building w/ key %s", building_uic:Id())
-
-            -- holder for floating unit cards!
-            local unit_list_uic = UIComponent(building_uic:Find("units_list"))
-
-            logf("Gotten units list")
-
-            -- loop through all floating unit cards
-            for j = 0, unit_list_uic:ChildCount() -1 do
-                logf("Looping through unit list, at index %d", j)
-                local unit_entry = UIComponent(unit_list_uic:Find(j))
-                logf("Unit entry founded")
-                local unit_key = unit_entry:Id()
-                logf("Unit key is %q", unit_key)
-
-                -- ignore template unit cards
-                if unit_key ~= "unit_entry" and unit_key ~= "agent_entry" then
-                    -- check if there's a unit in the manager with this key!
-                    local unit = get_unit(unit_key)
-
-                    if unit then
-                        -- save the localised name for other parts of the manager.
-                        unit:set_localised_name(unit_entry:GetTooltipText())
-                        unit:set_building_key(building_uic:Id())
-
-                        -- if this unit is locked, hide it
-                        local lock_state = unit:get_lock_state(faction_key)
-                        if lock_state == 1 then
-                            -- hide it entirely from the UI
-                            unit_entry:SetVisible(false)
-                        elseif lock_state >= 2 then
-                            -- set locked, visually, and set the tooltip
-                            local tt = unit_entry:GetTooltipText()
-                            local lock_reason = unit:get_lock_reason(faction_key)
-                            if not tt:find(lock_reason) then
-                                tt = tt .. "\n\n [[col:red]]" .. lock_reason .. "[[/col]]"
-
-                                unit_entry:SetState("active_red")
-                                unit_entry:SetTooltipText(tt, true)
-                            end
-                        end
-                    end
-                end
-            end
-		end
-	end
-end
-
---- TODO this has to be removed w/ a panel closed listener!
-function unit_ui:building_hover_listener(is_settlement_panel)
-	local parent
-	
-	-- they have a different structure based on the spot!
-	if is_settlement_panel then
-		parent = find_uicomponent("settlement_panel", "main_settlement_panel")
-	else
-		parent = find_uicomponent("building_browser", "main_settlement_panel")
-	end
-	
-	-- no main settlement panel found; err!
-	if not parent then
-		return errlogf("In unit_ui:building_hover_listener(), but there's no main_settlement_panel found!")
-	end
-
-	logf("Starting the building hover listener!")
-
-	-- TODO listen for a hover over a construction slot within a settlement panel
-		-- there's a "Construction_Slot" UIC type that can exist, only within settlement_panel->main_settlement_panel
-		-- within that, a construction_popup triggers with each building set UIC within. once you hover over a building set UIC, a second_construction_popup triggers
-		-- within THAT, the second_cp, we need to trigger the handle_slot_parent function again!
-
-
-	--[ui] <531.5s>   path from root:		root > settlement_panel > main_settlement_panel > capital > settlement_capital > building_slot_3 > Slot2_Construction_Site > frame_expand_slot > button_expand_slot
-		-- settlement_capital
-		-- player
-		-- button_expand_slot
-		-- hover
-
-	-- Listen for a hover over a "construction slot" that's available within the UI, to adjust the available buildings that popup within the construction dialogs.
-    local is_hovered = false
-	core:remove_listener("VLIB_ConstructionHovered")
-	core:add_listener(
-		"VLIB_ConstructionHovered",
-		"ComponentMouseOn",
-		function(context)
-			local uic = UIComponent(context.component)
-			if not uicomponent_descended_from(uic, "main_settlement_panel") then return false end
-
-			-- Make sure it's a button expand slot, and make sure it's being hovered (otherwise, it's another faction's/it's locked/etc)
-            logf("Hovering over UIC in main settlement panel w/ key %q", context.string)
-			return context.string == "button_expand_slot" and uic:CurrentState() == "hover" and is_hovered == false
-		end,
-		function(context)
-            logf("Hovering upon an expand slot, checking for Second Construction Popup!")
-			-- while this button is hovered, we're gonna do a repeated check!
-			local handled = false
-            is_hovered = true
-
-			vlib:repeat_callback(
-				function()
-
-                    logf("Checking for SCP repeat call!")
-
-					-- first, test if the construction_popup is on screen. If it isn't, we've moved on!
-					local cp = find_uicomponent("construction_popup")
-					if not cp or cp and not cp:Visible() then
-                        logf("No Construction Popup is found; aborting the SCP check!")
-                        is_hovered = false
-						return vlib:remove_callback("VLIB_ConstructionHovered")
-                    end
-
-					-- grab the "second_construction_popup", if there's one. this is the panel with all of the building icons to construct!
-					local scp = find_uicomponent("second_construction_popup")
-					if not scp then
-						handled = false
-						return
-					end
-
-					logf("At SCP, handled is: "..tostring(handled))
-
-					-- if not handled then
-						local slot_parent = find_uicomponent(scp, "list_holder", "building_tree", "slot_parent")
-
-                        if is_uicomponent(slot_parent) and slot_parent:Visible() and slot_parent:ChildCount() > 0 then
-    						self:handle_slot_parent(slot_parent)
-                            handled = true
-                        end
-					-- end
-				end,
-				10, -- every ms to check
-				"VLIB_ConstructionHovered"
-			)
-		end,
-		true
-	)
-
-
-	core:remove_listener("VLIB_BuildingHovered")
-	core:add_listener(
-		"VLIB_BuildingHovered",
-		"ComponentMouseOn",
-		function(context)
-			local uic = UIComponent(context.component)
-			local p = UIComponent(uic:Parent())
-
-			return 
-                (string.find(p:Id(), "building_slot_") and 
-                uicomponent_descended_from(uic, "main_settlement_panel")) or 
-                uicomponent_descended_from(uic, "slot_parent")
-		end,
-		function(context)
-			local uic = UIComponent(context.component)
-			self._building_hovered = context.string
-
-			logf("Hovered over building w/ key %q", context.string)
-
-			local ok, er = pcall(function()
-			
-			vlib:callback(
-				function()
-					logf("trying to get the BIP!")
-					local bip = self:get_bip(is_settlement_panel)
-					if not bip or not bip:Visible() then return end
-
-					if not uicomponent_descended_from(uic, "construction_popup") then
-						local construction_popup = self:get_cp()
-						if not construction_popup then return end
-						if not self._building_hovered then return end
-					
-						local slot_parent = find_uicomponent(construction_popup, "list_holder", "building_tree", "slot_parent")
-						self:handle_slot_parent(slot_parent)
-					end
-
-					self:edit_building_info_panel(bip)
-				end,
-				5,
-				"VLIB_BuildingHovered"
-			) end) if not ok then errlogf(er) end
-		end,
-		true
-	)
-end
-
---- Hide/remove all of the units in the recruitment pool that should be removed!
-function unit_ui:open_recruitment_panel()
-	logf("Hiding units from recruitment pool!")
-
-	local ok, er = pcall(function()
-	local recruitment_listbox = find_uicomponent("units_panel", "main_units_panel", "recruitment_docker", "recruitment_options", "recruitment_listbox")
-
-	local faction_key = cm:get_local_faction_name(true)
-    local units = get_units_for_faction(faction_key)
-
-	if units and #units >= 1 then
-		for _, intermediate_id in ipairs({"global", "local1", "local2"}) do
-			local intermediate_parent = find_uicomponent(recruitment_listbox, intermediate_id)
-			if intermediate_parent then
-				for i = 1, #units do
-                    local unit = units[i]
-					local unit_key = unit:get_key()
-                    logf("Checking %s within the recruitment panel", unit_key)
-					local unit_uic = find_uicomponent(intermediate_parent, "unit_list", "listview", "list_clip", "list_box", unit_key.."_recruitable")
-					if unit_uic then
-                        local lock_state = unit:get_lock_state(faction_key)
-                        logf("Lock state for unit [%s] in faction %q is [%s]", unit_key, faction_key, tostring(lock_state))
-						if lock_state == 1 then
-                            logf("%q is disabled, setting invisible!", unit_key)
-							unit_uic:SetVisible(false)
-						elseif lock_state >= 2 then
-                            logf("%q is locked, setting visible w/ special tooltip.", unit_key)
-							-- get rid of a silly white square!
-							local lock = find_uicomponent(unit_uic, "disabled_script")
-							lock:SetVisible(false)
-
-							-- change the unit icon state to "locked", which shows that padlock over the unit card.
-							local icon = find_uicomponent(unit_uic, "unit_icon")
-							icon:SetState("locked")
-
-							-- grab the existing tooltip, to edit.
-							local tt = unit_uic:GetTooltipText()
-							
-							-- we're grabbing the `[[col:red]]Cannot recruit unit.[[/col]]` bit and replacing it on our own.
-							local str = effect.get_localised_string("random_localisation_strings_string_StratHudbutton_Cannot_Recruit_Unit0")
-
-							-- get rid of the col bits. the % are needed because string.gsub treats [ as a special character, so these are being "escaped"
-							str = string.gsub(str, "%[%[col:red]]", "")
-							str = string.gsub(str, "%[%[/col]]", "")
-
-							-- this replaces the remaining bit, "Cannot recruit unit.", with whatever the provided lock reason is.
-							local lock_reason = unit:get_lock_reason(faction_key)
-							tt = string.gsub(tt, str, lock_reason, 1)
-
-							-- cut off everything AFTER the lock reason. vanilla has trailing \n for no raisin.
-							local _,y = string.find(tt, lock_reason)
-							tt = string.sub(tt, 1, y)
-
-							-- replace the tooltip!
-							unit_uic:SetTooltipText(tt, true)
-						end
-					end
-				end
-			end
-		end
-	end
-end) if not ok then errlogf(er) end
-end
-
-function unit_ui:open_building_browser()
-	local building_browser = find_uicomponent("building_browser")
-	if building_browser then
-		local slot_parent = find_uicomponent(building_browser, "listview", "list_clip", "list_box", "building_tree", "slot_parent")
-		self:handle_slot_parent(slot_parent)
-	end
-
-	self:building_hover_listener(false)
-end
-
-function unit_ui:open_settlement_panel()
-	self:building_hover_listener(true)
-end
-
---- TODO check if there needs to be any deets from unit_ui cleared out!
-function unit_ui:close_building_browser()
-    core:remove_listener("VLIB_ConstructionHovered")
-    core:remove_listener("VLIB_BuildingHovered")
-end
-
-function unit_ui:close_settlement_panel()
-    core:remove_listener("VLIB_ConstructionHovered")
-    core:remove_listener("VLIB_BuildingHovered")
-end
-
-function unit_ui:handle_panel(panel_name, is_open)
-    local name_to_func = {
-        building_browser = self.open_building_browser,
-        settlement_panel = self.open_settlement_panel,
-
-        units_recruitment = self.open_recruitment_panel,
-        mercenary_recruitment = self.open_recruitment_panel,
-    }
-
-    if not is_open then
-        name_to_func = {
-            building_browser = self.close_building_browser,
-            settlement_panel = self.close_settlement_panel,
-        }
-    end
-
-    local f = name_to_func[panel_name]
-    if not f then return end
-
-    return f(self) and true
-end
-
-local valid_panels_to_open = {
-    --- Tech!
-    technology_panel = true,
-
-    -- Unit shit!
-    units_recruitment = true,
-    mercenary_recruitment = true,
-    building_browser = true,
-    settlement_panel = true,
-}
-
-local valid_panels_to_close = {
-    --- Tech!
-    technology_panel = true,
-
-    building_browser = true,
-    settlement_panel = true,
-}
-
-local function handle_panel(panel_name, is_open)
-    logf("Handling panel %s that was "..tostring(is_open and "opened" or "closed"), panel_name)
-
-    local ok, er = pcall(function()
-    if panel_name == "technology_panel" then
-        if is_open then 
-            tech_ui:open()
-        else
-            tech_ui:close()
-        end
-    end
-
-    local unit_handled = unit_ui:handle_panel(panel_name, is_open)
-
-    -- for any other sections that might want to handle it!
-    if not unit_handled then
-        
-    end
-end) if not ok then errlogf(er) end
-end
-
---[[ 
-
-    ====== Listeners ======
-
-    For cleanliness's sake, this section holds all of my top-level listeners!
-
---]]
-
-local function init_listeners()
-
-    -- TODO temp disbable
-    -- core:add_listener(
-    --     "VLIB_PanelOpened",
-    --     "PanelOpenedCampaign",
-    --     function(context)
-    --         return valid_panels_to_open[context.string]
-    --     end,
-    --     function(context)
-    --         local panel_name = context.string
-    --         vlib:callback(function()
-    --             handle_panel(panel_name, true)
-    --         end, 10, "VLIB_PanelOpened")
-    --     end,
-    --     true
-    -- )
-    
-    -- core:add_listener(
-    --     "VLIB_PanelClosed",
-    --     "PanelClosedCampaign",
-    --     function(context)
-    --         return valid_panels_to_close[context.string]
-    --     end,
-    --     function(context)
-    --         local panel_name = context.string
-    --         vlib:callback(function()
-    --             handle_panel(panel_name, false)
-    --         end, 10, "VLIB_PanelClosed")
-    --     end,
-    --     true
-    -- )
-    
-    
-    -- -- TODO finish this up!
-    -- -- Locks the techs for a faction if they research any exclusive tech.
-    -- core:add_listener(
-    --     "TechResearched",
-    --     "ResearchCompleted",
-    --     true,
-    --     function(context)
-    --         local tech_key = context:technology()
-    --         local faction = context:faction()
-    --         local faction_key = faction:name()
-    --         logf("Research %q completed by %q, checking if any exclusives are researched!", tech_key, faction_key)
-    
-    --         local tech = get_tech(tech_key)
-    
-    --         if not tech then
-    --             logf("No tech found with key %q", tech_key)
-    --             return
-    --         end
-    
-    --         logf("Tech has exclusive techs: "..tostring(tech:has_exclusive_techs()))
-    
-    --         if tech:has_exclusive_techs() then
-    --             logf("Tech %q has exclusive technologies, restricting for faction %q", tech_key, faction_key)
-    --             -- tech_manager:restrict_tech_for_faction(tech:get_exclusive_techs(), faction_key, true)
-    --             logf("techs restricted!")
-    --         end
-    
-    --         -- TODO handle this with locks AND unlocks, needs to be dynamic so locked reasons and shit can be provided.
-    --         if tech:has_units() then
-    --             local unit_table = tech:get_unit_table(faction_key)
-    
-    --             for state,units in pairs(unit_table) do
-    --                 Counselor:set_units_lock_state(unit_table[state], state, "TODO!", faction_key)
-    --             end
-    --         end
-    --     end,
-    --     true
-    -- )
-
-    core:add_listener(
-        "PR_HoveredOn",
-        "ComponentMouseOn",
-        function(context)
-            return pr_ui:get_pr_with_key(context.string)
-        end,
-        function(context)
-            local str = context.string
-            vlib:callback(function()
-                -- logf("Checking tooltip for PR %q", str)
-                local ok, msg = pcall(function()
-                pr_ui:adjust_tooltip(str, cm:get_local_faction_name(true))
-                end) if not ok then errlog(msg) end
-            end, 5, "pr_hovered")
-        end,
-        true
-    )
-
-    core:add_listener(
-        "PR_ValueChanged",
-        "PooledResourceEffectChangedEvent",
-        function(context)
-            return context:faction():name() == cm:get_local_faction_name(true) and pr_ui:get_pr_with_key(context:resource():key())
-        end,
-        function(context)
-            pr_ui:check_value(context:resource():key(), cm:get_local_faction_name(true))
-        end,
-        true
-    )
-
-    core:add_listener(
-        "PR_TurnStart",
-        "FactionTurnStart",
-        function(context)
-            return context:faction():name() == cm:get_local_faction_name(true)
-        end,
-        function(context)
-            local faction = context:faction()
-            local faction_key = faction:name()
-            if pr_ui:faction_has_resources(faction) then
-                local resource_keys = pr_ui:get_resource_keys_for_faction(faction)
-                for i = 1, #resource_keys do
-                    local resource_key = resource_keys[i]
-
-                    if not pr_ui:get_uic(resource_key) then
-                        -- create UIC, if it doesn't exist already
-                        pr_ui:create_uic(pr_ui:get_pr_with_key(resource_key), faction_key)
-                    else -- check value if it does
-                        pr_ui:check_value(resource_key, faction_key)
-                    end
-                end
-            end
-        end,
-        true
-    )
 end
 
 --[[
@@ -1803,18 +439,21 @@ function Counselor:add_pr_uic(pooled_resource_key, pr_icon_path, filters)
     if not is_string(pr_icon_path) then
         return errlogf("Calling add_pr_uic(), but the PR icon path provided [%s] isn't a valid string!", tostring(pr_icon_path))
     end
+
+    ---@type vlib_pr_obj
+    local pr_ui = self:get_class("PRObj")
     
     local proper_filters = self:handle_filters(filters)
     if not proper_filters then
         return errlogf("Calling add_pr_uic(), but the filters provided aren't valid!")
     end
 
-    local new_pr = pr_ui:create_new_pr(pooled_resource_key, pr_icon_path, proper_filters)
+    local new_pr = pr_ui.create_new_pr(pooled_resource_key, pr_icon_path, proper_filters)
 
     if pr_ui._initialized then
         local this_faction = cm:get_local_faction_name(true)
         if new_pr._factions[this_faction] then
-            pr_ui:create_uic(new_pr, this_faction)
+            pr_ui.create_uic(new_pr, this_faction)
         end
     end
 end
@@ -1938,7 +577,7 @@ local states_to_numbers = {
 
 --- Used to set the lock state for a technology. This can unlock a previously locked tech, apply a lock to a tech, or completely remove and hide a tech from player and AI.
 ---@param tech_table string|table<number,string> A single technology key, or a table of them.
----@param lock_state string|"locked"|"unlocked"|"disabled" Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it's hidden and unusable.
+---@param lock_state lock_state_string Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it's hidden and unusable.
 ---@param lock_reason string|nil Provide the reason for the lock, if the lock_state is "locked". Otherwise, this parameter is ignored.
 ---@param filters table|string Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
 function Counselor:set_techs_lock_state(tech_table, lock_state, lock_reason, filters)
@@ -2035,11 +674,15 @@ function Counselor:set_units_lock_state(unit_keys, lock_state, lock_reason, filt
     end end) if not ok then errlogf(er) end
 end
 
-vlib:add_module("camp_counselor", Counselor)
-
 cm:add_first_tick_callback(function()
-    init_listeners()
-    pr_ui:init()
+    -- call "init" on every class!
+    local classes = Counselor._classes
+
+    for k,class in pairs(classes) do
+        if class.init then
+            class.init()
+        end
+    end
 end)
 
 cm:add_saving_game_callback(
@@ -2059,13 +702,15 @@ cm:add_loading_game_callback(
 
             for object_key, object in pairs(objects) do
                 logf("Instantiating %s of class %s", object_key, class_key)
-                class:instantiate(object)
+                class.instantiate(object)
 
                 logf("Object has states %s", tostring(object._states))
                 do
                     for i = 1, #object._states do
                         local state = object._states[i]
                         logf("State at %d is %s", i, tostring(state))
+
+                        -- TODO instantiate state?
                     end
                 end
             end

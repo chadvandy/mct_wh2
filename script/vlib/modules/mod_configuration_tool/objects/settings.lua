@@ -24,18 +24,85 @@ local settings = {
     --- This lets a user/modder disable a mod, finalize settings, and load up that old mod again without losing settings.
     ---@type table<string, table<string, any>>
     cached_settings = {},
+    
+    __profiles = setmetatable({},{
+        __index = function(self, k)
+            return rawget(self, k)
+        end,
+        __newindex = function(self, k, v)
+            if k:match("^__") then
+                -- you can't make a profile that starts with "__"
+                return
+            end
 
-    -- k/v table of profile keys to the standard settings memory - mod-key to option-key to option-setting.
-    profiles = {},
-    selected_profile = "",
+            return rawset(self, k, v)
+        end,
+    }),
+    __selected_profile = "",
 }
 
+function settings:clear_profile_cache()
+    self.__profiles = setmetatable({},{
+        __index = function(o, k)
+            return rawget(o, k)
+        end,
+        __newindex = function(o, k, v)
+            if k:match("^__") then
+                -- you can't make a profile that starts with "__"
+                return
+            end
+
+            return rawset(o, k, v)
+        end,
+    })
+end
+
+--[[ TODO this should:
+    1) load up the mct_settings and mct_profiles files, store them
+    2) create a new "main" profile, using the currently loaded settings. If there's a profile currently loaded, use that.
+    3) if there are other profiles, reorganize them (remove the .selected and .settings fields, and only save DIFFERENCES from "main" instead of all settings)
+    4) delete mct_profiles.lua
+    5) save everything in mct_settings.lua
+]]
+function settings:setup_default_profile()
+    -- self:add_profile_with_key("main")
+    self.__profiles["main"] = {}
+
+    -- TODO populate this with all the current settings!
+    local settings_file = io.open(self.settings_file, "r")
+    local profiles_file = io.open(self.profiles_file, "r")
+
+    if not settings_file then
+        -- Use defaults!
+    end
+    local settings_content = loadfile(settings_file)
+
+end
+
+
+function settings:load_new()
+
+end
+
+--- Save the shit into the profiles file.
+function settings:save_new()
+    local t = {}
+
+    local file = io.open(self.settings_file, "w+")
+end
+
 function settings:get_profiles()
-    return self.profiles
+    return self.__profiles
 end
 
 function settings:get_selected_profile()
-    return self.selected_profile
+    return self.__selected_profile
+end
+
+function settings:get_profile(key)
+    if not is_string(key) then return end
+    
+    return self:get_profiles()[key]
 end
 
 function settings:delete_profile_with_key(key)
@@ -44,13 +111,13 @@ function settings:delete_profile_with_key(key)
         return false
     end
 
-    if not self.profiles[key] then
+    if not self:get_profile(key) then
         err("delete_profile_with_key() called, but the profile with key ["..key.."] doesn't exist!")
         return false
     end
 
-    self.profiles[key] = nil
-    self.selected_profile = ""
+    self.__profiles[key] = nil
+    self.__selected_profile = ""
 
     -- refresh the dropdown UI
     mct.ui:populate_profiles_dropdown_box()
@@ -62,25 +129,25 @@ function settings:set_selected_profile(key)
         return false
     end
 
-    if not self.profiles[key] then
+    if not self:get_profile(key) then
         err("set_selected_profile() called, but there's not profile found with the key ["..key.."]")
         return false
     end
 
-    -- get the former selected profile, and un-save it as saved
-    local former = self.profiles[self.selected_profile]
-    if is_table(former) then
-        former.selected = false
-    end
+    -- -- get the former selected profile, and un-save it as saved
+    -- local former = self.__profiles[self.__selected_profile]
+    -- if is_table(former) then
+    --     former.selected = false
+    -- end
 
     -- save the new one as saved
-    self.selected_profile = key
-    self.profiles[key].selected = true
+    self.__selected_profile = key
+    -- self.__profiles[key].selected = true
 end
 
 function settings:get_all_profile_keys()
     local ret = {}
-    for k,_ in pairs(self.profiles) do
+    for k,_ in pairs(self.__profiles) do
         ret[#ret+1] = k
     end
 
@@ -105,9 +172,10 @@ function settings:read_profiles_file()
         return false
     end
 
+    -- TODO don't clear it out? or make sure it's reinstated the same way w/ MT?
     -- clear out old profiles data
-    self.profiles = {}
-    self.selected_profile = ""
+    self.__profiles = {}
+    self.__selected_profile = ""
 
     content = content()
 
@@ -116,12 +184,12 @@ function settings:read_profiles_file()
         -- profile_data has ["selected"], a bool
         -- profile_data has ["settings"], the k/v table of mod-key to option-key to option-setting
 
-        self.profiles[profile_key] = profile_data
+        self.__profiles[profile_key] = profile_data
 
-        -- TODO temporarily disable this - start with no prof's selected!
-        if profile_data.selected then
-            self:set_selected_profile(profile_key)
-        end
+        -- -- TODO temporarily disable this - start with no prof's selected!
+        -- if profile_data.selected then
+        --     self:set_selected_profile(profile_key)
+        -- end
     end
 end) if not ok then err(msg) end end
 
@@ -135,7 +203,7 @@ function settings:save_profiles_file()
 
     local str = "return {\n"
 
-    for profile_key, profile_data in pairs(self.profiles) do
+    for profile_key, profile_data in pairs(self.__profiles) do
         str = str .. "\t[\""..profile_key.."\"] = {\n"
 
         local selected = profile_data.selected
@@ -180,21 +248,21 @@ function settings:save_profile_with_key(key)
         return "bad_key"
     end
 
-    if not self.profiles[key] then
+    if not self.__profiles[key] then
         return "none_found"
     end
 
-    -- if the table doesn't exist, make one!
-    if not is_table(self.profiles[key].settings) then
-        self.profiles[key].settings = {}
-    end
+    -- -- if the table doesn't exist, make one!
+    -- if not is_table(self.__profiles[key].settings) then
+    --     self.__profiles[key].settings = {}
+    -- end
 
     local mods = mct:get_mods()
 
     for mod_key, mod_obj in pairs(mods) do
         -- ditto
-        if not is_table(self.profiles[key]["settings"][mod_key]) then
-            self.profiles[key]["settings"][mod_key] = {}
+        if not is_table(self.__profiles[key][mod_key]) then
+            self.__profiles[key][mod_key] = {}
         end
 
         local options = mod_obj:get_options()
@@ -203,7 +271,7 @@ function settings:save_profile_with_key(key)
             local setting = option_obj:get_selected_setting()
 
             -- one final ditto
-            self.profiles[key]["settings"][mod_key][option_key] = setting
+            self.__profiles[key][mod_key][option_key] = setting
         end
     end
 
@@ -215,11 +283,11 @@ function settings:apply_profile_with_key(key)
         return "bad_key"
     end
 
-    if not self.profiles[key] then
+    if not self.__profiles[key] then
         return "none_found"
     end
 
-    local profile_settings = self.profiles[key].settings
+    local profile_settings = self.__profiles[key]
 
     log("applying profile with key ["..key.."].")
 
@@ -248,11 +316,15 @@ function settings:test_profile_with_key(key)
         return "blank_key"
     end
 
+    if key == "main" then
+        return "restricted"
+    end
+
     -- make sure the string isn't going to have some bad escape key or something
     -- TODO this
 
     -- test if one exists already
-    if self.profiles[key] ~= nil then
+    if self.__profiles[key] ~= nil then
         return "exists"
     end
 
@@ -266,26 +338,22 @@ function settings:add_profile_with_key(key)
         return test
     end
 
-    self.profiles[key] = {}
+    self.__profiles[key] = {}
 
     -- loop through all current settings, and save them!
     local mods = mct:get_mods()
 
-    self.profiles[key]["settings"] = {}
-
     for mod_key, mod_obj in pairs(mods) do
-        self.profiles[key]["settings"][mod_key] = {}
+        self.__profiles[key][mod_key] = {}
 
         local options = mod_obj:get_options()
 
         for option_key, option_obj in pairs(options) do
             local setting = option_obj:get_selected_setting()
 
-            self.profiles[key]["settings"][mod_key][option_key] = setting
+            self.__profiles[key][mod_key][option_key] = setting
         end
     end
-
-    self.profiles[key]["selected"] = true
 
     self.selected_profile = key
 
@@ -399,6 +467,8 @@ function settings:remove_cached_setting(mod_key, option_keys)
     end
 end
 
+--- 
+--- TODO consolidate mct_settings.lua and mct_profiles.lua
 function settings:save_mct_settings()
     local file, load_err  = io.open(self.settings_file, "w+")
 
@@ -522,17 +592,7 @@ function settings:finalize_first_time(force)
 end
 
 function settings:finalize(force, specific_mod)
-    --log("Finalizing Settings!")
-    --local ret = {}
     local mods = mct:get_mods()
-
-    -- don't save specific indices that will absolutely break shit or waste space if they're saved to Lua
-    --[[local excluded_indices = {
-        _FILEPATH = true,
-        _uics = true,
-        _mod = true,
-        _template = true,
-    }]]
 
     if specific_mod then
         local mod_obj = mct:get_mod_by_key(specific_mod)
@@ -627,6 +687,12 @@ end
 -- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
 -- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
 function settings:load()
+    --- trigger the create-new-profile "main" thing here
+    if not self:get_profile("main") then
+        -- first time setup, either for a completely new user or a pre-port user.
+        self:setup_default_profile()
+    end
+
     -- if we're in the campaign, save the "mct_init" value as true
     if __game_mode == __lib_type_campaign then
         cm:set_saved_value("mct_init", true)
@@ -644,13 +710,14 @@ function settings:load()
         mct._first_load = false
         local content = loadfile(self.settings_file)
 
-        if not pcall(function() content() end) then
+        local ok,content = pcall(function() return content() end)
+
+        if not ok then
             err("The mct_settings.lua file had a script error in it and couldn't be loaded. Investigate!")
+            err(content)
             self:finalize_first_time(true)
             return
-        end
-
-        content = content()
+        end 
 
         if not content then
             self:finalize_first_time(true)
