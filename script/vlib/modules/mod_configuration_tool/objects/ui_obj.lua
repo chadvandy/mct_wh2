@@ -1390,10 +1390,7 @@ function ui_obj:create_actions_panel()
     _SetTooltipText(revert_to_default, effect.get_localised_string("mct_button_revert_to_default_tt"), true)
 end
 
-function ui_obj:close_frame()
-    -- save the profiles file every time we close it up
-    -- mct.settings:save_profiles_file()
-    
+function ui_obj:close_frame()  
     delete_component(self.panel)
 
     --core:remove_listener("left_or_right_pressed")

@@ -282,6 +282,10 @@ function mod_configuration_tool:get_mod_with_name(mod_name)
     return self:get_mod_by_key(mod_name)
 end
 
+function mod_configuration_tool:finalize_new()
+    
+end
+
 --- TODO use new system!
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mod_configuration_tool:finalize(specific_mod)

@@ -10,7 +10,7 @@ local log,logf,err,errf = vlib:get_log_functions("[mct]")
 
 ---@type mct_option
 local mct_option = {
-    ---@type mct_mod The owning mod object.
+    ---@type mct_mod The owning mod object. TODO swap to a key reference?
     _mod = nil,
 
     ---@type string The key of this option object.
@@ -214,6 +214,12 @@ end
 --- @return mct_mod @{mct_mod}
 function mct_option:get_mod()
     return self._mod
+end
+
+--- Grab the key of the owning mct_mod.
+---@return string
+function mct_option:get_mod_key()
+    return self._mod:get_key()
 end
 
 ---- Internal use only. Clears all the UIC objects attached to this boy.
