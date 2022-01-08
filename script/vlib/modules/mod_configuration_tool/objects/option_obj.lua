@@ -614,21 +614,25 @@ end
 
 --- Slider-specific function. Calls @{mct_slider:slider_get_precise_value}.
 function mct_option:slider_get_precise_value(...)
-    return self:get_wrapped_type():slider_get_precise_value(...)
+---@diagnostic disable-next-line: redundant-parameter
+return self:get_wrapped_type():slider_get_precise_value(...)
 end
 
 --- Slider-specific function. Calls @{mct_slider:slider_set_step_size}.
 function mct_option:slider_set_step_size(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():slider_set_step_size(...)
 end
 
 --- Slider-specific function. Calls @{mct_slider:slider_set_precision}.
 function mct_option:slider_set_precision(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():slider_set_precision(...)
 end
 
 --- Slider-specific function. Calls @{mct_slider:slider_set_min_max}.
 function mct_option:slider_set_min_max(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():slider_set_min_max(...)
 end
 
@@ -636,11 +640,13 @@ end
 
 --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_values}
 function mct_option:add_dropdown_values(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():add_dropdown_values(...)
 end
 
 --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_value}
 function mct_option:add_dropdown_value(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():add_dropdown_value(...)
 end
 
@@ -653,6 +659,7 @@ end
 
 --- Text-input-specific function. Calls @{mct_text_input:add_validity_test}
 function mct_option:text_input_add_validity_test(...)
+    ---@diagnostic disable-next-line: redundant-parameter
     return self:get_wrapped_type():add_validity_test(...)
 end
 
@@ -661,21 +668,8 @@ end
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
     return Settings:get_finalized_setting_for_option(self)
-
-    -- local test = self._finalized_setting
-
-    -- if is_nil(test) then
-    --     local default_val = self:get_default_value()
-    --     if default_val ~= nil or self:get_type() == "dummy" then
-    --         self._finalized_setting = default_val
-    --     else
-    --         log("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
-    --         return nil
-    --     end
-    -- end
-
-    -- return self._finalized_setting
 end
+
 
 
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
@@ -693,23 +687,13 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
+    --- NEXT error with this, when called during finalize_first_time() but no "Main" profile was created!
     Settings:save_setting(self, val)
 
     -- trigger an event to listen for externally (skip if it's first load)
     if not is_first_load then
         core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
     end
-
-    -- -- save locally
-    -- self._finalized_setting = val
-
-    -- -- save on the mct_mod attached, too
-    -- local mod = self:get_mod()
-    -- mod._finalized_settings[self:get_key()] = val
-
-    -- if self:get_selected_setting() ~= val then
-    --     self:set_selected_setting(val)
-    -- end
 end
 
 --- Set the default setting when the mct_mod is first created and loaded. Also used for the "Revert to Defaults" option.
@@ -717,7 +701,6 @@ end
 function mct_option:set_default_value(val)
     if self:is_val_valid_for_type(val) then
         self._default_setting = val
-        --self._selected_setting = val
     end
 end
 
@@ -728,13 +711,6 @@ function mct_option:get_default_value()
     local default_val = self._default_setting
 
     if is_nil(default_val) then
-        -- pick the default value for the modder:
-            -- false for checkbox
-            -- between min/max for sliders
-            -- first added option for dropdowns
-
-        --local wrapped = self:get_wrapped_type()
-
         self:set_default()
     end
 
@@ -820,20 +796,6 @@ end
 --- @treturn any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
     return Settings:get_selected_setting_for_option(self)
-    -- -- no selected setting found - UI was just created!
-    -- if self._selected_setting == nil then
-
-    --     -- default to the current finalized setting
-    --     if self:get_finalized_setting() ~= nil then
-    --         self._selected_setting = self:get_finalized_setting()
-
-    --     -- if no finalized setting, set to the default setting
-    --     elseif self:get_default_value() ~= nil then
-    --         self._selected_setting = self:get_default_value()
-    --     end
-    -- end
-
-    -- return self._selected_setting
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.

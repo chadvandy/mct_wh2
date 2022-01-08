@@ -28,7 +28,6 @@ elseif core:is_battle() then
     local bm = get_bm()
 
     local function create_button(button_group)
-        local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
         local new_button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
 
         -- set the tooltip to the one on the frontend button

@@ -5,6 +5,29 @@ local mct = get_mct()
 local vlib = get_vlib()
 local log,logf,err,errf = vlib:get_log_functions "[mct_settings]"
 
+---@class mct_profile
+local Profile = {
+    ---@type string Key of this profile.
+    __key = "",
+
+    ---@type string Localised name for this profile.
+    __name = "",
+
+    ---@type string Localised description for this profile.
+    __description = "",
+
+    ---@type table<string, table<string, any>> Table of settings for this profile; indexed by mod key, which is then a table index by option keys linked to values, ie. __mods[mod_key][option_key] = true
+    __mods = {},
+}
+
+local __Profile = {
+    __index = Profile,
+}
+
+function Profile:instantiate(o)
+    return setmetatable(o or {}, __Profile)
+end
+
 ---@type mct_settings
 local Settings = {
     ---@type string Path to the profile save file. ANTIQUATED.
@@ -49,38 +72,23 @@ local Settings = {
         end,
     },
 
+    --- TODO create the main profile here, instead of create_default_profile, so it's accessible from the get
     ---@type table<string, mct_profile>
-    __profiles = {},
-    __used_profile = "",
+    __profiles = {
+        main = Profile:instantiate({
+            __name = "Default Profile",
+            __description = "The default MCT profile. Stores all important information about mods, as well as the current saved settings.",
+        })
+    },
+
+    ---@type string Key of the currently selected profile.
+    __selected_profile = "main",
 }
 
 --- TODO add __mod_data = {} to the settings table
 --- hold __mod_data[mod_key] = {patch=0,name="",desc=""}, etc etc
 --- __profiles[profile_key].__mods[mod_key].__settings[option_key]=value otherwise
 
-
----@class mct_profile
-local Profile = {
-    ---@type string Key of this profile.
-    __key = "",
-
-    ---@type string Localised name for this profile.
-    __name = "",
-
-    ---@type string Localised description for this profile.
-    __description = "",
-
-    ---@type table<string, table<string, any>> Table of settings for this profile; indexed by mod key, which is then a table index by option keys linked to values, ie. __mods[mod_key][option_key] = true
-    __mods = {},
-}
-
-local __Profile = {
-    __index = Profile,
-}
-
-function Profile:instantiate(o)
-    return setmetatable(o or {}, __Profile)
-end
 
 function Profile:get_settings_for_mod(mod_key)
 
@@ -182,19 +190,11 @@ setmetatable(Settings.__profiles, Settings.__profiles_mt)
 function Settings:setup_default_profile()
     self:read_profiles_file()
 
-    self:create_profile_with_key("main", {
-        __name = "Default Profile",
-        __description = "The default MCT profile. Stores all important information about mods, as well as the current saved settings.",
-        __mods = {},
-    })
-
     local main = self:get_profile("main")
 
     for _,mod_obj in pairs(mct:get_mods()) do
         main:save_mod(mod_obj)
     end
-
-    self:set_selected_profile("main")
 
     --- clear out the old fields in all profiles
     for key,_ in pairs(self.__profiles) do
@@ -271,6 +271,7 @@ end
 
 --- Load the shit from the profiles file.
 function Settings:load()
+    logf("Loading all settings from the mct_save.lua file!")
     local content = loadfile(self.__new_settings_file)
     if not content then
         -- errmsg!
@@ -279,7 +280,7 @@ function Settings:load()
 
     content = content()
 
-    self.__used_profile = content.__used_profile
+    self.__selected_profile = content.__used_profile
     self.__cached_settings = content.__cached_settings
 
     -- instantiate all profiles!
@@ -333,10 +334,6 @@ function Settings:get_mod_data()
     return t
 end
 
-function Settings:get_used_profile()
-    return self.__used_profile
-end
-
 --- TODO make sure that all mods are saved in empty tables in all profiles
 --- Save the shit into the profiles file.
 function Settings:save()
@@ -346,7 +343,7 @@ function Settings:save()
         "This file, that said, is safe to delete if you are no longer using the Mod Configuration Tool and don't plan on resubbing it. I'll miss you!",
     }
 
-    t.__used_profile = self:get_used_profile()
+    t.__used_profile = self:get_selected_profile_key()
     t.__profiles = self:get_profiles()
     t.__cached_settings = self.__cached_settings
     t.__mod_data = self:get_mod_data()
@@ -472,18 +469,22 @@ end
 function Settings:get_selected_setting_for_option(option_obj)
     local mod_key = option_obj:get_mod_key()
     local option_key = option_obj:get_key()
+    logf("Getting selected setting for [%s]_[%s]", mod_key, option_key)
 
     ---@type any
+    logf("Querying changed settings")
     local changed_value = self:get_changed_settings(mod_key, option_key)
-    if not is_nil(changed_value) then return changed_value end
+    if not is_nil(changed_value) then logf("Changed found: %s", tostring(changed_value))  return changed_value end
 
     local current_profile = self:get_selected_profile()
     local value = current_profile:query_mod_option(mod_key, option_key)
 
-    if not is_nil(value) then return value end
+    if not is_nil(value) then logf("Current profile found: %s", tostring(changed_value))  return value end
 
     local main = self:get_profile("main")
-    return main:query_mod_option(mod_key, option_key)
+    local main_value = main:query_mod_option(mod_key, option_key)
+    logf("Main found: %s", tostring(main_value)) 
+    return main_value
 end
 
 ---@param option_obj mct_option
@@ -523,7 +524,7 @@ function Settings:get_selected_profile()
 end
 
 function Settings:get_selected_profile_key()
-    return self.__used_profile
+    return self.__selected_profile
 end
 
 function Settings:get_profile(key)
@@ -574,7 +575,7 @@ function Settings:set_selected_profile(key)
     end
 
     -- save the new one as saved
-    self.__used_profile = key
+    self.__selected_profile = key
 end
 
 function Settings:get_all_profile_keys()
@@ -605,9 +606,13 @@ function Settings:read_profiles_file()
         return false
     end
 
-    -- clear out old profiles data
-    self.__used_profile = ""
-    self.__profiles = setmetatable(content(), self.__profiles_mt)
+    for k,v in pairs(content) do
+        if k == "main" then k = "Old Main" end
+        self.__profiles[k] = v
+    end
+
+    setmetatable(self.__profiles, self.__profiles_mt)
+    self.__selected_profile = "main"
 
 end) if not ok then err(msg) end end
 
