@@ -718,12 +718,13 @@ function ui_obj:set_actions_states()
     local button_parent = find_uicomponent(actions_panel, "mct_profiles_button_parent")
     local profiles_new = find_uicomponent(button_parent, "mct_profiles_new")
     local profiles_delete = find_uicomponent(button_parent, "mct_profiles_delete")
-    local profiles_save = find_uicomponent(button_parent, "mct_profiles_save")
-    local profiles_apply = find_uicomponent(button_parent, "mct_profiles_apply")
+    -- local profiles_save = find_uicomponent(button_parent, "mct_profiles_save")
+    -- local profiles_apply = find_uicomponent(button_parent, "mct_profiles_apply")
 
     local selected_mod_key = mct:get_selected_mod_name()
     local selected_mod = mct:get_mod_by_key(selected_mod_key)
 
+    --- TODO revert to defaults option-specific instead of global
     local revert_to_defaults = find_uicomponent(actions_panel, "mct_revert_to_default")
     local button_mct_finalize_settings = find_uicomponent(actions_panel, "button_mct_finalize_settings")
     -- local mct_finalize_settings_on_mod = find_uicomponent(actions_panel, "mct_finalize_settings_on_mod")
@@ -735,22 +736,14 @@ function ui_obj:set_actions_states()
     local test = mct.settings:get_selected_profile_key()
     if not test or test == "" then
         _SetState(profiles_delete, "inactive")
-        _SetState(profiles_save, "inactive")
-        _SetState(profiles_apply, "inactive")
     else
         -- there is a current profile; enable delete
         _SetState(profiles_delete, "active")
-
-        -- TODO check if any selected settings are different from profile settings, to enable/disable Save/Apply
-        -- probably will be a hefty chunk of checking, so figure out an optimized way of doing it
-        _SetState(profiles_save, "active")
-        _SetState(profiles_apply, "active")
     end
 
     -- easy to start - if changed_settings is empty, lock everything!
     if not self:get_locally_edited() then
         _SetState(button_mct_finalize_settings, "inactive")
-        -- _SetState(mct_finalize_settings_on_mod, "inactive")
     else
         -- set the finalize settings button to active; SOMETHING was changed!
         _SetState(button_mct_finalize_settings, "active")

@@ -1,3 +1,6 @@
+---@diagnostic disable: redundant-return
+--- TODO port all of the autogen stuff into here!
+
 ---@class effect
 ---@type effect
 effect = {
@@ -8,9 +11,9 @@ effect = {
 
     --- Performs a VFS lookup in the specified relative path (root is data/) for files matching the supplied pattern. Returns a comma-delimited list of files found. 
     ---@param path string Path from data/ in which to look.
-    ---@param path string Search pattern. Can use wildcard (*), ie. "*.lua"
+    ---@param pattern string Search pattern. Can use wildcard (*), ie. "*.lua"
     ---@return string list Comma-delimited list of files found, with the full paths.
-    filesystem_lookup = function(path, path) return "" end,
+    filesystem_lookup = function(path, pattern) return "" end,
 
     --- Retrieves a full image path from the working data folder for a supplied image name that obeys the currently loaded skins. For each loaded skin, the existence of the image is queried and, should it exist, the path to that image is returned. If the image is not found then a path to the image in the default skin folder is returned, although in this case the existence of the image is not checked for. The returned image path can subsequently be supplied to uicomponent:SetImagePath.
     ---@param img_name string The name of the image searched for, including file extension - ie. "icon_ritual.png"
@@ -55,23 +58,61 @@ CampaignUI = {
     TriggerCampaignScriptEvent = function(faction_cqi, event_id) end
 }
 
+---@alias ComponentAddress string
+
+---@alias docking_points "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
+--- TODO autofill from html
 --- TODO fill this out (:
 ---@class UIComponent
----@type UIComponent
+---@field SetState fun(self:UIComponent, state:string)
+---@field SetStateText fun(self:UIComponent, text:string)
+---@field Resize fun(self:UIComponent, w:number, h:number)
+---@field MoveTo fun(self:UIComponent, x:number, y:number)
+---@field SetTooltipText fun(self:UIComponent, t:string, all_states:boolean)
+---@field SetVisible fun(self:UIComponent, is:boolean)
+---@field SetInteractive fun(self:UIComponent, is:boolean)
+---@field SetDisabled fun(self:UIComponent, is:boolean)
+---@field SetProperty fun(self:UIComponent, key:any, value:any)
+---@field SetDockingPoint fun(UIComponent, point:docking_points)
+---@field SetDockOffset fun(UIComponent, x:number, y:number)
+---@field SetCanResizeWidth fun(UIComponent, can:boolean)
+---@field SetCanResizeHeight fun(UIComponent, can:boolean)
+---@field SetMoveable fun(UIComponent, boolean)
+---@field SetImagePath fun(UIComponent, img:string, index:number)
+---@field Width fun(UIComponent):number
+---@field Height fun(UIComponent):number
+---@field CreateComponent fun(self:UIComponent, key:string, template:string|nil):ComponentAddress
+---@field UnLockPriority fun(UIComponent)
+---@field Id fun(self:UIComponent):string
+---@field Parent fun(self:UIComponent):ComponentAddress
+---@field PropagatePriority fun(self:UIComponent, priority:number)
+---@field LockPriority fun(self:UIComponent)
+---@field Dimensions fun(self:UIComponent):number,number
+---@field Bounds fun(self:UIComponent):number,number
+---@field DestroyChildren fun(self:UIComponent)
+---@field Visible fun(self:UIComponent):boolean
+---@field CurrentState fun(self:UIComponent):string
+---@field RemoveTopMost fun(self:UIComponent)
+---@field GetStateText fun(self:UIComponent):string
+---@field TextDimensionsForText fun(self:UIComponent, text:string):number,number
+---@field ResizeTextResizingComponentToInitialSize fun(self:UIComponent, w:number, h:number)
+---@field Find fun(self:UIComponent, i:number|string):ComponentAddress
+---@field Priority fun(self:UIComponent):number
+---@field Position fun(self:UIComponent):number,number
+---@field GetDockOffset fun(self:UIComponent):number,number
+---@field RegisterTopMost fun(self:UIComponent)
+---@field Layout fun(self:UIComponent)
+---@field ChildCount fun(self:UIComponent):number
+---@field GetCurrentStateImageDimensions fun(self:UIComponent, img_index:number):number,number
+---@field ResizeCurrentStateImage fun(self:UIComponent, img_index:number, w:number,h:number)
+---@field StartPulseHighlight fun(self:UIComponent, intensity:number, state:string)
+---@field StopPulseHighlight fun(self:UIComponent)
+---@field Address fun(self:UIComponent):ComponentAddress
+---@field Adopt fun(self:UIComponent, address: ComponentAddress)
+---@field Highlight fun(self:UIComponent, boolean, boolean)
+
 local UIC = {
-    SetState = function(self, state) return end,
-    SetStateText = function(self, text) return end,
-    MoveTo = function(self) return end,
-    SetMoveable = function(self) return end,
-    Resize = function(self) return end,
-    SetCanResizeHeight = function(self) return end,
-    SetCanResizeWidth = function(self) return end,
-    ResizeTextResizingComponentToInitialSize = function(self) return end,
-    SetDockingPoint = function(self) return end,
-    SetDockOffset = function(self) return end,
-    SetTooltipText = function(self) return end,
-    SetImagePath = function(self) return end,
-    SetVisible = function(self) return end,
+    ResizeTextResizingComponentToInitialSize = function(self) end,
     SetInteractive = function(self) return end,
     SetDisabled = function(self) return end,
     SetProperty = function(self) return end,
@@ -115,7 +156,7 @@ local UIC = {
 battle_manager = battle_manager;
 
 --- Turn the address of a UIC to the wrapped UIComponent object.,
----@param address userdata|string Gotten through context.component in Component events, or UIC:Address()
+---@param address ComponentAddress Gotten through context.component in Component events, or UIC:Address()
 ---@return UIComponent
 function UIComponent(address)
     return UIC

@@ -4,6 +4,7 @@
 
 -- TODO make "Finalize settings" validate all MCT options; if some are invalid, give some UX notifs that they're not valid. esp. for the textboxes.
 --- TODO move all local functions to *actual* locals? Or something similar?
+--- TODO emmylua
 
 local vlib = get_vlib()
 local mct = get_mct()

@@ -57,7 +57,7 @@ local Settings = {
 --- hold __mod_data[mod_key] = {patch=0,name="",desc=""}, etc etc
 --- __profiles[profile_key].__mods[mod_key].__settings[option_key]=value otherwise
 
---- TODO OOP profiles
+
 ---@class mct_profile
 local Profile = {
     __name = "",
@@ -86,6 +86,7 @@ end
 ---@param option_key string Option in question.
 ---@return any Val The value of the option's saved value (or nil, if there is no option)
 function Profile:query_mod_option(mod_key, option_key)
+    logf("Querying %s & %s", tostring(mod_key), tostring(option_key))
     return self.__mods[mod_key] and self.__mods[mod_key].__settings[option_key]
 end
 
@@ -114,8 +115,6 @@ function Profile:save_mod(mod_obj)
 
     if not self.__mods[mod_key] then
         self.__mods[mod_key] = {
-            -- TODO get this OUT of here
-            __patch = mod_obj:get_last_viewed_patch(),
             __settings = {},
         }
     end
@@ -128,9 +127,9 @@ function Profile:save_mod(mod_obj)
 end
 
 function Settings:create_profile_with_key(key, o)
-    local p = Profile:instantiate(o)
-
     -- TODO check if extant?
+
+    local p = Profile:instantiate(o)
     self.__profiles[key] = p
 
     return p
@@ -177,12 +176,6 @@ setmetatable(Settings.__profiles, Settings.__profiles_mt)
 --     })
 -- end
 
---[[ TODO this should:
-    1) load up the mct_settings and mct_profiles files, store them
-    2) create a new "main" profile, using the currently loaded settings. If there's a profile currently loaded, use that.
-    3) if there are other profiles, reorganize them (remove the .selected and .settings fields, and only save DIFFERENCES from "main" instead of all settings)
-    4) save everything in mct_save.lua
-]]
 function Settings:setup_default_profile()
     self:read_profiles_file()
 
@@ -210,7 +203,7 @@ function Settings:setup_default_profile()
             p.settings = nil
     
             --- TODO!
-            p.__name = ""
+            p.__name = key
             p.__description = ""
     
             --- only save the *difference* from main
@@ -230,7 +223,7 @@ function Settings:setup_default_profile()
         end
     end
 
-    ---- TODO fixed elsewhere
+    ---- NOTE fixed elsewhere
     -- -- Fix the "cached settings" table
     -- local t = self.__cached_settings
     -- for mod_key, mod_data in pairs(t) do
@@ -284,7 +277,8 @@ function Settings:load_new()
 end
 
 local warning = {
-    "WARNING: This file is automatically edited by the Mod Configuration Tool, is regularly read, and is required for ALL save functionality with the mods. DO NOT EDIT THIS MANUALLY. DO NOT DELETE THIS.",
+    "WARNING: This file is automatically edited by the Mod Configuration Tool, is regularly read, and is required for ALL save functionality with the mods.",
+    "DO NOT EDIT THIS MANUALLY. DO NOT DELETE THIS.",
     "This file, that said, is safe to delete if you are no longer using the Mod Configuration Tool and don't plan on resubbing it. I'll miss you!",
 }
 
@@ -503,8 +497,8 @@ function Settings:test_profile_with_key(key)
         return "restricted"
     end
 
-    -- make sure the string isn't going to have some bad escape key or something
     -- TODO this
+    -- make sure the string isn't going to have some bad escape key or something
 
     -- test if one exists already
     if self.__profiles[key] ~= nil then
@@ -868,6 +862,8 @@ function Settings:mp_load()
     end
 end
 
+--- TODO on first time load, set default values
+--- TODO check for empty tables in __mods, ie. some reason mixu_mixer is in profiles.__main.__mods
 --- This is the function that reads the mct_settings.lua file and loads up all the necessary components from it.
 -- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
 -- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
