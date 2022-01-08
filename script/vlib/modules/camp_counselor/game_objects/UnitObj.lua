@@ -8,7 +8,7 @@ local log,logf,err,errf = vlib:get_log_functions("[unit]")
 ---@type vlib_camp_counselor
 local cc = vlib:get_module("camp_counselor")
 
----@class unit_class : class_prototype
+---@class unit_class : Class
 local UnitObj = vlib:new_class("UnitObj")
 UnitObj.__index = UnitObj
 

@@ -1,0 +1,1609 @@
+{
+    "extension": "linecounter",
+    "version": "0.2.7",
+    "workspace": "s:\\modding\\warhammer_2\\mod_configuration_tool_reupload",
+    "linecount": [
+        {
+            "version": "0.2.7",
+            "counttime": "2021-11-22 22:18:55",
+            "filesum": 245,
+            "codesum": 219322,
+            "commentsum": 2654,
+            "blanksum": 7306,
+            "statistics": {
+                "": {
+                    "code": 116,
+                    "comment": 3,
+                    "blank": 168
+                },
+                ".ld": {
+                    "code": 11,
+                    "comment": 0,
+                    "blank": 3
+                },
+                ".md": {
+                    "code": 167,
+                    "comment": 1,
+                    "blank": 66
+                },
+                ".rst": {
+                    "code": 32,
+                    "comment": 1,
+                    "blank": 13
+                },
+                ".bat": {
+                    "code": 20,
+                    "comment": 0,
+                    "blank": 5
+                },
+                ".py": {
+                    "code": 12,
+                    "comment": 32,
+                    "blank": 17
+                },
+                ".html": {
+                    "code": 6203,
+                    "comment": 21,
+                    "blank": 1911
+                },
+                ".js": {
+                    "code": 9297,
+                    "comment": 2513,
+                    "blank": 2429
+                },
+                ".txt": {
+                    "code": 33,
+                    "comment": 1,
+                    "blank": 13
+                },
+                ".css": {
+                    "code": 1740,
+                    "comment": 77,
+                    "blank": 432
+                },
+                ".lua": {
+                    "code": 11511,
+                    "comment": 0,
+                    "blank": 2249
+                },
+                ".xml": {
+                    "code": 190180,
+                    "comment": 5,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".gitattributes"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 3,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 11,
+                    "code": 33,
+                    "comment": 1,
+                    "filename": "changenotes.md"
+                },
+                {
+                    "blank": 3,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": "config.ld"
+                },
+                {
+                    "filename": "db\\help_page_index_records_tables\\mct_help_pages",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "db\\ui_tooltip_components_tables\\mct_tooltips",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "db\\ui_tooltips_tables\\mct_tooltips",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "docs.bat"
+                },
+                {
+                    "blank": 143,
+                    "code": 385,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct.html"
+                },
+                {
+                    "blank": 30,
+                    "code": 126,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_checkbox.html"
+                },
+                {
+                    "blank": 30,
+                    "code": 139,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_dropdown.html"
+                },
+                {
+                    "blank": 14,
+                    "code": 56,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_dummy.html"
+                },
+                {
+                    "blank": 138,
+                    "code": 321,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_mod.html"
+                },
+                {
+                    "blank": 204,
+                    "code": 550,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_option.html"
+                },
+                {
+                    "blank": 172,
+                    "code": 352,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_section.html"
+                },
+                {
+                    "blank": 54,
+                    "code": 130,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_settings.html"
+                },
+                {
+                    "blank": 81,
+                    "code": 229,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_slider.html"
+                },
+                {
+                    "blank": 97,
+                    "code": 232,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_text_input.html"
+                },
+                {
+                    "blank": 40,
+                    "code": 97,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mct_ui.html"
+                },
+                {
+                    "blank": 150,
+                    "code": 355,
+                    "comment": 1,
+                    "filename": "docs\\classes\\mod_configuration_tool.html"
+                },
+                {
+                    "blank": 21,
+                    "code": 63,
+                    "comment": 1,
+                    "filename": "docs\\classes\\template_type.html"
+                },
+                {
+                    "blank": 22,
+                    "code": 64,
+                    "comment": 1,
+                    "filename": "docs\\classes\\ui_tab.html"
+                },
+                {
+                    "blank": 17,
+                    "code": 129,
+                    "comment": 1,
+                    "filename": "docs\\index.html"
+                },
+                {
+                    "blank": 41,
+                    "code": 251,
+                    "comment": 11,
+                    "filename": "docs\\ldoc.css"
+                },
+                {
+                    "blank": 123,
+                    "code": 322,
+                    "comment": 1,
+                    "filename": "docs\\modules\\mct.html"
+                },
+                {
+                    "blank": 124,
+                    "code": 323,
+                    "comment": 1,
+                    "filename": "docs\\modules\\mod_configuration_manager.html"
+                },
+                {
+                    "blank": 149,
+                    "code": 359,
+                    "comment": 1,
+                    "filename": "docs\\modules\\mod_configuration_tool.html"
+                },
+                {
+                    "blank": 21,
+                    "code": 63,
+                    "comment": 1,
+                    "filename": "docs\\scripts\\mct_uic_mixins.html"
+                },
+                {
+                    "blank": 36,
+                    "code": 127,
+                    "comment": 1,
+                    "filename": "docs\\topics\\changenotes.md.html"
+                },
+                {
+                    "filename": "docs\\topics\\doc_img\\00.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs\\topics\\doc_img\\01.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs\\topics\\doc_img\\02.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 82,
+                    "code": 208,
+                    "comment": 1,
+                    "filename": "docs\\topics\\manual.md.html"
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\cc.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\environment.pickle",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\index.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\mct.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\mct\\mod.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\doctrees\\vandy_lib.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\.buildinfo"
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\.doctrees\\environment.pickle",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\.doctrees\\index.doctree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_sources\\cc.rst.txt"
+                },
+                {
+                    "blank": 9,
+                    "code": 18,
+                    "comment": 1,
+                    "filename": "docs_NEW\\build\\html\\_sources\\index.rst.txt"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_sources\\mct.rst.txt"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_sources\\mct\\mod.rst.txt"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_sources\\vandy_lib.rst.txt"
+                },
+                {
+                    "blank": 147,
+                    "code": 535,
+                    "comment": 19,
+                    "filename": "docs_NEW\\build\\html\\_static\\alabaster.css"
+                },
+                {
+                    "blank": 191,
+                    "code": 681,
+                    "comment": 32,
+                    "filename": "docs_NEW\\build\\html\\_static\\basic.css"
+                },
+                {
+                    "blank": 53,
+                    "code": 199,
+                    "comment": 14,
+                    "filename": "docs_NEW\\build\\html\\_static\\classic.css"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 1,
+                    "filename": "docs_NEW\\build\\html\\_static\\custom.css"
+                },
+                {
+                    "blank": 25,
+                    "code": 220,
+                    "comment": 82,
+                    "filename": "docs_NEW\\build\\html\\_static\\doctools.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_static\\documentation_options.js"
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\_static\\file.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 2080,
+                    "code": 6902,
+                    "comment": 1892,
+                    "filename": "docs_NEW\\build\\html\\_static\\jquery-3.5.1.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 2,
+                    "filename": "docs_NEW\\build\\html\\_static\\jquery.js"
+                },
+                {
+                    "blank": 28,
+                    "code": 246,
+                    "comment": 31,
+                    "filename": "docs_NEW\\build\\html\\_static\\language_data.js"
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\_static\\minus.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\_static\\plus.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 74,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\_static\\pygments.css"
+                },
+                {
+                    "blank": 49,
+                    "code": 369,
+                    "comment": 103,
+                    "filename": "docs_NEW\\build\\html\\_static\\searchtools.js"
+                },
+                {
+                    "blank": 23,
+                    "code": 103,
+                    "comment": 34,
+                    "filename": "docs_NEW\\build\\html\\_static\\sidebar.js"
+                },
+                {
+                    "blank": 224,
+                    "code": 1441,
+                    "comment": 365,
+                    "filename": "docs_NEW\\build\\html\\_static\\underscore-1.13.1.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 4,
+                    "filename": "docs_NEW\\build\\html\\_static\\underscore.js"
+                },
+                {
+                    "blank": 27,
+                    "code": 310,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\cc.html"
+                },
+                {
+                    "blank": 30,
+                    "code": 332,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\genindex.html"
+                },
+                {
+                    "blank": 10,
+                    "code": 109,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\index.html"
+                },
+                {
+                    "blank": 36,
+                    "code": 347,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\mct.html"
+                },
+                {
+                    "blank": 10,
+                    "code": 89,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\mct\\mod.html"
+                },
+                {
+                    "filename": "docs_NEW\\build\\html\\objects.inv",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 20,
+                    "code": 77,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\search.html"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\searchindex.js"
+                },
+                {
+                    "blank": 30,
+                    "code": 309,
+                    "comment": 0,
+                    "filename": "docs_NEW\\build\\html\\vandy_lib.html"
+                },
+                {
+                    "blank": 5,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "docs_NEW\\make.bat"
+                },
+                {
+                    "blank": 4,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "docs_NEW\\Makefile"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\source\\cc.rst"
+                },
+                {
+                    "blank": 17,
+                    "code": 12,
+                    "comment": 32,
+                    "filename": "docs_NEW\\source\\conf.py"
+                },
+                {
+                    "blank": 9,
+                    "code": 18,
+                    "comment": 1,
+                    "filename": "docs_NEW\\source\\index.rst"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\source\\mct.rst"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\source\\mct\\mod.rst"
+                },
+                {
+                    "blank": 1,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "docs_NEW\\source\\vandy_lib.rst"
+                },
+                {
+                    "blank": 164,
+                    "code": 93,
+                    "comment": 0,
+                    "filename": "docs_NEW\\tmp"
+                },
+                {
+                    "blank": 55,
+                    "code": 134,
+                    "comment": 0,
+                    "filename": "manual.md"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "README.rst"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "script\\_lib\\lib_mod_loader.lua"
+                },
+                {
+                    "blank": 4,
+                    "code": 20,
+                    "comment": 0,
+                    "filename": "script\\_lib\\mod\\!vandy_lib_init.lua"
+                },
+                {
+                    "blank": 15,
+                    "code": 111,
+                    "comment": 0,
+                    "filename": "script\\_lib\\mod\\mp_event_communication.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\_lib\\mod\\qa_console.lua"
+                },
+                {
+                    "blank": 6,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "script\\campaign\\mod\\tests.lua"
+                },
+                {
+                    "blank": 13,
+                    "code": 49,
+                    "comment": 0,
+                    "filename": "script\\mct\\settings\\mct_mod_settings.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 163,
+                    "comment": 0,
+                    "filename": "script\\mct_profiles_BACKUP.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 368,
+                    "comment": 0,
+                    "filename": "script\\mct_settings_BACKUP.lua"
+                },
+                {
+                    "blank": 7,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "script\\mod\\!!!overwrite_vanilla.lua"
+                },
+                {
+                    "blank": 5,
+                    "code": 44,
+                    "comment": 0,
+                    "filename": "script\\mod\\mct_options.lua"
+                },
+                {
+                    "blank": 3,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "script\\mod\\zzz_debugger.lua"
+                },
+                {
+                    "blank": 4,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "script\\vlib\\class.lua"
+                },
+                {
+                    "blank": 3,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": "script\\vlib\\helpers\\etc.lua"
+                },
+                {
+                    "blank": 6,
+                    "code": 29,
+                    "comment": 0,
+                    "filename": "script\\vlib\\helpers\\extensions.lua"
+                },
+                {
+                    "blank": 17,
+                    "code": 62,
+                    "comment": 0,
+                    "filename": "script\\vlib\\helpers\\print_table.lua"
+                },
+                {
+                    "blank": 2,
+                    "code": 9,
+                    "comment": 0,
+                    "filename": "script\\vlib\\helpers\\text_formatting.lua"
+                },
+                {
+                    "blank": 43,
+                    "code": 163,
+                    "comment": 0,
+                    "filename": "script\\vlib\\helpers\\uic.lua"
+                },
+                {
+                    "blank": 4,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\etc\\filters.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\etc\\requirements.lua"
+                },
+                {
+                    "blank": 10,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\functionality\\cm_additions.lua"
+                },
+                {
+                    "blank": 15,
+                    "code": 56,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\functionality\\cm_wrappers.lua"
+                },
+                {
+                    "blank": 5,
+                    "code": 10,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\functionality\\ui\\frontend_effects.lua"
+                },
+                {
+                    "blank": 20,
+                    "code": 70,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\functionality\\ui\\unit_card.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\AgentObj.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\BuildingObj.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\EffectObj.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\PRObj.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\RegimentObj.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\SkillObj.lua"
+                },
+                {
+                    "blank": 140,
+                    "code": 449,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\TechObj.lua"
+                },
+                {
+                    "blank": 56,
+                    "code": 193,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\game_objects\\UnitObj.lua"
+                },
+                {
+                    "blank": 39,
+                    "code": 121,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\camp_counselor\\main.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\debug_menu\\main.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\logging_menu\\main.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\lua_console\\main.lua"
+                },
+                {
+                    "blank": 18,
+                    "code": 81,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\main.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\actions.lua"
+                },
+                {
+                    "blank": 8,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\cached_settings.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\logging.lua"
+                },
+                {
+                    "blank": 22,
+                    "code": 102,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\mp_support.lua"
+                },
+                {
+                    "blank": 13,
+                    "code": 70,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\new_options_added.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\notifications_center.lua"
+                },
+                {
+                    "blank": 12,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\patch_notes.lua"
+                },
+                {
+                    "blank": 13,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\ui_init.lua"
+                },
+                {
+                    "blank": 8,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\ui_tab.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\modules\\wiki.lua"
+                },
+                {
+                    "blank": 71,
+                    "code": 274,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\mct.lua"
+                },
+                {
+                    "blank": 84,
+                    "code": 325,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\mod_obj.lua"
+                },
+                {
+                    "blank": 105,
+                    "code": 450,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\option_obj.lua"
+                },
+                {
+                    "blank": 69,
+                    "code": 304,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\section_obj.lua"
+                },
+                {
+                    "blank": 152,
+                    "code": 517,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\settings.lua"
+                },
+                {
+                    "blank": 235,
+                    "code": 787,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\objects\\ui_obj.lua"
+                },
+                {
+                    "blank": 43,
+                    "code": 145,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\checkbox.lua"
+                },
+                {
+                    "blank": 42,
+                    "code": 152,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\dropdown.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\dummy.lua"
+                },
+                {
+                    "blank": 22,
+                    "code": 76,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\multibox.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\radio_option.lua"
+                },
+                {
+                    "blank": 85,
+                    "code": 318,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\slider.lua"
+                },
+                {
+                    "blank": 93,
+                    "code": 335,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\text_input.lua"
+                },
+                {
+                    "blank": 18,
+                    "code": 58,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\mod_configuration_tool\\types\\zzz_template.lua"
+                },
+                {
+                    "blank": 47,
+                    "code": 155,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\BaseClass.lua"
+                },
+                {
+                    "blank": 4,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\Collection.lua"
+                },
+                {
+                    "blank": 54,
+                    "code": 229,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\Component.lua"
+                },
+                {
+                    "blank": 31,
+                    "code": 102,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\ComponentLayoutEngine.lua"
+                },
+                {
+                    "blank": 38,
+                    "code": 130,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\Field.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\classes\\Template.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 10416,
+                    "comment": 1,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\character_information.twui.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 18478,
+                    "comment": 1,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\dungeon_of_athel_tamarha.twui.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 34897,
+                    "comment": 1,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\grom_cauldron_panel.twui.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 125780,
+                    "comment": 1,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\layout.twui.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\layout_engine.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 568,
+                    "comment": 1,
+                    "filename": "script\\vlib\\modules\\ui_editor\\example_xml\\text_pointer_line_parent.twui.xml"
+                },
+                {
+                    "blank": 61,
+                    "code": 158,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\layout_parser.lua"
+                },
+                {
+                    "blank": 19,
+                    "code": 50,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\main.lua"
+                },
+                {
+                    "blank": 14,
+                    "code": 35,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentEvent.lua"
+                },
+                {
+                    "blank": 11,
+                    "code": 28,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentEventProperty.lua"
+                },
+                {
+                    "blank": 17,
+                    "code": 40,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentFunction.lua"
+                },
+                {
+                    "blank": 30,
+                    "code": 92,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentFunctionAnimation.lua"
+                },
+                {
+                    "blank": 14,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentFunctionAnimationTrigger.lua"
+                },
+                {
+                    "blank": 18,
+                    "code": 42,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentImage.lua"
+                },
+                {
+                    "blank": 18,
+                    "code": 36,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentImageMetric.lua"
+                },
+                {
+                    "blank": 16,
+                    "code": 34,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentMouse.lua"
+                },
+                {
+                    "blank": 15,
+                    "code": 48,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentMouseSth.lua"
+                },
+                {
+                    "blank": 12,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentProperty.lua"
+                },
+                {
+                    "blank": 31,
+                    "code": 83,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentState.lua"
+                },
+                {
+                    "blank": 21,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentTemplate.lua"
+                },
+                {
+                    "blank": 13,
+                    "code": 29,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\OLD\\ComponentTemplateChild.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 116,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\Component.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 152,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentAnimation.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 140,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentAnimationFrame.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 53,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentAnimationTrigger.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentEvent.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentEventProperty.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 38,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentImage.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 967,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentImageMetric.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 52,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentLayoutEngine.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentModel.lua"
+                },
+                {
+                    "blank": 3,
+                    "code": 64,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentModelView.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentMouse.lua"
+                },
+                {
+                    "blank": 3,
+                    "code": 67,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentMouseUndec.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentProperty.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 204,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentState.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 50,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplate.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 230,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChild.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 78,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChildEvent.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChildEventAlso.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 57,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChildState.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChildUndecOne.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\schemas\\ComponentTemplateChildUndecTwo.lua"
+                },
+                {
+                    "blank": 73,
+                    "code": 231,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\testing_format.lua"
+                },
+                {
+                    "blank": 138,
+                    "code": 495,
+                    "comment": 0,
+                    "filename": "script\\vlib\\modules\\ui_editor\\ui_panel.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 234,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\additional_ui_effects.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 27,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\attributes.lua"
+                },
+                {
+                    "blank": 2,
+                    "code": 75,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\invalid_usage_flags.lua"
+                },
+                {
+                    "blank": 2,
+                    "code": 138,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\ui_unit_bullet_point_enums.lua"
+                },
+                {
+                    "blank": 2,
+                    "code": 273,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\ui_unit_groupings.lua"
+                },
+                {
+                    "blank": 2,
+                    "code": 21,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\unit_ability_source_types.lua"
+                },
+                {
+                    "blank": 1,
+                    "code": 27,
+                    "comment": 0,
+                    "filename": "script\\vlib\\tables\\unit_ability_types.lua"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "script\\vlib\\vandy_lib.txt"
+                },
+                {
+                    "filename": "text\\db\\mct_help_pages.loc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "text\\db\\mct_settings_default__.loc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "text\\db\\mct_tooltips_text.loc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "text\\db\\mct_ui_text.loc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "text\\vlib\\mct\\ui.loc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\mct\\mct_dialogue",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\mct\\mct_dialogue.bak",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\mct\\mct_frame",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\mct\\script_dummy",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\mct\\special_button",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\skins\\default\\icon_options_tab.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\skins\\default\\icon_records_tab.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\skins\\warhammer2\\icon_options_tab.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\skins\\warhammer2\\icon_records_tab.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\black_text",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\custom_image",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\custom_image_tiled",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\dialogue_box",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\dropdown_button",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\dropdown_button_no_event",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\dropdown_option",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\expandable_row_header",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\header_text",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\hlist",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\hlist.bak",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\number_label",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\pooled_resources\\dy_canopic_jars",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\pooled_resources\\negative_list_entry",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\pooled_resources\\positive_list_entry",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\resize_drag_handle",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\row_header",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\calligraph421",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\fe_section_heading",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\georgia_italic",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\la_gioconda\\center",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\la_gioconda\\left",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\la_gioconda\\unaligned",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\la_gioconda_uppercase",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\norse",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\text\\norse-bold",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\unit_card_blank_smol.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "ui\\vandy_lib\\vlist",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                }
+            ]
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-.. lua:class:: vlib_camp_counselor: manager_prototype
+.. lua:class:: mct
     :module:
 
 
@@ -7,141 +7,251 @@
 
 
 
-    .. lua:method:: handle_filters(filters)
-
-
-        TODO Handles a table of any filters, and returns a single table with a list of faction keys to use as filters.
-
-
-
-        :param filters: 
-        :type filters: any
-
-    .. lua:method:: get_active_techs_for_faction(faction_obj)
-
-
-        comment
-
-
-
-        :param faction_obj: 
-        :type faction_obj: userdata
-
-        :rtype: dict[number, vlib_TechObj]
-
-    .. lua:method:: new_techs_from_table(tech_keys, filters)
-
-
-        comment
-
-
-
-        :param tech_keys: 
-        :type tech_keys: dict[number, str]
-        :param filters: 
-        :type filters: any
-
-        :rtype: dict[number, vlib_TechObj]
-
-    .. lua:method:: new_units_from_table(unit_keys, filters)
-
-
-        comment
-
-
-
-        :param unit_keys: 
-        :type unit_keys: dict[number, str]
-        :param filters: 
-        :type filters: any
-
-        :rtype: dict[number, vlib_UnitObj]
-
-    .. lua:method:: restrict_techs_for_faction(techs, faction_key, is_disable)
+    .. lua:method:: log(text)
 
 
 
 
 
-        :param techs: 
-        :type techs: any
-        :param faction_key: 
-        :type faction_key: any
-        :param is_disable: 
-        :type is_disable: any
+        :param text: 
+        :type text: any
 
-    .. lua:method:: add_pr_uic(pooled_resource_key, pr_icon_path, filters)
-
-
-        Add in-game UI for a Pooled Resource - similar to the UI for Canopic Jars, or the various Vortex Currencies, or otherwise. The Pooled Resource MUST be created already in data, and have valid factors, valid text, and be hooked up to each faction provided herein.
+    .. lua:method:: logf(text, ...)
 
 
 
-        :param pooled_resource_key: The key for your PR, from pooled_resources_tables.
-        :type pooled_resource_key: str
-        :param pr_icon_path: The image path for your PR icon. It should start from the root of a .pack file - so if your file is in mymod.pack/ui/icons/pr_icon.png, you would put in "ui/icons/pr_icon.png", including the file name (must be a .png).
-        :type pr_icon_path: str
-        :param filters: Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
-        :type filters: table or str
-
-    .. lua:method:: set_mutually_exclusive_techs(tech_table, filters)
 
 
-        A system to create mutually exclusive technologies - if one is researched, the other[s] are locked, permanently. Handles the UI and the actual locking of the techs.
+        :param text: 
+        :type text: any
+        :param vararg: 
+        :type vararg: any
+
+    .. lua:method:: err(text)
 
 
 
-        :param tech_table: A table of the relevant techs that are being mutually exclusive'd. Needs to be a table of techs, optionally linked to each techs child key. For instance, without child techs: {"tech_1", "tech_2", "tech_3"}; with child techs: {["tech_1"] = {"child_1", "child_2"}, ["tech_2"] = {"child_3", "child_4"}}
-        :type tech_table: dict[str, table]
-        :param filters: Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
-        :type filters: table or str
-
-    .. lua:method:: set_tech_unit_unlock(tech_key, unit_table, is_unlock, filters)
 
 
-        Provide a list of units to lock behind this tech, and to subsequently unlock upon research. Set the "is_unlock" bool to false, to handle the opposite interaction - unlock by default, and then LOCK upon research.
+        :param text: 
+        :type text: any
+
+    .. lua:method:: errf(text, ...)
 
 
 
-        :param tech_key: The tech behind which to lock your units. Must match the key in "technologies"
-        :type tech_key: str
-        :param unit_table: The unit[s] to attach to this tech. You can provide a single unit key `"unit_1"`, or a bunch of them using a table `{"unit_1", "unit_2"}`
-        :type unit_table: str or table
-        :param is_unlock: Set this to true to lock the units by default, and unlock through this tech being research; set this to false to have the reverse behaviour.
-        :type is_unlock: boolean
-        :param filters: Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
-        :type filters: table or str
-
-    .. lua:method:: set_techs_lock_state(tech_table, lock_state, lock_reason, filters)
 
 
-        Used to set the lock state for a technology. This can unlock a previously locked tech, apply a lock to a tech, or completely remove and hide a tech from player and AI.
+        :param text: 
+        :type text: any
+        :param vararg: 
+        :type vararg: any
+
+    .. lua:method:: warn(text)
 
 
 
-        :param tech_table: A single technology key, or a table of them.
-        :type tech_table: str or dict[number, str]
-        :param lock_state: |"locked"|"unlocked"|"disabled" Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it's hidden and unusable.
-        :type lock_state: str
-        :param lock_reason: Provide the reason for the lock, if the lock_state is "locked". Otherwise, this parameter is ignored.
-        :type lock_reason: str or nil
-        :param filters: Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
-        :type filters: table or str
-
-    .. lua:method:: set_units_lock_state(unit_keys, lock_state, lock_reason, filters)
 
 
-        Set the lock state for the units provided. 
+        :param text: 
+        :type text: any
+
+    .. lua:method:: mp_prep()
+
+
+        triggers the listeners for MP communication events!
 
 
 
-        :param unit_keys: The unit[s] to lock. Use "unit_key" or {"unit_key", "unit_key_2"}.
-        :type unit_keys: str or dict[number, str]
-        :param lock_state: |"unlocked"|"locked"|"disabled" Set the lock state to unlocked to have the unit readily available; locked to have the unit restricted, but visible in the UI with an explanation (lock_reason) and a chain around it; or disabled, to have the unit restricted and invisible in the UI.
-        :type lock_state: str
-        :param lock_reason: The reason to list in the UI for the lock. I recommend passing in text grabbed through effect.get_localised_string(). Only necessary if the lock_state is "locked".
-        :type lock_reason: str or nil
-        :param filters: Provide a filters table (or a single string, if you're just using one faction key). You can use {faction="faction_key"}, {subculture="subculture_key"}, {culture="culture_key"}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {"faction1", "faction2"}}, and you can use all three filters at once, ie. {faction="faction1", subculture = {"subculture1", "subculture2"}}
-        :type filters: table or str
+
+    .. lua:method:: load_and_start(loading_game_context, is_mp)
+
+
+
+
+
+        :param loading_game_context: 
+        :type loading_game_context: any
+        :param is_mp: 
+        :type is_mp: any
+
+    .. lua:method:: load_mod(filename, filename_for_out)
+
+
+        For internal use, loads specific mod files located in `script/mct/settings/`. 
+
+        Any .lua file found in here is given the MCT manager as the variable `mct` within the full scope of the file.
+
+        :param filename: The filename being required and loaded.
+        :type filename: str
+        :param filename_for_out: The original filename with the full directory path still included; used for outputs.
+        :type filename_for_out: str
+
+    .. lua:method:: load_mods()
+
+
+
+
+
+
+    .. lua:method:: set_selected_mod(mod_name)
+
+
+
+
+
+        :param mod_name: 
+        :type mod_name: any
+
+    .. lua:method:: get_selected_mod_name()
+
+
+
+
+
+
+    .. lua:method:: get_selected_mod()
+
+
+
+
+
+
+        :rtype: mct_mod
+
+    .. lua:method:: has_mod_with_name_been_registered(mod_name)
+
+
+
+
+
+        :param mod_name: 
+        :type mod_name: any
+
+    .. lua:method:: get_mod_with_name(mod_name)
+
+
+
+
+
+        :param mod_name: 
+        :type mod_name: any
+
+    .. lua:method:: finalize_new()
+
+
+
+
+
+
+    .. lua:method:: finalize()
+
+
+        TODO use new system!
+
+        Internal use only. Triggers all the functionality for "Finalize Settings!"
+
+
+    .. lua:method:: get_mod_by_key(mod_name)
+
+
+        Getter for the :lua:class:`mct_mod` with the supplied key.
+
+
+
+        :param mod_name: Unique identifier for the desired mct_mod.
+        :type mod_name: str
+
+        :rtype: mct_mod
+
+    .. lua:method:: get_mods()
+
+
+
+
+
+
+    .. lua:method:: get_mods_from_file(filepath)
+
+
+
+
+
+        :param filepath: 
+        :type filepath: any
+
+    .. lua:method:: register_mod(mod_name)
+
+
+        Primary function to begin adding settings to a "mod".
+
+        Calls the internal function :lua:class:`mct_mod.new`.
+
+        :param mod_name: The identifier for this mod.
+        :type mod_name: str
+
+        :rtype: mct_mod
+
+    .. lua:method:: is_mct_mod(obj)
+
+
+        Type-checker for :lua:class:`mct_mod`s
+
+
+
+        :param obj: Tested value.
+        :type obj: any
+        :return: Whether it passes.
+        :rtype: boolean
+
+    .. lua:method:: is_mct_option(obj)
+
+
+        Type-checker for :lua:class:`mct_option`s
+
+
+
+        :param obj: Tested value.
+        :type obj: any
+        :return: Whether it passes.
+        :rtype: boolean
+
+    .. lua:method:: is_mct_section(obj)
+
+
+        Type-checker for :lua:class:`mct_section`s
+
+
+
+        :param obj: Tested value.
+        :type obj: any
+        :return: Whether it passes.
+        :rtype: boolean
+
+    .. lua:method:: is_valid_option_type(val)
+
+
+        Type-checker for :lua:class:`mct_option` types.
+
+
+
+        :param val: Tested value.
+        :type val: any
+        :return: Whether it passes.
+        :rtype: boolean
+
+    .. lua:method:: get_valid_option_types()
+
+
+
+
+
+
+    .. lua:method:: get_valid_option_types_table()
+
+
+
+
+
 
 

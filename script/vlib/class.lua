@@ -1,122 +1,232 @@
---- A system for creating classes in Lua.
--- Inspired by SinisterRectus's implementation in Discordia, 
-
---- TODO change this to just a single, simple "class" system, and then make a "Manager" class that can be duplicated for specific managers
--- TODO this. Have all the shared "manager" stuff between all of the various managers within this.
--- Filters, getting, setting, tostring'ing, grabbing, creating.
--- Also handle the held class[es] within each manager, and understand the types therein, etc.
--- Potentially hold all of the save-state stuff within here as well?
-
-local vlib = get_vlib()
-local log,logf,err,errf = vlib:get_log_functions("[managers]")
-
---- Metatable for all classes.
-local meta = {
-    -- local class_prototype = vlib:new_class("ClassName")
-    -- local class = class_prototype(args, for, init)
-    -- runs through class_prototype.__init()
-    __call = function(self, ...)
-        -- local o = setmetatable(self, self)
-        --- objects[o] = true
-        self:__init(...)
-        return self
-    end,
-    __tostring = function(self)
-        return 'class ' .. self.__name
-    end,
+local details = {
+    _DESCRIPTION = '30 lines library for object orientation in Lua',
+    _VERSION     = '30log v1.3.0',
+    _URL         = 'http://github.com/Yonaba/30log',
+    _LICENSE     = 'MIT LICENSE <http://www.opensource.org/licenses/mit-license.php>',
 }
 
---- Default values for all classes.
----@class class_prototype
-local default = {
-    -- TODO decide
-    __init = function(self, ...)
-        -- Default __init function if I don't want to actually do any for something.
-    end,
-    __name = "",
-    _key = "",
+local next         = next
+local assert       = assert
+local pairs        = pairs
+local type         = type
+local tostring     = tostring
+local setmetatable = setmetatable
 
-    get_key = function(self)
-        return self._key
-    end
+local _class
+local baseMt     = {}
+local _instances = setmetatable({},{__mode = 'k'})
+local _classes   = setmetatable({},{__mode = 'k'})
+
+isClass   = function(t) return not not _classes[t] end
+isInstance = function(t) return not not _instances[t] end
+
+--- TODO redo this entire file so it's a bit more readable and usable; default_class should be the documented base class type.
+local default_class = {}
+
+local function assert_call_from_class(class, method)
+	assert(_classes[class], ('Wrong method call. Expected class:%s.'):format(method))
+end
+
+local function assert_call_from_instance(instance, method)
+	assert(_instances[instance], ('Wrong method call. Expected instance:%s.'):format(method))
+end
+
+local function bind(f, v) 
+	return function(...) return f(v, ...) end 
+end
+
+local default_filter = function() return true end
+	
+local function deep_copy(t, dest, aType)
+	t = t or {}
+	local r = dest or {}
+	for k,v in pairs(t) do
+		if aType ~= nil and type(v) == aType then
+			r[k] = (type(v) == 'table')
+							and ((_classes[v] or _instances[v]) and v or deep_copy(v))
+							or v
+		elseif aType == nil then
+			r[k] = (type(v) == 'table') 
+			        and k~= '__index' and ((_classes[v] or _instances[v]) and v or deep_copy(v)) 
+							or v
+		end
+	end
+	return r
+end
+
+--- Create a new subclass from an existing class.
+---@param super Class
+---@param className string
+---@param extra_params table
+---@return Class
+local function extend(super, className, extra_params)
+	assert_call_from_class(super, 'extend(...)')
+
+	---@type Class
+	local heir = {}
+	_classes[heir] = tostring(heir)
+	super.__subclasses[heir] = true
+	deep_copy(extra_params, deep_copy(super, heir))
+	heir.className    = extra_params and extra_params.className or className
+	heir.__index = heir
+
+	---@type Class
+	heir.super   = super
+	heir.mixins = {}
+	return setmetatable(heir,super)
+end
+
+baseMt = {
+	__call = function (self,...) return self:new(...) end,
+	
+	__tostring = function(self,...)
+		if _instances[self] then
+			return ("instance of '%s' (%s)"):format(rawget(self.class,'className') 
+								or '?', _instances[self])
+		end
+		return _classes[self] 
+							and ("class '%s' (%s)"):format(rawget(self,'className')
+							or '?',
+					_classes[self]) or self
+	end
 }
 
----@type table<class_prototype, boolean> Holds all existing created classes
-local classes = {}
+_classes[baseMt] = tostring(baseMt)
+setmetatable(baseMt, {__tostring = baseMt.__tostring})
 
----@type table<string, class_prototype> Holds all existing class names.
-local names = {}
+local function new_obj(self, ...)
+	assert_call_from_class(self, 'new(...) or class(...)')
 
-local function is_class(obj)
+	---@type Class
+	local instance = {class = self}
+	_instances[instance] = tostring(instance)
+	deep_copy(self, instance, 'table')
+	instance.__index = nil
+	instance.mixins = nil
+	instance.__subclasses = nil
+	instance.__instances = nil
+	setmetatable(instance,self)
 
+	return instance
 end
 
-local function is_object(obj)
+---@return Class
+_class = function(className, attr)
+    ---@class Class
+	local c = deep_copy(attr)
+	_classes[c] = tostring(c)
+	c.className = className or c.className
+	c.__tostring = baseMt.__tostring
+	c.__call = baseMt.__call
 
+	---@param self Class
+	---@return Class
+	c.__new = function(self)
+		local o = new_obj(self)
+		return o
+	end
+
+	c.extend = extend
+	c.__index = c
+	
+	c.mixins = setmetatable({},{__mode = 'k'})
+	c.__instances = setmetatable({},{__mode = 'k'})
+	c.__subclasses = setmetatable({},{__mode = 'k'})
+	
+	c.subclasses = function(self, filter, ...)
+		assert_call_from_class(self, 'subclasses(class)')
+		filter = filter or default_filter
+		local subclasses = {}
+		for class in pairs(_classes) do
+			if class ~= baseMt and class:subclassOf(self) and filter(class,...) then 
+				subclasses[#subclasses + 1] = class 
+			end
+		end
+		return subclasses
+	end
+	
+	c.instances = function(self, filter, ...)
+		assert_call_from_class(self, 'instances(class)')	
+		filter = filter or default_filter		
+		local instances = {}
+		for instance in pairs(_instances) do
+			if instance:instanceOf(self) and filter(instance, ...) then 
+				instances[#instances + 1] = instance
+			end
+		end
+		return instances
+	end
+
+	c.subclassOf = function(self, superclass)
+		assert_call_from_class(self, 'subclassOf(superclass)')
+		assert(isClass(superclass), 'Wrong argument given to method "subclassOf()". Expected a class.')
+		local super = self.super
+		while super do
+			if super == superclass then return true end
+			super = super.super
+		end
+		return false
+	end
+	
+	c.classOf = function(self, subclass)
+		assert_call_from_class(self, 'classOf(subclass)')
+		assert(isClass(subclass), 'Wrong argument given to method "classOf()". Expected a class.')		
+		return subclass:subclassOf(self)
+	end	
+
+	c.instanceOf = function(self, fromclass)
+		assert_call_from_instance(self, 'instanceOf(class)')
+		assert(isClass(fromclass), 'Wrong argument given to method "instanceOf()". Expected a class.')
+		return ((self.class == fromclass) or (self.class:subclassOf(fromclass)))
+	end
+	
+	c.cast = function(self, toclass)
+		assert_call_from_instance(self, 'instanceOf(class)')
+		assert(isClass(toclass), 'Wrong argument given to method "cast()". Expected a class.')
+		setmetatable(self, toclass)
+		self.class = toclass
+		return self
+	end
+	
+	c.with = function(self,...)
+		assert_call_from_class(self, 'with(mixin)')
+		for _, mixin in ipairs({...}) do
+			assert(self.mixins[mixin] ~= true, ('Attempted to include a mixin which was already included in %s'):format(tostring(self)))
+			self.mixins[mixin] = true
+			deep_copy(mixin, self, 'function')
+		end
+		return self
+	end
+	
+	c.includes = function(self, mixin)
+		assert_call_from_class(self,'includes(mixin)')
+		return not not (self.mixins[mixin] or (self.super and self.super:includes(mixin)))
+	end	
+	
+	c.without = function(self, ...)
+		assert_call_from_class(self, 'without(mixin)')
+		for _, mixin in ipairs({...}) do
+			assert(self.mixins[mixin] == true, ('Attempted to remove a mixin which is not included in %s'):format(tostring(self)))		
+			local classes = self:subclasses()
+			classes[#classes + 1] = self
+			for _, class in ipairs(classes) do
+				for method_name, method in pairs(mixin) do
+					if type(method) == 'function' then 
+						class[method_name] = nil 
+					end
+				end
+			end
+			self.mixins[mixin] = nil
+		end
+		return self
+	end
+	return setmetatable(c, baseMt)
 end
 
-do
-    return function(name, obj, ...)
-        obj = obj or {}
-        if names[name] then
-            --- errmsg, class already exists with this name
-            return false
-        end
 
-        local class = setmetatable(obj, meta)
-        classes[class] = true
-
-        for k,v in pairs(default) do
-            class[k] = v
-        end
-
-        local parents = {...}
-        local getters = {}
-        local setters = {}
-
-        for _,parent in ipairs(parents) do
-            for k1,v1 in pairs(parent) do
-                class[k1] = v1
-
-                for k2,v2 in pairs(parent.__getters) do
-                    getters[k2] = v2
-                end
-
-                for k2,v2 in pairs(parent.__setters) do
-                    setters[k2] = v2
-                end
-            end
-        end
-
-        class.__name = name
-        class.__class = class
-        class.__parents = parents
-        class.__getters = getters
-        class.__seters = setters
-
-        names[name] = class
-
-        -------
-        --- These two functions are only "triggered" into the MT when __init() is called on the class, so anything defined before then is safe!
-        -------
-
-        function class:__index(k)
-            if getters[k] then
-                return getters[k](self)
-            else
-                return class[k]
-            end
-        end
-
-        function class:__newindex(k, v)
-            if setters[k] then
-                return setters[k](self, v)
-            elseif class[k] or getters[k] then
-                -- errmsg, can't overwrite stuff!
-                return class[k](self, v)
-            end
-        end
-
-        return class, getters, setters
-    end
-end
+return
+    --- Create a new class object!
+    ---@param className string The new class's name.
+    ---@param attr table Default attributes for this class.
+    ---@return Class
+    function(className, attr) return _class(className, attr) end

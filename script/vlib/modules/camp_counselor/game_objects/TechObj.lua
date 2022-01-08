@@ -19,7 +19,7 @@ local function get_tech(key)
     return cc:get_object("TechObj", key)
 end
 
----@class tech_class : class_prototype
+---@class tech_class : Class
 local TechObj = vlib:new_class("TechObj")
 TechObj.__index = TechObj
 

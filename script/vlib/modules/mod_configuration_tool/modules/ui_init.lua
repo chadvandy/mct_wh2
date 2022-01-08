@@ -28,17 +28,15 @@ elseif core:is_battle() then
     local bm = get_bm()
 
     local function create_button(button_group)
+        local button_group = find_uicomponent(core:get_ui_root(), "menu_bar", "buttongroup")
         local new_button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
 
         -- set the tooltip to the one on the frontend button
         _SetTooltipText(new_button, effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
-        local img_path = effect.get_skinned_image_path("icon_options.png")
-        _SetImagePath(new_button, img_path)
+        _SetImagePath(new_button, effect.get_skinned_image_path("icon_options.png"))
 
-        -- make sure it's on the button group, and set its z-priority to be as high as its parents
-        new_button:PropagatePriority(button_group:Priority())
+        -- make sure it's on the button group
         button_group:Adopt(new_button:Address())
-        --ModLog("end")
 
         mct.ui:set_mct_button(new_button)
 

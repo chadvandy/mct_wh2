@@ -28,7 +28,6 @@ do
 
     -- load the settings and UI files first
 
-    ---@type mct_settings
     local settings = vlib:load_module("settings", objects_path)
     mct.settings = settings
 

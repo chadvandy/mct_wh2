@@ -124,21 +124,21 @@ function ERROR_CHECKER()
         end
         
         local currentAddListener = core.add_listener;
-        --v [NO_CHECK] function(core: any, listenerName: any, eventName: any, conditionFunc: any, listenerFunc: any, persistent: any)
-        function myAddListener(core, listenerName, eventName, conditionFunc, listenerFunc, persistent)
-            local wrappedCondition = nil;
-            if is_function(conditionFunc) then
-                --wrappedCondition =  wrapFunction(conditionFunc, function(arg) mct:log("Callback condition called: " .. listenerName .. ", for event: " .. eventName); end);
-                wrappedCondition =  wrapFunction(conditionFunc);
-            else
-                wrappedCondition = conditionFunc;
-            end
-            currentAddListener(
-                core, listenerName, eventName, wrappedCondition, wrapFunction(listenerFunc), persistent
-                --core, listenerName, eventName, wrappedCondition, wrapFunction(listenerFunc, function(arg) mct:log("Callback called: " .. listenerName .. ", for event: " .. eventName); end), persistent
-            )
-        end
-        core.add_listener = myAddListener;
+        -- --v [NO_CHECK] function(core: any, listenerName: any, eventName: any, conditionFunc: any, listenerFunc: any, persistent: any)
+        -- function myAddListener(core, listenerName, eventName, conditionFunc, listenerFunc, persistent)
+        --     local wrappedCondition = nil;
+        --     if is_function(conditionFunc) then
+        --         --wrappedCondition =  wrapFunction(conditionFunc, function(arg) mct:log("Callback condition called: " .. listenerName .. ", for event: " .. eventName); end);
+        --         wrappedCondition =  wrapFunction(conditionFunc);
+        --     else
+        --         wrappedCondition = conditionFunc;
+        --     end
+        --     currentAddListener(
+        --         core, listenerName, eventName, wrappedCondition, wrapFunction(listenerFunc), persistent
+        --         --core, listenerName, eventName, wrappedCondition, wrapFunction(listenerFunc, function(arg) mct:log("Callback called: " .. listenerName .. ", for event: " .. eventName); end), persistent
+        --     )
+        -- end
+        -- core.add_listener = myAddListener;
 end
 
 -- ERROR_CHECKER()

@@ -189,7 +189,14 @@ function _SetImagePath(uic, img_path, index)
     if not is_string(img_path) then return end
     if not is_nil(index) and not is_number(index) then return end
 
-    uic:SetImagePath(img_path, index)
+    return uic:SetImagePath(img_path, index)
+end
+
+function _PropagatePriority(uic, priority)
+    if not is_uicomponent(uic) then return end
+    if not is_number(priority) then return end
+
+    return uic:PropagatePriority(priority)
 end
 
 ---@param uic UIComponent

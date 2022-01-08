@@ -1,3 +1,6 @@
+--- TODO come to an accord about how I need to handle all of these internal objects and libraries.
+
+
 ------ Vandy Library!
 --- @class vandy_lib
 local vandy_lib = {
@@ -135,7 +138,9 @@ end
 
 function vandy_lib:logf(text, tag, ...)
     if arg.n >= 1 then
-        text = string.format(text, unpack(arg))
+        local ok, err = pcall(function()
+            text = string.format(text, unpack(arg))
+        end) if not ok then self:error(err) end
     end
 
     self:log(text, tag)
@@ -491,12 +496,11 @@ function vandy_lib:init()
     local f = self:load_module("class", "script/vlib/")
 
     --- Create a new class.
-    ---@param self vandy_lib
     ---@param name string The name of this new class.
-    ---@param obj table Default table to build this new class from.
-    ---@vararg table Provide parents for the class to inherit from. Earliest take highest priority(TODO confirm :))
-    self.new_class = function(self, name, obj, ...)
-        return f(name, obj, ...)
+    ---@param defaults table Default table to build this new class from.
+    ---@return Class
+    function vandy_lib:new_class(name, defaults)
+        return f(name, defaults)
     end
     
     self:callback_handler()

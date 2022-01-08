@@ -46,11 +46,89 @@
 <h1>Camp Counselor<a class="headerlink" href="#camp-counselor" title="Permalink to this headline">¶</a></h1>
 <dl class="lua class">
 <dt class="sig sig-object lua" id="vlib_camp_counselor">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">vlib_camp_counselor</span></span><em class="property"><span class="pre">:</span> </em><span class="pre">manager_prototype</span><a class="headerlink" href="#vlib_camp_counselor" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">vlib_camp_counselor</span></span><a class="headerlink" href="#vlib_camp_counselor" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.__init">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">__init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.__init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called on Counselor creation, default values and shit.</p>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_class">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">class_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_class" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>class_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.new_object">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">new_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">class_key</span></em>, <em class="sig-param"><span class="pre">object_key</span></em>, <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.new_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO make sure new/get obj are valid, so it doesn’t break on objects[class_key][object_key] if class is invalid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>class_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>object_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>vararg</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_object">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">class_key</span></em>, <em class="sig-param"><span class="pre">object_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_object" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>class_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>object_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_objects_of_class">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_objects_of_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">class_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_objects_of_class" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>class_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_units_for_building">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_units_for_building</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">building_key</span></em>, <em class="sig-param"><span class="pre">faction_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_units_for_building" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>building_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+<li><p><strong>faction_key</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
+<dt class="sig sig-object lua" id="vlib_camp_counselor.get_units_for_faction">
+<em class="property"> </em><span class="sig-name descname"><span class="pre">get_units_for_faction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.get_units_for_faction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">unit_class]</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="lua method">
 <dt class="sig sig-object lua" id="vlib_camp_counselor.handle_filters">
 <em class="property"> </em><span class="sig-name descname"><span class="pre">handle_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">filters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vlib_camp_counselor.handle_filters" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO Handles a table of any filters, and returns a single table with a list of faction keys to use as filters.</p>
+<dd><p>TODO make Filter its own “object” that can be created and used on its own</p>
+<p>ie., local filter = Counselor:new_filter({faction=”faction_key”}) or whatever, and then you can keep that filter with its MT and all and use it for multiple functions at once TODO Handles a table of any filters, and returns a single table with a list of faction keys to use as filters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">any</span></code></span>) – </p>
@@ -67,7 +145,7 @@
 <dd class="field-odd"><p><strong>faction_obj</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">userdata</span></code></span>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_TechObj]</span></code></span></p>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">tech_class]</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -84,7 +162,7 @@
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_TechObj]</span></code></span></p>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">tech_class]</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -101,7 +179,7 @@
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">vlib_UnitObj]</span></code></span></p>
+<dd class="field-even"><p><span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">dict[number,</span> <span class="pre">unit_class]</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -173,7 +251,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tech_table</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – A single technology key, or a table of them.</p></li>
-<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <a href="#id1"><span class="problematic" id="id2">|&quot;locked&quot;|</span></a>”unlocked”|”disabled” Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it’s hidden and unusable.</p></li>
+<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">lock_state_string</span></code></span>) – Set the state for these locks. Locked means it cannot be used, and has chains on it visually. Unlocked means business as usual. Disabled means it’s hidden and unusable.</p></li>
 <li><p><strong>lock_reason</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">nil</span></code></span>) – Provide the reason for the lock, if the lock_state is “locked”. Otherwise, this parameter is ignored.</p></li>
 <li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
 </ul>
@@ -189,7 +267,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>unit_keys</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">dict[number,</span> <span class="pre">str]</span></code></span>) – The unit[s] to lock. Use “unit_key” or {“unit_key”, “unit_key_2”}.</p></li>
-<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <a href="#id3"><span class="problematic" id="id4">|&quot;unlocked&quot;|</span></a>”locked”|”disabled” Set the lock state to unlocked to have the unit readily available; locked to have the unit restricted, but visible in the UI with an explanation (lock_reason) and a chain around it; or disabled, to have the unit restricted and invisible in the UI.</p></li>
+<li><p><strong>lock_state</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <a href="#id1"><span class="problematic" id="id2">|&quot;unlocked&quot;|</span></a>”locked”|”disabled” Set the lock state to unlocked to have the unit readily available; locked to have the unit restricted, but visible in the UI with an explanation (lock_reason) and a chain around it; or disabled, to have the unit restricted and invisible in the UI.</p></li>
 <li><p><strong>lock_reason</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">or</span> <span class="pre">nil</span></code></span>) – The reason to list in the UI for the lock. I recommend passing in text grabbed through effect.get_localised_string(). Only necessary if the lock_state is “locked”.</p></li>
 <li><p><strong>filters</strong> (<span><code class="xref lua lua-class docutils literal notranslate"><span class="pre">table</span> <span class="pre">or</span> <span class="pre">str</span></code></span>) – Provide a filters table (or a single string, if you’re just using one faction key). You can use {faction=”faction_key”}, {subculture=”subculture_key”}, {culture=”culture_key”}, or any combination therein. Any three of those, likewise, can be tables, ie. {faction = {“faction1”, “faction2”}}, and you can use all three filters at once, ie. {faction=”faction1”, subculture = {“subculture1”, “subculture2”}}</p></li>
 </ul>

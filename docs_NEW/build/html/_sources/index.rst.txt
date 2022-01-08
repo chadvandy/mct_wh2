@@ -6,6 +6,11 @@
 Welcome to Vandy Library's documentation!
 =========================================
 
+The Vandy Library is a series of tools and scripts and functionalities, useful between Vandy's mods, and useful as a resource for other modders.
+They are all provided through and available in https://steamcommunity.com/sharedfiles/filedetails/?id=2548096468.
+
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

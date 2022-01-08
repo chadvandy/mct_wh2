@@ -1,17 +1,18 @@
---- TODO move to /types/ folder? Rename /types/ to /options/?
-
 ---- MCT Option Object
---- @class mct_option
+---@class mct_option
+---@field _template string
+---@field _wrapped_type template_type
 
 local vlib = get_vlib()
 local mct = get_mct()
+local Settings = mct.settings
 
 local log,logf,err,errf = vlib:get_log_functions("[mct]")
 
 ---@type mct_option
 local mct_option = {
-    ---@type mct_mod The owning mod object. TODO swap to a key reference?
-    _mod = nil,
+    ---@type string The key of the owning mod object.
+    _mod_key = nil,
 
     ---@type string The key of this option object.
     _key = "",
@@ -38,7 +39,6 @@ local mct_option = {
     -- selected setting is the current UI state, defaults to default_setting if no finalized_setting;
     -- finalized setting is the saved setting in the file/etc;
     _default_setting = nil,
-    _selected_setting = nil,
     _finalized_setting = nil,
 
     -- whether this option obj is read only for campaign
@@ -75,31 +75,23 @@ local __mct_option_mt = {
 }
 
 ---- For internal use only. Called by @{mct_mod:add_new_option}.
---- @param mod mct_mod
+--- @param mod_key string Key of the mod
 --- @param option_key string
 --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
-function mct_option.new(mod, option_key, type)
-    local new_option = table.copy_add({
-        _mod = mod,
-        _key = option_key,
-        _type = type or "NULL_TYPE",
-        _text = option_key,
-
-    }, mct_option)
-
-    setmetatable(new_option, __mct_option_mt)
-
-    new_option._mod = mod
-    new_option._key = option_key
-    new_option._type = type or "NULL_TYPE"
-
-    new_option._text = option_key -- default text is the key of the mct_option if none is provided
-
-    --self._text = text or ""
-    --self._tooltip_text = tooltip_text or ""
-
-    -- create the wrapped type
-    --new_option._wrapped_type = mct._MCT_TYPES[type]:new({mod=mod, option=new_option, key=option_key})
+function mct_option.new(mod_key, option_key, type)
+    local new_option = setmetatable(
+        -- Create a new table with defaults of the mct_option, + the new fields, + the metatable
+        table.copy_add(
+            {
+                _mod_key = mod_key,
+                _key = option_key,
+                _type = type or "NULL_TYPE",
+                _text = option_key,
+            },
+            mct_option
+        ),
+        __mct_option_mt
+    )
 
     new_option._wrapped_type = mct._MCT_TYPES[type]:new(new_option)
 
@@ -113,11 +105,13 @@ function mct_option.new(mod, option_key, type)
         }
     end
 
+    local mod = new_option:get_mod()
+
     -- assigned section, used for UI, defaults to the last created section unless one is specified
     new_option._assigned_section = mod:get_last_section():get_key()
 
     -- add the option to the mct_section
-    new_option._mod:get_section_by_key(new_option._assigned_section):assign_option(new_option)
+    mod:get_section_by_key(new_option._assigned_section):assign_option(new_option)
 
     -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
     new_option._template = new_option.__templates[type]
@@ -213,13 +207,13 @@ end
 ---- Get the @{mct_mod} object housing this option.
 --- @return mct_mod @{mct_mod}
 function mct_option:get_mod()
-    return self._mod
+    return mct:get_mod_by_key(self._mod_key)
 end
 
 --- Grab the key of the owning mct_mod.
 ---@return string
 function mct_option:get_mod_key()
-    return self._mod:get_key()
+    return self._mod_key
 end
 
 ---- Internal use only. Clears all the UIC objects attached to this boy.
@@ -464,8 +458,7 @@ end
 
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using @{mct_option:add_option_set_callback}.
 ---@param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
----@param is_creation boolean Whether this is being set on the option's UI creation, or being set somewhere else.
-function mct_option:set_selected_setting(val, is_creation)
+function mct_option:set_selected_setting(val)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
         if new_value ~= nil then
@@ -481,25 +474,32 @@ function mct_option:set_selected_setting(val, is_creation)
     if self:get_uic_locked() then
         return
     end
-
-    -- make sure nothing happens if the new val is the current setting
-    if self:get_selected_setting() == val then
+    
+    -- -- make sure nothing happens if the new val is the current setting
+    -- if self:get_selected_setting() == val then
+    --     return
+    -- end
+    
+    --- Only valid if the panel is open!
+    if not mct.ui:is_open() then
         return
     end
-
-    -- save the val as the currently selected setting, used for UI and finalization
-    self._selected_setting = val
-
-    core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val, is_creation = is_creation} )
-
-    if not is_creation then
-        mct.ui:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
-    end
-
+    
+    Settings:set_changed_setting(self:get_mod_key(), self:get_key(), val)
+    
     -- call ui_select_value if the UI exists
     if is_uicomponent(self:get_uic_with_key("option")) then
         self:ui_select_value(val, true)
     end
+    
+    core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val} )
+
+    -- -- save the val as the currently selected setting, used for UI and finalization
+    -- self._selected_setting = val
+
+    -- if not is_creation then
+    --     mct.settings:set_changed_setting(self:get_mod():get_key(), self:get_key(), val)
+    -- end
 
     --[[if not event_free then
         -- run the callback, passing the mct_option along as an arg
@@ -513,7 +513,7 @@ end
 ---@param y number y-coord
 function mct_option:override_position(x,y)
     if not is_number(x) or not is_number(y) then
-        err("override_position() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the x/y coordinates supplied are not numbers! Returning false")
+        err("override_position() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod_key().."], but the x/y coordinates supplied are not numbers! Returning false")
         return false
     end
 
@@ -521,7 +521,7 @@ function mct_option:override_position(x,y)
     self._pos = {x=x,y=y}
 
     -- set coords defined in the mod obj
-    local mod = self._mod
+    local mod = self:get_mod()
     local index = tostring(x)..","..tostring(y)
     mod._coords[index] = self._key
 end
@@ -563,7 +563,6 @@ function mct_option:set_default()
 end
 
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
---- @see mct_option:set_selected_setting
 ---@param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 ---@param is_new_version boolean Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function mct_option:ui_select_value(val, is_new_version)
@@ -590,7 +589,7 @@ function mct_option:ui_select_value(val, is_new_version)
 
     --- TODO, err?
     if not is_new_version then
-        self:set_selected_seting(val)
+        self:set_selected_setting(val)
     end
 
     mct.ui:set_actions_states()
@@ -661,19 +660,21 @@ end
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
-    local test = self._finalized_setting
+    return Settings:get_finalized_setting_for_option(self)
 
-    if is_nil(test) then
-        local default_val = self:get_default_value()
-        if default_val ~= nil or self:get_type() == "dummy" then
-            self._finalized_setting = default_val
-        else
-            log("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
-            return nil
-        end
-    end
+    -- local test = self._finalized_setting
 
-    return self._finalized_setting
+    -- if is_nil(test) then
+    --     local default_val = self:get_default_value()
+    --     if default_val ~= nil or self:get_type() == "dummy" then
+    --         self._finalized_setting = default_val
+    --     else
+    --         log("get_finalized_setting() called for option ["..self:get_key().."], but there is no finalized or default setting for this option!")
+    --         return nil
+    --     end
+    -- end
+
+    -- return self._finalized_setting
 end
 
 
@@ -692,29 +693,23 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
-    -- fuck it, sure. I need this for MP option.
-    -- TODO figure out a much more elegant way to try and do this.
-    --[[if self:get_uic_locked() and not is_first_load then
-        -- can't change finalized setting for read onlys! Error!
-        mct:warn("set_finalized_setting() called for mct_option ["..self:get_key().."], but the option is locked! This shouldn't happen, investigate.")
-        return false
-    end]]
-
-    -- save locally
-    self._finalized_setting = val
-
-    -- save on the mct_mod attached, too
-    local mod = self:get_mod()
-    mod._finalized_settings[self:get_key()] = val
-
-    if self:get_selected_setting() ~= val then
-        self:set_selected_setting(val)
-    end
+    Settings:save_setting(self, val)
 
     -- trigger an event to listen for externally (skip if it's first load)
     if not is_first_load then
         core:trigger_custom_event("MctOptionSettingFinalized", {mct = mct, mod = self:get_mod(), option = self, setting = val})
     end
+
+    -- -- save locally
+    -- self._finalized_setting = val
+
+    -- -- save on the mct_mod attached, too
+    -- local mod = self:get_mod()
+    -- mod._finalized_settings[self:get_key()] = val
+
+    -- if self:get_selected_setting() ~= val then
+    --     self:set_selected_setting(val)
+    -- end
 end
 
 --- Set the default setting when the mct_mod is first created and loaded. Also used for the "Revert to Defaults" option.
@@ -824,20 +819,21 @@ end
 --- Used when finalizing settings.
 --- @treturn any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
-    -- no selected setting found - UI was just created!
-    if self._selected_setting == nil then
+    return Settings:get_selected_setting_for_option(self)
+    -- -- no selected setting found - UI was just created!
+    -- if self._selected_setting == nil then
 
-        -- default to the current finalized setting
-        if self:get_finalized_setting() ~= nil then
-            self._selected_setting = self:get_finalized_setting()
+    --     -- default to the current finalized setting
+    --     if self:get_finalized_setting() ~= nil then
+    --         self._selected_setting = self:get_finalized_setting()
 
-        -- if no finalized setting, set to the default setting
-        elseif self:get_default_value() ~= nil then
-            self._selected_setting = self:get_default_value()
-        end
-    end
+    --     -- if no finalized setting, set to the default setting
+    --     elseif self:get_default_value() ~= nil then
+    --         self._selected_setting = self:get_default_value()
+    --     end
+    -- end
 
-    return self._selected_setting
+    -- return self._selected_setting
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.
@@ -915,7 +911,7 @@ end
 
 ---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_tooltip`, before seeing if any was supplied through @{mct_option:set_tooltip_text}.
 function mct_option:get_tooltip_text()
-    local text = effect.get_localised_string("mct_"..self._mod:get_key().."_"..self:get_key().."_tooltip")
+    local text = effect.get_localised_string("mct_"..self:get_mod_key().."_"..self:get_key().."_tooltip")
     if text ~= "" then
         return text
     end

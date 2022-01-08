@@ -1,21 +1,19 @@
+--- TODO move over entirely to 30log
+--- TODO don't have this here
+
 ---- Mod Configuration Tool Manager
 --- @class mct
 -- Define the manager that will be used for the majority of all these operations
 ---@type mct
+---@field _MCT_OPTION mct_option
+---@field _MCT_SECTION mct_section
+---@field _MCT_MOD mct_mod
+---@field _MCT_TYPES {template:template_type,slider:mct_slider,dropdown:mct_dropdown,checkbox:mct_checkbox,text_input:mct_text_input,dummy:mct_dummy}
+---@field settings mct_settings
+---@field ui mct_ui
 local mod_configuration_tool = {
     _settings_path = "/script/mct/settings/",
     _self_path = "script/vlib/modules/mod_configuration_tool/",
-
-    ---@type mct_settings
-    settings = nil,
-
-    ---@type mct_ui
-    ui = nil,
-    ---@type mct_mod
-    _MCT_MOD = nil,
-
-    ---@type table<string, table>
-    _MCT_TYPES = nil,
 
     -- default to false
     _finalized = false,
@@ -147,7 +145,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         else
             -- if it's a new game, read the settings file and save that into the save file
             if cm:is_new_game() then
-                self.settings:load()
+                self.settings:load_old()
             else
                 self.settings:load_game_callback(loading_game_context)
             end
@@ -160,7 +158,7 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
         --log("frontend?")
         -- read the settings file
         local ok, msg = pcall(function()
-            self.settings:load()
+            self.settings:load_old()
 
             trigger(false)
         end) if not ok then errlog(msg) end
@@ -288,7 +286,7 @@ end
 
 --- TODO use new system!
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
-function mod_configuration_tool:finalize(specific_mod)
+function mod_configuration_tool:finalize()
     local ok, msg = pcall(function()
     if __game_mode == __lib_type_campaign then
         -- check if it's MP!
@@ -296,7 +294,7 @@ function mod_configuration_tool:finalize(specific_mod)
             -- check if it's the host
             if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
                 log("Finalizing settings mid-campaign for MP.")
-                self.settings:finalize(false, specific_mod)
+                self.settings:finalize(false)
 
                 self._finalized = true
                 self.ui.locally_edited = false
@@ -333,7 +331,7 @@ function mod_configuration_tool:finalize(specific_mod)
             end
         else
             -- it's SP, do regular stuff
-            self.settings:finalize(false, specific_mod)
+            self.settings:finalize(false)
 
             self._finalized = true
     
@@ -343,7 +341,7 @@ function mod_configuration_tool:finalize(specific_mod)
             core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
         end
     else
-        self.settings:finalize(false, specific_mod)
+        self.settings:finalize(false)
 
         self._finalized = true
 
@@ -366,21 +364,11 @@ function mod_configuration_tool:get_mod_by_key(mod_name)
     
     local test = self._registered_mods[mod_name]
     if type(test) == "nil" then
-        errlog("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
+        -- errlog("Trying to get mod with name ["..mod_name.."] but none is found! Returning nil.")
         return nil
     end
         
     return self._registered_mods[mod_name]
-end
-
---- Iterate over all mods, iterating through all mod keys and their options.
-function mod_configuration_tool:get_mods_iter()
-    local mods = self:get_mods()
-
-    return function()
-        local mod_key,mod = next(mods)
-        return mod,mod:get_options()
-    end
 end
 
 function mod_configuration_tool:get_mods()

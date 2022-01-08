@@ -661,10 +661,11 @@ function mct_mod:get_patch(index)
     return self._patches[index]
 end
 
+--- TODO switch to Settings object
 --- Used when finalizing the settings in MCT.
 --- @local
 function mct_mod:finalize_settings()
-    local changed_options = mct.ui.changed_settings[self:get_key()]
+    local changed_options = mct.settings:get_changed_settings(self:get_key())
     if not is_table(changed_options) then
         -- this mod hasn't had any changed settings - skip!
         log("Finalizing settings for mod ["..self:get_key().."], but nothing was changed in this mod! Cool!")
@@ -689,7 +690,8 @@ function mct_mod:finalize_settings()
         end
     end
 
-    mct.ui.changed_settings[self:get_key()] = nil
+    --- TODO wrap this
+    mct.settings.__changed_settings[self:get_key()] = nil
 end
 
 function mct_mod:get_settings_table()
@@ -715,6 +717,7 @@ function mct_mod:load_finalized_settings()
     self._finalized_settings = ret
 end
 
+--- TODO replace this with wrapping through Settings, since _finalized_settings is gonezo
 --- Returns the `finalized_settings` field of this `mct_mod`.
 function mct_mod:get_settings()
     --[[local options = self:get_options()
@@ -900,9 +903,7 @@ function mct_mod:add_new_option(option_key, option_type)
         return false
     end
 
-    local mod = self
-
-    local new_option = mct._MCT_OPTION.new(mod, option_key, option_type)
+    local new_option = mct._MCT_OPTION.new(self:get_key(), option_key, option_type)
 
     -- set a default value of unticked if it's a checkbox
     if option_type == "checkbox" then
@@ -916,7 +917,7 @@ function mct_mod:add_new_option(option_key, option_type)
 
     --if mct._initalized then
         --log("Triggering MctNewOptionCreated")
-        core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = mod, ["option"] = new_option})
+        core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = self, ["option"] = new_option})
     --end
 
 

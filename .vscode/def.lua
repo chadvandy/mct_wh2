@@ -58,10 +58,11 @@ CampaignUI = {
     TriggerCampaignScriptEvent = function(faction_cqi, event_id) end
 }
 
----@alias ComponentAddress string
-
 ---@alias docking_points "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
+
 --- TODO autofill from html
+---@class UIC_Address:userdata
+
 --- TODO fill this out (:
 ---@class UIComponent
 ---@field SetState fun(self:UIComponent, state:string)
@@ -81,10 +82,10 @@ CampaignUI = {
 ---@field SetImagePath fun(UIComponent, img:string, index:number)
 ---@field Width fun(UIComponent):number
 ---@field Height fun(UIComponent):number
----@field CreateComponent fun(self:UIComponent, key:string, template:string|nil):ComponentAddress
+---@field CreateComponent fun(self:UIComponent, key:string, template:string|nil):UIC_Address
 ---@field UnLockPriority fun(UIComponent)
 ---@field Id fun(self:UIComponent):string
----@field Parent fun(self:UIComponent):ComponentAddress
+---@field Parent fun(self:UIComponent):UIC_Address
 ---@field PropagatePriority fun(self:UIComponent, priority:number)
 ---@field LockPriority fun(self:UIComponent)
 ---@field Dimensions fun(self:UIComponent):number,number
@@ -96,7 +97,7 @@ CampaignUI = {
 ---@field GetStateText fun(self:UIComponent):string
 ---@field TextDimensionsForText fun(self:UIComponent, text:string):number,number
 ---@field ResizeTextResizingComponentToInitialSize fun(self:UIComponent, w:number, h:number)
----@field Find fun(self:UIComponent, i:number|string):ComponentAddress
+---@field Find fun(self:UIComponent, i:number|string):UIC_Address
 ---@field Priority fun(self:UIComponent):number
 ---@field Position fun(self:UIComponent):number,number
 ---@field GetDockOffset fun(self:UIComponent):number,number
@@ -107,8 +108,8 @@ CampaignUI = {
 ---@field ResizeCurrentStateImage fun(self:UIComponent, img_index:number, w:number,h:number)
 ---@field StartPulseHighlight fun(self:UIComponent, intensity:number, state:string)
 ---@field StopPulseHighlight fun(self:UIComponent)
----@field Address fun(self:UIComponent):ComponentAddress
----@field Adopt fun(self:UIComponent, address: ComponentAddress)
+---@field Address fun(self:UIComponent):UIC_Address
+---@field Adopt fun(self:UIComponent, address: UIC_Address)
 ---@field Highlight fun(self:UIComponent, boolean, boolean)
 
 local UIC = {
@@ -116,23 +117,27 @@ local UIC = {
     SetInteractive = function(self) return end,
     SetDisabled = function(self) return end,
     SetProperty = function(self) return end,
+    
+    ---@return UIC_Address
     Address = function(self) return end,
     Parent = function(self) return end,
     Visible = function(self) return end,
-    Find = function(self) return end,
+    Find = function(self, i) return end,
     GetStateText = function(self) return end,
     ChildCount = function(self) return end,
-    CreateComponent = function(self) return end,
+    CreateComponent = function(self, name, template_path) return end,
     Id = function(self) return end,
     GetTooltipText = function(self) return end,
     CurrentState = function(self) return end,
     GetDockOffset = function(self) return end,
-    TextDimensionsForText = function(self) return end,
+    TextDimensionsForText = function(self, text) return end,
     DestroyChildren = function(self) return end,
     Destroy = function(self) return end,
     Bounds = function(self) return end,
     RemoveTopMost = function(self) return end,
-    PropagatePriority = function(self) return end,
+
+    ---@param priority number
+    PropagatePriority = function(self, priority) return end,
     PropagateVisibility = function(self) return end,
     Dimensions = function(self) return end,
     Width = function(self) return end,
@@ -144,7 +149,9 @@ local UIC = {
     GetCurrentStateImageDimensions = function(self) return end,
     ResizeCurrentStateImage = function(self) return end,
     Layout = function(self) return end,
-    Adopt = function(self) return end,
+
+    ---@param address UIC_Address
+    Adopt = function(self, address) return end,
     Highlight = function(self) return end,
     SimulateLClick = function(self) return end,
     RegisterTopMost = function(self) return end,
@@ -156,7 +163,7 @@ local UIC = {
 battle_manager = battle_manager;
 
 --- Turn the address of a UIC to the wrapped UIComponent object.,
----@param address ComponentAddress Gotten through context.component in Component events, or UIC:Address()
+---@param address UIC_Address Gotten through context.component in Component events, or UIC:Address()
 ---@return UIComponent
 function UIComponent(address)
     return UIC
