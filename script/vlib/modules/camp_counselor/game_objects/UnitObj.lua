@@ -24,15 +24,6 @@ local UnitObjState = {
     _lock_reason = "",
 }
 
---- Initialize the UnitObj factory.
-function UnitObj:__init()
-    -- vlib:logf("Creating a new unit w/ key %s", "[boop]", o._key)
-    -- o = o or {}
-    -- return setmetatable(o, self)
-
-    return self
-end
-
 function UnitObj:__tostring()
     return "UnitObj ["..self._key.."]"
 end

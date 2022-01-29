@@ -40,10 +40,6 @@ local TechObjState = {
     _units = {},
 }
 
-function TechObj:__init()
-    return self
-end
-
 function TechObj:__tostring()
     return "TechObj ["..self.__name.."]"
 end
@@ -372,6 +368,9 @@ end
 -- do the check on all exclusive techs and their states and shit
 function TechObj.refresh()
     local faction_obj = cm:get_local_faction(true)
+
+    local vlib = get_vlib()
+    local cc = vlib:get_module("camp_counselor")
 
     -- first, check the panel for any nodes that SHOULD be locked on the screen :)
 

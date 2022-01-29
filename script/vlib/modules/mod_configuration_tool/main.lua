@@ -64,11 +64,15 @@ do
 
     end) if not ok then mct:err(msg) end
 
+    mct:log("INIT 1")
     --- Load all internal modules!
     vlib:load_modules(modules_path)
 
+    mct:log("INIT 2")
     -- load mods in script/mct/settings/!
     mct:load_mods()
+
+    mct:log("INIT 3")
     
     if not core:is_campaign() then
         -- trigger load_and_start after all mod scripts are loaded!
@@ -82,18 +86,15 @@ do
             false
         )
     else
-        core:add_listener(
-            "MCT_Init",
-            "LoadingGame",
-            true, 
-            function(context)
-                if not cm.game_interface:model():is_multiplayer() then
-                    mct:load_and_start(context, false)
-                else
-                    mct:load_and_start(context, true)
-                end
-            end,
-            true
-        )
+        mct:log("LISTENING FOR LOAD GAME")
+        
+        cm:add_loading_game_callback(function(context)
+            mct:log("LOADING GAME CALBACK")
+            if not cm.game_interface:model():is_multiplayer() then
+                mct:load_and_start(context, false)
+            else
+                mct:load_and_start(context, true)
+            end
+        end)
     end
 end

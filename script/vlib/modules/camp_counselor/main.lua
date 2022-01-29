@@ -23,36 +23,37 @@ local functionality_path = this_path.."functionality/"
 local go_path = this_path.."game_objects/"
 
 ---@class vlib_camp_counselor
-local Counselor = vlib:new_class("camp_counselor")
-vlib:add_module("camp_counselor", Counselor)
-
---- Called on Counselor creation, default values and shit.
-function Counselor:__init()
-    self._classes = {
+local CounselorDefaults = {
+    _classes = {
         ---@type unit_class
-        UnitObj = vlib:load_module("UnitObj", go_path)(),
+        UnitObj = vlib:load_module("UnitObj", go_path),
 
         ---@type tech_class
-        TechObj = vlib:load_module("TechObj", go_path)(),
+        TechObj = vlib:load_module("TechObj", go_path),
 
         ---@type vlib_pr_obj TODO swap to the custom class setup?
         PRObj = vlib:load_module("PRObj", go_path),
-    }
+    },
 
     
-    self._objects = {}
+    _objects = {},
+}
 
+---@class vlib_camp_counselor : Class
+local Counselor = vlib:new_class("camp_counselor", CounselorDefaults)
+vlib:add_module("camp_counselor", Counselor)
+
+function Counselor:init()
+    -- anything else needed on creation
     for k,_ in pairs(self._classes) do
         self._objects[k] = {}
     end
-    -- anything else needed on creation
 
     --- load functionality here
     vlib:load_modules(functionality_path)
 end
 
--- triggers :__init()
-Counselor()
+Counselor:init()
 
 function Counselor:get_class(class_key)
     return self._classes[class_key]

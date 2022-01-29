@@ -111,6 +111,7 @@ CampaignUI = {
 ---@field Address fun(self:UIComponent):UIC_Address
 ---@field Adopt fun(self:UIComponent, address: UIC_Address)
 ---@field Highlight fun(self:UIComponent, boolean, boolean)
+---@field SetCanResizeCurrentStateImageWidth fun(self:UIComponent, number, boolean)
 
 local UIC = {
     ResizeTextResizingComponentToInitialSize = function(self) end,

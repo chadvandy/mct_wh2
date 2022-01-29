@@ -84,6 +84,8 @@ end
 function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
     self._initialized = true
 
+    logf("LOAD AND START - Is this literally ever called?")
+
     core:add_listener(
         "who_is_the_host_tell_me_now_please",
         "UITrigger",
@@ -143,8 +145,9 @@ function mod_configuration_tool:load_and_start(loading_game_context, is_mp)
 
             cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
         else
-            -- if it's a new game, read the settings file and save that into the save file
+            --- if it's a new game, save the currently selected profile into the save file, and load up that profile
             if cm:is_new_game() then
+                logf("New game - loading!")
                 self.settings:load_old()
             else
                 self.settings:load_game_callback(loading_game_context)
@@ -341,6 +344,7 @@ function mod_configuration_tool:finalize()
             core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
         end
     else
+        --- TODO if we haven't locally edited, don't do this?
         self.settings:finalize(false)
 
         self._finalized = true

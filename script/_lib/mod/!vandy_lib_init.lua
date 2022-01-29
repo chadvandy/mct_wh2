@@ -18,7 +18,7 @@ local vandy_lib = {
         timeout = 250,
         max_held = 1000,
         is_checking = false,
-        print_immediately = false,
+        print_immediately = true,
     },
 
     _callbacks = {},
@@ -232,6 +232,8 @@ function vandy_lib:load_modules(path, search_override)
 
     local file_str = effect.filesystem_lookup(path, search_override)
     logf("Checking all module folders for main.lua, found: %s", file_str)
+    
+    --- TODO make this safe if one module breaks
     for filename in string.gmatch(file_str, '([^,]+)') do
         local filename_for_out = filename
 

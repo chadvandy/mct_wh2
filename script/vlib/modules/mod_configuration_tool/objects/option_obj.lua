@@ -568,7 +568,7 @@ end
 function mct_option:ui_select_value(val, is_new_version)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
-        if new_value ~= nil then
+        if val ~= nil then
             err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
             val = new_value
         else
@@ -795,6 +795,7 @@ end
 --- Used when finalizing settings.
 --- @treturn any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
+    logf("Getting selected setting for %s", self:get_key())
     return Settings:get_selected_setting_for_option(self)
 end
 

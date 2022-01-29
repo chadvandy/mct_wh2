@@ -30,9 +30,9 @@ elseif core:is_battle() then
     local function create_button(button_group)
         local new_button = UIComponent(button_group:CreateComponent("button_mct_options", "ui/templates/round_small_button"))
 
-        -- set the tooltip to the one on the frontend button
+        -- -- set the tooltip to the one on the frontend button
         _SetTooltipText(new_button, effect.get_localised_string("uied_component_texts_localised_string_button_mct_options_Tooltip_42069"), true)
-        _SetImagePath(new_button, effect.get_skinned_image_path("icon_options.png"))
+        _SetImagePath(new_button, effect.get_skinned_image_path("icon_options.png"), 1)
 
         -- make sure it's on the button group
         button_group:Adopt(new_button:Address())
