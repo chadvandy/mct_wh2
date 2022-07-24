@@ -352,7 +352,7 @@ function vandy_lib:trigger_popup(key, text, two_buttons, button_one_callback, bu
         ok_group:SetDockOffset(0, 0)
 
         DY_text:SetDockingPoint(5)
-        -- errlog("WHAT THE FUCK IS CALLING THIS")
+        errlog("WHAT THE FUCK IS CALLING THIS")
         local ow, oh = popup:Width() * 0.9, popup:Height() * 0.8
         DY_text:Resize(ow, oh)
         DY_text:SetDockOffset(1, -35)
@@ -445,40 +445,6 @@ function get_vandy_lib()
     return core:get_static_object("vandy_lib")
 end
 
-function vandy_lib:setup_listeners()
-    core:declare_lookup_listener(
-        "panel_opened",
-        "PanelOpenedCampaign",
-        function(context) 
-            return context.string 
-        end
-    )
-
-    core:declare_lookup_listener(
-        "panel_closed",
-        "PanelClosedCampaign",
-        function(context)
-            return context.string
-        end
-    )
-
-    core:declare_lookup_listener(
-        "ui_clicked",
-        "ComponentLClickUp",
-        function(context)
-            return context.string
-        end
-    )
-
-    core:declare_lookup_listener(
-        "ui_hovered",
-        "ComponentMouseOn",
-        function(context)
-            return context.string
-        end
-    )
-end
-
 get_vlib = get_vandy_lib
 
 function vandy_lib:init()
@@ -486,21 +452,8 @@ function vandy_lib:init()
 
     -- Load all helpers.
     self:load_modules(self.helpers_path)
-
-    --- Load the Class constructor
-    local f = self:load_module("class", "script/vlib/")
-
-    --- Create a new class.
-    ---@param self vandy_lib
-    ---@param name string The name of this new class.
-    ---@param obj table Default table to build this new class from.
-    ---@vararg table Provide parents for the class to inherit from. Earliest take highest priority(TODO confirm :))
-    self.new_class = function(self, name, obj, ...)
-        return f(name, obj, ...)
-    end
     
     self:callback_handler()
-    self:setup_listeners()
 
     -- Do debug stuffs.
     if vfs.exists("script/vlib/is_debug.txt") then

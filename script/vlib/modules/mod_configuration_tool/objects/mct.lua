@@ -6,9 +6,6 @@ local mod_configuration_tool = {
     _settings_path = "/script/mct/settings/",
     _self_path = "script/vlib/modules/mod_configuration_tool/",
 
-    ---@type mct_settings
-    settings = nil,
-
     -- default to false
     _finalized = false,
     _initialized = false,

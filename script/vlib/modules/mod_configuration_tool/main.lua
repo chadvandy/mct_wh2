@@ -27,14 +27,11 @@ do
     -- load modules!
 
     -- load the settings and UI files first
-
     ---@type mct_settings
-    local settings = vlib:load_module("settings", objects_path)
-    mct.settings = settings
+    mct.settings = vlib:load_module("settings", objects_path)
 
     ---@type mct_ui
-    local ui = vlib:load_module("ui_obj", objects_path)
-    mct.ui = ui
+    mct.ui = vlib:load_module("ui_obj", objects_path)
 
     mct._MCT_TYPES = {}
     local ok, msg = pcall(function()

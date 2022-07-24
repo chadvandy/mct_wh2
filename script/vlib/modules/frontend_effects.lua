@@ -1,6 +1,3 @@
---- TODO move this back out of CC, it shouldn't be CC'd
-
-do return end
 if __game_mode ~= __lib_type_frontend then return false end
 
 -- TODO refactor so this takes a lord's startpos ID

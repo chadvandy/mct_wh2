@@ -639,10 +639,6 @@ function mct_mod:finalize_settings()
     mct.ui.changed_settings[self:get_key()] = nil
 end
 
-function mct_mod:get_settings_table()
-
-end
-
 function mct_mod:load_finalized_settings()
     local options = self:get_options()
 
@@ -818,7 +814,6 @@ end
 --- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
 ---@param option_key string The unique identifier for the new mct_option.
 ---@param option_type string The type for the new mct_option.
----@return mct_option
 function mct_mod:add_new_option(option_key, option_type)
     -- check first to see if an option with this key already exists; if it does, return that one!
     local test = self:get_option_by_key(option_key)
