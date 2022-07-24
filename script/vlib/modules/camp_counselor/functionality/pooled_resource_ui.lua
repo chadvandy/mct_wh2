@@ -88,7 +88,7 @@ end
 function PR_Manager:get_uic(pr_key)
     local parent = find_uicomponent(core:get_ui_root(), "layout", "resources_bar", "topbar_list_parent")
 
-    return find_uicomponent(parent, pr_key)
+    return find_uicomponent(parent, pr_key, "dy_canopic_jars")
 end
 
 --- Create the UIC on the top bar!
@@ -106,7 +106,8 @@ function PR_Manager:create_uic(pr_obj, faction_key)
         return
     end
         
-    local uic = UIComponent(core:get_ui_root():CreateComponent(pr_key, self.pr_path))
+    local canopic = find_uicomponent(parent, "canopic_jars_holder")
+    local uic = UIComponent(canopic:CopyComponent(pr_key))
 
     if not uic then return errlogf("Failed to create component") end
     local pos = 1
